@@ -19,4 +19,4 @@ Guidelines:
 - Each code block should be preceded by prose that motivates it
 - Call out any non-obvious choices, tradeoffs, or assumptions
 
-Output format: a single Markdown document with alternating prose and fenced Python code blocks. Include diagrams of flow, algorithm, interesting or tricky data structures. Do not include the full program text. Put the file in the literate/ directory
+Output format: a single Markdown document with alternating prose and fenced Python code blocks. Include diagrams of flow, algorithm, interesting or tricky data structures. Do not include the full program text. Put the file in the `01-literate/` directory.

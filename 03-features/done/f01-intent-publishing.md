@@ -2,6 +2,7 @@
 ## F01 — Add intent publishing (voice/speech MVP)
 **Priority**: High
 **Done:** yes
+**Tasks File Created:** yes
 **Tests Written:** yes
 **Test Passing:** yes
 **Description**: Extend control/ so the existing CLI REPL can publish normalized

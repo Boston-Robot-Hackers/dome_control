@@ -5,7 +5,7 @@
 **Description**: What the task is 
 
 ## T02 — task 02 is described
-**Status**: done | not donw
+**Status**: done | not done
 **Description**: what this task is
 
 and so on

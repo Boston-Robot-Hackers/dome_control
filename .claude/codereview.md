@@ -8,7 +8,7 @@ Derived from `.claude/coding.md`. Apply to each Python file under review.
 3. Commit process files (feature, tasks, this checklist) directly to `main`.
 4. Create a branch for source code fixes (e.g. `review/f44-semantic-map`).
 5. Fix each violation, run tests, open a PR.
-6. Before opening the PR: regenerate the literate version of any changed file (`apply .claude/literate.md` to each changed Python source, save to `literate/<module>.md`).
+6. Before opening the PR: regenerate the literate version of any changed file (`apply .claude/literate.md` to each changed Python source, save to `01-literate/<module>.md`).
 
 
 ## File header
