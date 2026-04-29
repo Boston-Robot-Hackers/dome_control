@@ -32,6 +32,7 @@ setup(
             'run = control.main:main',
             'behavior_manager = control.behavior_manager_node:main',
             'describe_scene_stub = control.describe_scene_stub_node:main',
+            'voice_input = control.voice_input_node:main',
         ],
     },
 )
