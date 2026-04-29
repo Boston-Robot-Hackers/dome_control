@@ -84,3 +84,8 @@ class TestIntentCommands:
         assert "intent.explore" in cmds
         assert "intent.describe_scene" in cmds
         assert "intent.count_objects" in cmds
+
+    def test_scene_commands_are_separate_user_facing_aliases(self, dispatcher):
+        cmds = dispatcher.list_commands(group="scene")
+        assert "scene.describe" in cmds
+        assert "scene.count" in cmds

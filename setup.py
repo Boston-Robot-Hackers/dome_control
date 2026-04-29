@@ -30,6 +30,8 @@ setup(
     entry_points={
         'console_scripts': [
             'run = control.main:main',
+            'behavior_manager = control.behavior_manager_node:main',
+            'describe_scene_stub = control.describe_scene_stub_node:main',
         ],
     },
 )

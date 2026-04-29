@@ -29,17 +29,21 @@ The repository has been migrated to the numbered process/documentation layout:
 - Launch management through configured templates.
 - Map save/list/serialize commands.
 - Intent publishing to `/intent` using `std_msgs/String` JSON.
+- Semantic `scene describe` and `scene count <object_type>` CLI aliases.
+- `behavior_manager` node that receives `/intent`, calls `/describe_scene`,
+  and publishes `/announcement` JSON.
+- Temporary `describe_scene_stub` node for smoke testing.
 - Existing feature files:
   - `F01` intent publishing: done
   - `F02` structural code cleanup: done
+  - `F03` semantic behavior pipeline MVP: done
 
 ## Likely Next Steps
 
-1. **Create a feature for the semantic behavior pipeline.**
-   Feature: no feature yet. This should probably track the next cross-repo step from
-   `oak_roboflow/02-doc/implementation-plan.md`: CLI command such as
-   `scene describe` publishes `/intent`, a behavior manager receives it, calls a
-   describe-scene service, and reports a summary.
+1. **Replace the describe-scene stub with the real oak_roboflow query path.**
+   Feature: no feature yet. The next cross-repo step is to provide a real
+   `/describe_scene` service backed by latest `/targets/confirmed`, then point
+   `behavior_manager` at that instead of `describe_scene_stub`.
 
 2. **Split `RobotController` into smaller modules.**
    Feature: no feature yet. `robot_controller.py` is still large and should be split

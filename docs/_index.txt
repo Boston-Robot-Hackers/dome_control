@@ -6,6 +6,8 @@ MOST COMMON COMMANDS:
   move forward <meters>                    Move robot forward
   turn clockwise <degrees>                 Turn robot clockwise
   robot stop                               Stop robot immediately
+  scene describe                           Describe currently confirmed targets
+  scene count <object_type>                Count visible objects by type
   config list                              Show all settings
   map save <filename>                      Save current map
 
@@ -33,3 +35,4 @@ For detailed help on any command:
 Examples:
   help move forward
   help config set
+  help scene

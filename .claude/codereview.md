@@ -27,7 +27,7 @@ Derived from `.claude/coding.md`. Apply to each Python file under review.
 - [ ] Double quotes throughout; single quotes only when required
 - [ ] No `from __future__ import annotations`
 - [ ] No `Optional[X]` — use `X | None` instead
-- [ ] No underscore prefix on private methods/variables
+- [ ] No leading underscore prefix on methods, functions, instance variables, or other custom identifiers
 
 ## Structure
 - [ ] Functions and methods ≤ 50 lines

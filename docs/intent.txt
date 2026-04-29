@@ -5,6 +5,8 @@ COMMANDS
   intent.explore            — publish explore intent
   intent.describe_scene     — publish describe_scene intent
   intent.count_objects      — publish count_objects intent (requires object_type)
+  scene.describe            — user-facing alias for intent.describe_scene
+  scene.count <object>      — user-facing alias for intent.count_objects
 
 SMOKE TEST
   Terminal 1:
@@ -16,7 +18,9 @@ SMOKE TEST
   In REPL, type:
     intent stop
     intent explore
-    intent count_objects object_type=chair
+    intent count_objects chair
+    scene describe
+    scene count chair
 
 EXPECTED OUTPUT (Terminal 1)
   data: '{"name": "stop", "source": "cli", "slots": {}}'

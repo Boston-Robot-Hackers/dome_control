@@ -12,6 +12,7 @@ import control.commands.movement_commands as mov_cmd
 import control.commands.navigation_commands as nav_cmd
 import control.commands.parameter_def as paramdef_mod
 import control.commands.robot_controller as rc
+import control.commands.semantic_commands as sem_cmd
 import control.commands.system_commands as sys_cmd
 
 
@@ -33,6 +34,7 @@ class CommandDispatcher:
         commands.update(lch_cmd.build_launch_commands())
         commands.update(sys_cmd.build_system_commands())
         commands.update(intent_cmd.build_intent_commands())
+        commands.update(sem_cmd.build_semantic_commands())
         return commands
 
     def execute(

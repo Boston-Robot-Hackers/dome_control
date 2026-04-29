@@ -1,0 +1,28 @@
+SCENE COMMANDS — publish semantic intents to the behavior manager
+
+COMMANDS
+  scene.describe           — ask the robot to summarize what it currently sees
+  scene.count <object>     — ask the robot to count visible objects by type
+
+SMOKE TEST
+  Terminal 1:
+    ros2 run control behavior_manager
+
+  Terminal 2:
+    ros2 run control describe_scene_stub
+
+  Terminal 3:
+    ros2 run control run
+
+  In REPL, type:
+    scene describe
+    scene count can
+
+EXPECTED FLOW
+  scene describe -> /intent JSON -> behavior_manager -> /describe_scene -> /announcement JSON
+
+NOTES
+  The current MVP uses std_msgs/String JSON for /intent and /announcement.
+  The temporary /describe_scene service type is std_srvs/Trigger.
+  Custom Intent.msg, Announcement.msg, and query services are deferred until
+  the vocabulary stabilizes.
