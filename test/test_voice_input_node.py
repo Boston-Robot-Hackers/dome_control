@@ -40,3 +40,45 @@ def test_publish_announcement():
     node.announcement_pub.publish.assert_called_once()
     msg = node.announcement_pub.publish.call_args[0][0]
     assert msg.data == "I didn't catch that"
+
+
+def test_process_transcript_known_intent():
+    _, node = _make_voice_node()
+    from control.voice_input_node import VoiceInputNode
+
+    node.intent_mapper = MagicMock()
+    node.intent_mapper.map_intent.return_value = {
+        "name": "describe_scene", "source": "voice", "slots": {}
+    }
+    node.publish_state = MagicMock()
+    node.publish_intent = MagicMock()
+    node.publish_announcement = MagicMock()
+
+    with patch("control.voice_input_node.beep") as mock_beep:
+        VoiceInputNode.process_transcript(node, "what do you see", device_index=2)
+
+    node.publish_state.assert_any_call("PROCESSING")
+    node.publish_state.assert_any_call("SPEAKING")
+    node.publish_intent.assert_called_once()
+    node.publish_announcement.assert_not_called()
+    mock_beep.assert_called_once_with(frequency=330, duration=0.02, device_index=2)
+
+
+def test_process_transcript_unknown_intent():
+    _, node = _make_voice_node()
+    from control.voice_input_node import VoiceInputNode
+
+    node.intent_mapper = MagicMock()
+    node.intent_mapper.map_intent.return_value = None
+    node.publish_state = MagicMock()
+    node.publish_intent = MagicMock()
+    node.publish_announcement = MagicMock()
+
+    with patch("control.voice_input_node.speak") as mock_speak:
+        VoiceInputNode.process_transcript(node, "blah blah")
+
+    node.publish_state.assert_any_call("PROCESSING")
+    node.publish_state.assert_any_call("SPEAKING")
+    node.publish_intent.assert_not_called()
+    node.publish_announcement.assert_called_once_with("I didn't catch that")
+    mock_speak.assert_called_once_with("say again")

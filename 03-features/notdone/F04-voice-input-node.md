@@ -3,8 +3,8 @@
 **Priority**: High
 **Done:** no
 **Tasks File Created:** yes
-**Tests Written:** no
-**Test Passing:** no
+**Tests Written:** yes
+**Test Passing:** yes
 **Description**: Extend the existing `voice_input_node` from a hardcoded
 `describe_scene` stub into a full openWakeWord + Vosk pipeline. On hearing
 "Hey Jarvis", Vosk transcribes the utterance and a keyword matcher maps it to

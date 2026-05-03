@@ -11,10 +11,10 @@ from std_msgs.msg import String
 
 from control.voice.wake_word import WakeWordDetector
 from control.voice.stt import SpeechTranscriber
-from control.voice.intent_mapper import map_intent
+from control.voice.intent_mapper import IntentMapper
 from control.voice.audio_feedback import beep, speak
 
-VOICE_STATES = ("IDLE", "LISTENING", "PROCESSING")
+VOICE_STATES = ("IDLE", "LISTENING", "PROCESSING", "SPEAKING")
 
 
 class VoiceInputNode(Node):
@@ -23,6 +23,7 @@ class VoiceInputNode(Node):
         self.intent_pub = self.create_publisher(String, "/intent", 10)
         self.state_pub = self.create_publisher(String, "/voice/state", 10)
         self.announcement_pub = self.create_publisher(String, "/announcement", 10)
+        self.intent_mapper = IntentMapper()
 
     def publish_intent(self, intent: dict) -> None:
         msg = String()
@@ -40,6 +41,20 @@ class VoiceInputNode(Node):
         msg = String()
         msg.data = text
         self.announcement_pub.publish(msg)
+
+    def process_transcript(self, text: str, device_index: int = 0) -> None:
+        self.get_logger().info(f"Transcribed: '{text}'")
+        self.publish_state("PROCESSING")
+
+        intent = self.intent_mapper.map_intent(text)
+        if intent:
+            self.publish_intent(intent)
+            self.publish_state("SPEAKING")
+            beep(frequency=330, duration=0.02, device_index=device_index)
+        else:
+            self.publish_state("SPEAKING")
+            speak("say again")
+            self.publish_announcement("I didn't catch that")
 
 
 def main():
@@ -67,18 +82,8 @@ def main():
             beep(frequency=880, duration=0.02, device_index=device_index)
 
             text = transcriber.transcribe()
-            node.get_logger().info(f"Transcribed: '{text}'")
-            node.publish_state("PROCESSING")
-
-            intent = map_intent(text)
-            if intent:
-                node.publish_intent(intent)
-            else:
-                speak("say again")
-                node.publish_announcement("I didn't catch that")
-
+            node.process_transcript(text, device_index=device_index)
             node.publish_state("IDLE")
-            beep(frequency=330, duration=0.02, device_index=device_index)
 
     finally:
         detector.close()

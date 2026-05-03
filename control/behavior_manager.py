@@ -8,6 +8,15 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from control.announcement_contract import make_announcement_payload
+
+__all__ = [
+    'BehaviorManager',
+    'BehaviorResult',
+    'Intent',
+    'make_announcement_payload',
+]
+
 
 @dataclass
 class Intent:
@@ -61,13 +70,3 @@ class BehaviorManager:
             return BehaviorResult(True, "describe_scene handled", summary)
 
         return BehaviorResult(False, f"Unsupported intent: {intent.name}")
-
-
-def make_announcement_payload(text: str, source: str = "behavior_manager") -> str:
-    return json.dumps(
-        {
-            "text": text,
-            "priority": "query_reply",
-            "source": source,
-        }
-    )

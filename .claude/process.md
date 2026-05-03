@@ -5,19 +5,22 @@
 * You shall not close off a feature unless there is a complete suite of tests and they run
 
 # features
-* new features get a feature id like f01-create-process-folder
+* new features get a feature id like `F01-create-process-folder`
+* Feature file naming scheme is `FNN-<slug>.md` where `NN` is the feature number
 * each feature has a markdown file in the `03-features/done`, `03-features/deferred`, or `03-features/notdone` folder
 * each feature records whether its corresponding task file exists with `**Tasks File Created:** yes | no`
-* set `Tasks File Created` to `yes` only when a matching `04-tasks/{done,notdone,deferred}/fNN-*.md` file exists
+* set `Tasks File Created` to `yes` only when a matching `04-tasks/{done,notdone,deferred}/TFNN-*.md` file exists for that same `NN`
 * inside features folder there is a file called template.md which shows the format
 * feature md files are mini-specs. They should not go to the level of tasks. They belong in the task md file
 
 # tasks
 * Before any design is done or code is written, a set of tasks must be developed
-* All the tasks for a feature can be found in a file in the `04-tasks/done`, `04-tasks/deferred`, or `04-tasks/notdone` folders
+* All the tasks for a feature can be found in a task file in the `04-tasks/done`, `04-tasks/deferred`, or `04-tasks/notdone` folders
+* Task file naming scheme is `TFNN-<slug>.md` where `NN` matches the corresponding feature number
 * When creating a task file for a feature, update the feature file's `Tasks File Created` field to `yes`
 * inside tasks folder there is a file called template.md which shows the format
-* Each individual task should have one or more tests written as they happen, unless this is really not possible or meaningful
+* Each individual task step must include at least one test whenever feasible
+* If a step cannot be tested meaningfully, record a short reason in the task or work log
 * Every feature must include a task for writing tests; this task must always be proposed along with the other tasks
 * When the last task for a feature is marked done, move the task file from `04-tasks/notdone/` to `04-tasks/done/`
 * Then update the feature file: set Done to yes, and Tests Written and Test Passing to yes if applicable
@@ -59,7 +62,5 @@
 # bugs and testing
 * Whenever a bug is discovered, and fixed, write a new test for it
 * Whenever we see a regression bug, and fix it, write a new test for it.
-
-
 
 

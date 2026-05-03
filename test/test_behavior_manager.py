@@ -7,6 +7,7 @@ import json
 import pytest
 
 from control.behavior_manager import BehaviorManager, make_announcement_payload
+from control.announcement_contract import PRIORITY_QUERY_REPLY
 
 
 class TestBehaviorManager:
@@ -81,5 +82,5 @@ class TestBehaviorManager:
 
         data = json.loads(payload)
         assert data["text"] == "I see a can"
-        assert data["priority"] == "query_reply"
+        assert data["priority"] == PRIORITY_QUERY_REPLY
         assert data["source"] == "behavior_manager"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from control.voice.intent_mapper import map_intent
+from control.voice.intent_mapper import IntentMapper, map_intent
 
 
 def test_describe_scene():
@@ -57,3 +57,9 @@ def test_unknown_returns_none():
 def test_source_is_voice():
     result = map_intent("stop")
     assert result["source"] == "voice"
+
+
+def test_intent_mapper_class_api():
+    mapper = IntentMapper()
+    assert mapper.map_intent("stop")["name"] == "stop"
+    assert mapper.map_intent("nonsense phrase") is None

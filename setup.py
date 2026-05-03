@@ -33,6 +33,7 @@ setup(
             'behavior_manager = control.behavior_manager_node:main',
             'describe_scene_stub = control.describe_scene_stub_node:main',
             'voice_input = control.voice_input_node:main',
+            'speech_output = control.speech_output_node:main',
         ],
     },
 )

@@ -29,52 +29,64 @@ def _contains(text: str, *phrases: str) -> bool:
     return any(p in text for p in phrases)
 
 
-def map_intent(text: str) -> Optional[dict]:
-    """Return intent dict or None if text does not match any known command."""
-    t = text.lower().strip()
-    if not t or t == "[unk]":
+class IntentMapper:
+    """Keyword/phrase matcher from transcript text to normalized voice intents."""
+
+    SOURCE = "voice"
+
+    def map_intent(self, text: str) -> Optional[dict]:
+        t = text.lower().strip()
+        if not t or t == "[unk]":
+            return None
+
+        if _contains(t, "what do you see", "describe", "what's there", "look around",
+                     "what do you see around"):
+            return {"name": "describe_scene", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "how many", "count"):
+            obj = _extract_object(t)
+            return {"name": "count_objects", "source": self.SOURCE,
+                    "slots": {"object_type": obj} if obj else {}}
+
+        if _contains(t, "stop", "halt"):
+            return {"name": "stop", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "go home", "return home", "come back", "home"):
+            return {"name": "return_home", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "start exploring", "explore"):
+            return {"name": "start_exploring", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "follow me", "follow"):
+            return {"name": "follow_me", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "be quiet", "quiet"):
+            return {"name": "be_quiet", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "go to sleep", "sleep"):
+            return {"name": "sleep", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "wake up"):
+            return {"name": "wake", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "battery"):
+            return {"name": "get_battery", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "where are you", "where"):
+            return {"name": "get_location", "source": self.SOURCE, "slots": {}}
+
+        if _contains(t, "get status", "what's your status", "what's going on", "status"):
+            return {"name": "get_status", "source": self.SOURCE, "slots": {}}
+
         return None
 
-    if _contains(t, "what do you see", "describe", "what's there", "look around",
-                 "what do you see around"):
-        return {"name": "describe_scene", "source": "voice", "slots": {}}
 
-    if _contains(t, "how many", "count"):
-        obj = _extract_object(t)
-        return {"name": "count_objects", "source": "voice",
-                "slots": {"object_type": obj} if obj else {}}
+_DEFAULT_MAPPER = IntentMapper()
 
-    if _contains(t, "stop", "halt"):
-        return {"name": "stop", "source": "voice", "slots": {}}
 
-    if _contains(t, "go home", "return home", "come back", "home"):
-        return {"name": "return_home", "source": "voice", "slots": {}}
-
-    if _contains(t, "start exploring", "explore"):
-        return {"name": "start_exploring", "source": "voice", "slots": {}}
-
-    if _contains(t, "follow me", "follow"):
-        return {"name": "follow_me", "source": "voice", "slots": {}}
-
-    if _contains(t, "be quiet", "quiet"):
-        return {"name": "be_quiet", "source": "voice", "slots": {}}
-
-    if _contains(t, "go to sleep", "sleep"):
-        return {"name": "sleep", "source": "voice", "slots": {}}
-
-    if _contains(t, "wake up"):
-        return {"name": "wake", "source": "voice", "slots": {}}
-
-    if _contains(t, "battery"):
-        return {"name": "get_battery", "source": "voice", "slots": {}}
-
-    if _contains(t, "where are you", "where"):
-        return {"name": "get_location", "source": "voice", "slots": {}}
-
-    if _contains(t, "get status", "what's your status", "what's going on", "status"):
-        return {"name": "get_status", "source": "voice", "slots": {}}
-
-    return None
+def map_intent(text: str) -> Optional[dict]:
+    """Compatibility wrapper for existing call sites and tests."""
+    return _DEFAULT_MAPPER.map_intent(text)
 
 
 def _extract_object(text: str) -> Optional[str]:
