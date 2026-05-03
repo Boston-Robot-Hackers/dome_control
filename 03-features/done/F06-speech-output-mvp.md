@@ -1,12 +1,13 @@
 # Feature description for feature F06
 ## F06 — Speech output node MVP (Piper + ALSA)
 **Priority**: High
-**Done:** no
+**Done:** yes
 **Tasks File Created:** yes
 **Tests Written:** yes
 **Test Passing:** yes
 **Description**: Implement the first-pass `speech_output_node` that subscribes to
-`/announcement`, synthesizes speech with Piper, writes WAV output to `/tmp`, and
+`/announcement`, synthesizes speech with Piper, writes WAV output to a
+configurable temp directory, and
 plays audio through the ReSpeaker/ALSA output device. This is the minimum path
 to make announcements audible on robot hardware.
 
