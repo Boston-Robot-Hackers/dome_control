@@ -19,10 +19,10 @@ SMOKE TEST
     scene count can
 
 EXPECTED FLOW
-  scene describe -> /intent JSON -> behavior_manager -> /describe_scene -> /announcement JSON
+  scene describe -> /intent JSON -> behavior_manager -> /describe_scene -> /announcement
 
 NOTES
-  The current MVP uses std_msgs/String JSON for /intent and /announcement.
+  The current MVP uses std_msgs/String JSON for /intent.
+  Announcement output uses control/msg/Announcement on /announcement.
   The temporary /describe_scene service type is std_srvs/Trigger.
-  Custom Intent.msg, Announcement.msg, and query services are deferred until
-  the vocabulary stabilizes.
+  Custom Intent.msg and query services are deferred until the vocabulary stabilizes.

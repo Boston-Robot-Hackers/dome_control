@@ -2,6 +2,8 @@
 import json
 from unittest.mock import MagicMock, patch
 
+from control.announcement_contract import PRIORITY_QUERY_REPLY
+
 
 def _make_voice_node():
     with patch("rclpy.node.Node.__init__", return_value=None):
@@ -39,7 +41,9 @@ def test_publish_announcement():
     VoiceInputNode.publish_announcement(node, "I didn't catch that")
     node.announcement_pub.publish.assert_called_once()
     msg = node.announcement_pub.publish.call_args[0][0]
-    assert msg.data == "I didn't catch that"
+    assert msg.text == "I didn't catch that"
+    assert msg.priority == PRIORITY_QUERY_REPLY
+    assert msg.source == "voice_input"
 
 
 def test_process_transcript_known_intent():

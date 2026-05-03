@@ -8,12 +8,16 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from control.announcement_contract import make_announcement_payload
+from control.announcement_contract import (
+    make_announcement_msg,
+    make_announcement_payload,
+)
 
 __all__ = [
     'BehaviorManager',
     'BehaviorResult',
     'Intent',
+    'make_announcement_msg',
     'make_announcement_payload',
 ]
 

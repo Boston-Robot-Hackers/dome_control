@@ -6,7 +6,11 @@ import json
 
 import pytest
 
-from control.behavior_manager import BehaviorManager, make_announcement_payload
+from control.behavior_manager import (
+    BehaviorManager,
+    make_announcement_msg,
+    make_announcement_payload,
+)
 from control.announcement_contract import PRIORITY_QUERY_REPLY
 
 
@@ -84,3 +88,11 @@ class TestBehaviorManager:
         assert data["text"] == "I see a can"
         assert data["priority"] == PRIORITY_QUERY_REPLY
         assert data["source"] == "behavior_manager"
+
+    def test_make_announcement_msg(self):
+        msg = make_announcement_msg("I see a can")
+
+        assert msg.text == "I see a can"
+        assert msg.priority == PRIORITY_QUERY_REPLY
+        assert msg.source == "behavior_manager"
+        assert msg.dedup_key == ""

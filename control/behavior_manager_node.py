@@ -9,7 +9,8 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 
-from control.behavior_manager import BehaviorManager, make_announcement_payload
+from control.announcement_contract import AnnouncementMsg
+from control.behavior_manager import BehaviorManager, make_announcement_msg
 
 
 class BehaviorManagerNode(Node):
@@ -19,7 +20,9 @@ class BehaviorManagerNode(Node):
         self.intent_sub = self.create_subscription(
             String, "/intent", self.on_intent, 10
         )
-        self.announcement_pub = self.create_publisher(String, "/announcement", 10)
+        self.announcement_pub = self.create_publisher(
+            AnnouncementMsg, "/announcement", 10
+        )
         self.describe_scene_client = self.create_client(Trigger, "/describe_scene")
 
     def on_intent(self, msg: String) -> None:
@@ -59,8 +62,7 @@ class BehaviorManagerNode(Node):
         self.publish_announcement(response.message)
 
     def publish_announcement(self, text: str) -> None:
-        msg = String()
-        msg.data = make_announcement_payload(text)
+        msg = make_announcement_msg(text)
         self.announcement_pub.publish(msg)
         self.get_logger().info(text)
 

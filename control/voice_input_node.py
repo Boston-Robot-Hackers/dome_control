@@ -3,16 +3,20 @@
 
 import json
 import os
-import time
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from control.voice.wake_word import WakeWordDetector
-from control.voice.stt import SpeechTranscriber
-from control.voice.intent_mapper import IntentMapper
+from control.announcement_contract import (
+    AnnouncementMsg,
+    PRIORITY_QUERY_REPLY,
+    make_announcement_msg,
+)
 from control.voice.audio_feedback import beep, speak
+from control.voice.intent_mapper import IntentMapper
+from control.voice.stt import SpeechTranscriber
+from control.voice.wake_word import WakeWordDetector
 
 VOICE_STATES = ("IDLE", "LISTENING", "PROCESSING", "SPEAKING")
 
@@ -22,7 +26,9 @@ class VoiceInputNode(Node):
         super().__init__("voice_input")
         self.intent_pub = self.create_publisher(String, "/intent", 10)
         self.state_pub = self.create_publisher(String, "/voice/state", 10)
-        self.announcement_pub = self.create_publisher(String, "/announcement", 10)
+        self.announcement_pub = self.create_publisher(
+            AnnouncementMsg, "/announcement", 10
+        )
         self.intent_mapper = IntentMapper()
 
     def publish_intent(self, intent: dict) -> None:
@@ -38,8 +44,11 @@ class VoiceInputNode(Node):
         self.get_logger().info(f"Voice state: {state}")
 
     def publish_announcement(self, text: str) -> None:
-        msg = String()
-        msg.data = text
+        msg = make_announcement_msg(
+            text,
+            priority=PRIORITY_QUERY_REPLY,
+            source="voice_input",
+        )
         self.announcement_pub.publish(msg)
 
     def process_transcript(self, text: str, device_index: int = 0) -> None:

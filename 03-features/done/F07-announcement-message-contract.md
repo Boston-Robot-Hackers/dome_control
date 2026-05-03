@@ -1,10 +1,10 @@
 # Feature description for feature F07
 ## F07 — Announcement message contract migration
 **Priority**: High
-**Done:** no
+**Done:** yes
 **Tasks File Created:** yes
-**Tests Written:** no
-**Test Passing:** no
+**Tests Written:** yes
+**Test Passing:** yes
 **Description**: Replace ad hoc `/announcement` payload handling with the
 structured `Announcement.msg` contract (`text`, `priority`, `stamp`, `source`,
 `dedup_key`, and priority constants). Update producers/consumers so speech output
