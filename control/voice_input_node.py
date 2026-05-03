@@ -1,88 +1,88 @@
 #!/usr/bin/env python3
-# voice_input_node.py - temporary Porcupine-to-/intent bridge
-# Author: Pito Salas and Claude Code
-# Open Source Under MIT license
-"""ROS2 node that publishes a describe_scene intent when Porcupine hears Jarvis."""
+"""ROS2 node: openWakeWord + Vosk STT + intent mapper → /intent."""
 
 import json
 import os
-from typing import Callable
+import time
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
+from control.voice.wake_word import WakeWordDetector
+from control.voice.stt import SpeechTranscriber
+from control.voice.intent_mapper import map_intent
+from control.voice.audio_feedback import beep, speak
 
-INTENT_PAYLOAD = {"name": "describe_scene", "source": "voice", "slots": {}}
+VOICE_STATES = ("IDLE", "LISTENING", "PROCESSING")
 
 
 class VoiceInputNode(Node):
     def __init__(self):
         super().__init__("voice_input")
         self.intent_pub = self.create_publisher(String, "/intent", 10)
+        self.state_pub = self.create_publisher(String, "/voice/state", 10)
+        self.announcement_pub = self.create_publisher(String, "/announcement", 10)
 
-    def publish_describe_scene_intent(self) -> None:
+    def publish_intent(self, intent: dict) -> None:
         msg = String()
-        msg.data = json.dumps(INTENT_PAYLOAD)
+        msg.data = json.dumps(intent)
         self.intent_pub.publish(msg)
-        self.get_logger().info(f"Voice intent published: {msg.data}")
+        self.get_logger().info(f"Intent published: {msg.data}")
 
+    def publish_state(self, state: str) -> None:
+        msg = String()
+        msg.data = state
+        self.state_pub.publish(msg)
+        self.get_logger().info(f"Voice state: {state}")
 
-def _load_picovoice():
-    try:
-        import pvporcupine
-        from pvrecorder import PvRecorder
-    except ImportError as exc:
-        raise RuntimeError(
-            "Install voice dependencies first: "
-            "pip install pvporcupine pvrecorder pvporcupinedemo"
-        ) from exc
-    return pvporcupine, PvRecorder
-
-
-def run_porcupine_loop(
-    on_wake: Callable[[], None],
-    access_key: str,
-    keyword: str = "jarvis",
-    device_index: int = -1,
-) -> None:
-    pvporcupine, PvRecorder = _load_picovoice()
-    porcupine = pvporcupine.create(access_key=access_key, keywords=[keyword])
-    recorder = PvRecorder(
-        device_index=device_index,
-        frame_length=porcupine.frame_length,
-    )
-
-    try:
-        recorder.start()
-        while rclpy.ok():
-            pcm = recorder.read()
-            keyword_index = porcupine.process(pcm)
-            if keyword_index >= 0:
-                on_wake()
-    finally:
-        recorder.stop()
-        recorder.delete()
-        porcupine.delete()
+    def publish_announcement(self, text: str) -> None:
+        msg = String()
+        msg.data = text
+        self.announcement_pub.publish(msg)
 
 
 def main():
-    access_key = os.environ.get("PICOVOICE_ACCESS_KEY")
-    if not access_key:
-        raise RuntimeError("Set PICOVOICE_ACCESS_KEY before running voice_input")
-
-    device_index = int(os.environ.get("PICOVOICE_DEVICE_INDEX", "-1"))
+    device_index = int(os.environ.get("VOICE_DEVICE_INDEX", "0"))
 
     rclpy.init()
     node = VoiceInputNode()
+    detector = WakeWordDetector(device_index=device_index)
+    transcriber = SpeechTranscriber(device_index=device_index)
+
     try:
-        node.get_logger().info("Listening for Porcupine wake word: jarvis")
-        run_porcupine_loop(
-            on_wake=node.publish_describe_scene_intent,
-            access_key=access_key,
-            device_index=device_index,
-        )
+        node.get_logger().info("Voice input ready — listening for 'Hey Jarvis'")
+        node.publish_state("IDLE")
+
+        while rclpy.ok():
+            detector.start()
+            detected = detector.wait_for_wake(ok_fn=rclpy.ok)
+            detector.stop()
+
+            if not detected:
+                break
+
+            node.get_logger().info("Wake word detected — speak your command")
+            node.publish_state("LISTENING")
+            beep(frequency=880, duration=0.02, device_index=device_index)
+
+            text = transcriber.transcribe()
+            node.get_logger().info(f"Transcribed: '{text}'")
+            node.publish_state("PROCESSING")
+
+            intent = map_intent(text)
+            if intent:
+                node.publish_intent(intent)
+            else:
+                speak("say again")
+                node.publish_announcement("I didn't catch that")
+
+            node.publish_state("IDLE")
+            beep(frequency=330, duration=0.02, device_index=device_index)
+
     finally:
+        detector.close()
+        transcriber.close()
         node.destroy_node()
         rclpy.shutdown()
 
