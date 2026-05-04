@@ -1,6 +1,8 @@
 Run a full checkpoint in this order:
 
-1. Run all tests
-2. Follow instructions in @.claude/literate.md
-3. Create a commit
-4. Push to github
+- Run all tests unless ROS2 is not installed
+- Update current.md with your latest context
+- Follow instructions in @.claude/codereview.md
+- Update any changed literate md files
+- Create a commit (no need for a pull request)
+- Push to github
