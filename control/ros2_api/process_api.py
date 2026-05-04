@@ -237,12 +237,10 @@ class ProcessApi(BaseApi):
             return (False, error_msg, log_file_path)
 
     def launch_command(self, command: str, log_name: Optional[str]) -> str:
-        print(f"[DEBUG] launch_command called with log_name={log_name}")
         process_id = str(uuid.uuid4())
 
         self.log_debug(f"Launching: {command}")
 
-        # Create log file if log_name is provided
         log_file_path = None
         if log_name:
             self.config.ensure_subdirs()
@@ -250,7 +248,6 @@ class ProcessApi(BaseApi):
             logs_dir = self.config.resolve_path(log_dir_config)
             timestamp = time.strftime("%Y%m%d_%H%M%S")
             log_file_path = str(logs_dir / f"{log_name}_{timestamp}.log")
-        print(f"[DEBUG] log_file_path resolved to: {log_file_path}")
 
         try:
             proc = subprocess.Popen(
@@ -283,22 +280,17 @@ class ProcessApi(BaseApi):
             output_thread = threading.Thread(target=self._capture_output, args=(process_id, process_info), daemon=True)
             output_thread.start()
 
-            print(f"[DEBUG] Returning from launch_command, process_id={process_id}")
             return process_id
 
         except Exception as e:
-            # If Popen itself fails, log the error to the log file if possible
             self.log_error(f"Failed to launch command '{command}': {e}")
             if log_file_path:
-                print(f"[DEBUG] Attempting to write exception log file: {log_file_path}")
                 try:
                     with open(log_file_path, 'w') as f:
                         f.write(f"Failed to launch command: {e}\n")
-                    print(f"[DEBUG] Successfully wrote exception log file: {log_file_path}")
-                    self.log_debug(f"[launch_command] Exception info written to log file: {log_file_path}")
+                    self.log_debug(f"Exception info written to log file: {log_file_path}")
                 except Exception as ex:
-                    print(f"[DEBUG] Failed to write exception log file: {log_file_path}, error: {ex}")
-            print(f"[DEBUG] Raising exception in launch_command")
+                    self.log_warn(f"Failed to write exception log file: {ex}")
             raise
 
     def kill_process(self, process_id: str) -> bool:
@@ -318,16 +310,13 @@ class ProcessApi(BaseApi):
             stdout, _ = proc_info.process.communicate()
             proc_info.is_running = False
 
-            # Write output to log file if specified
             if proc_info.log_file:
-                print(f"[DEBUG] Attempting to write graceful shutdown log file: {proc_info.log_file}")
                 try:
                     with open(proc_info.log_file, 'w') as f:
                         f.write(stdout)
-                    print(f"[DEBUG] Successfully wrote graceful shutdown log file: {proc_info.log_file}")
                     self.log_debug(f"Output written to log file: {proc_info.log_file}")
                 except Exception as e:
-                    print(f"[DEBUG] Failed to write graceful shutdown log file: {proc_info.log_file}, error: {e}")
+                    self.log_warn(f"Failed to write shutdown log file: {e}")
 
             self.log_debug(f"Process {process_id} terminated gracefully with SIGINT")
             return True
@@ -342,24 +331,6 @@ class ProcessApi(BaseApi):
             if self.kill_process(process_id):
                 killed_count += 1
         return killed_count
-
-    def get_process_output(
-        self, process_id: str, lines: Optional[int]
-    ) -> List[str]:
-        """Get captured output from process"""
-        if process_id not in self.processes:
-            return []
-
-        output = self.processes[process_id].output
-        if lines is None:
-            return output.copy()
-        return output[-lines:] if lines > 0 else []
-
-    def get_process_log_file(self, process_id: str) -> Optional[str]:
-        """Get log file path for a process"""
-        if process_id not in self.processes:
-            return None
-        return self.processes[process_id].log_file
 
     def get_running_processes(self) -> Dict[str, dict]:
         """Get status of all managed processes"""
@@ -451,6 +422,121 @@ class ProcessApi(BaseApi):
             except:
                 pass
             self.log_debug(f"Process {process_id} output capture finished.")
+
+    def get_process_pid(self, process_id: str) -> int | str:
+        info = self.processes.get(process_id)
+        return info.pid if info else "unknown"
+
+    def kill_ros_process(self, pid: int) -> "CommandResponse":
+        from control.commands.robot_controller import CommandResponse
+        try:
+            ps_result = subprocess.run(
+                ["ps", "-o", "pid,pgid", "-p", str(pid)],
+                check=False, capture_output=True, text=True, timeout=2,
+            )
+            is_group_leader = False
+            if ps_result.returncode == 0:
+                lines = ps_result.stdout.strip().split("\n")
+                if len(lines) > 1:
+                    parts = lines[1].split()
+                    if len(parts) >= 2:
+                        is_group_leader = parts[0].strip() == parts[1].strip()
+
+            target = f"-{pid}" if is_group_leader else str(pid)
+            label = f"process group {pid}" if is_group_leader else f"process {pid}"
+            try:
+                subprocess.run(["kill", "-TERM", target], check=True, timeout=2)
+                return CommandResponse(True, f"Sent SIGTERM to {label}\nRun 'system ps' to verify stopped")
+            except subprocess.CalledProcessError:
+                subprocess.run(["kill", "-KILL", target], check=True, timeout=2)
+                return CommandResponse(True, f"Force killed {label} (SIGKILL)")
+
+        except subprocess.CalledProcessError:
+            return CommandResponse(False, f"Failed to kill {pid}. May require sudo")
+        except subprocess.TimeoutExpired:
+            return CommandResponse(False, "Kill command timed out")
+        except OSError as e:
+            return CommandResponse(False, f"Error killing process: {e}")
+
+    def list_ros_processes(self) -> "CommandResponse":
+        from control.commands.robot_controller import CommandResponse
+        try:
+            result = subprocess.run(
+                ["ps", "aux"], check=False, capture_output=True, text=True, timeout=5
+            )
+            if result.returncode != 0:
+                return CommandResponse(False, "Failed to list processes")
+
+            ros_keywords = ["ros2", "nav2", "slam", "rviz", "gazebo", "amcl", "map_server", "robot_state"]
+            process_info = []
+            for line in result.stdout.split("\n")[1:]:
+                if any(kw in line.lower() for kw in ros_keywords):
+                    parts = line.split(None, 10)
+                    if len(parts) >= 11:
+                        pid, cpu, mem = parts[1], parts[2], parts[3]
+                        command = parts[10]
+                        if len(command) > 101:
+                            command = command[:98] + "..."
+                        process_info.append({"pid": pid, "cpu": cpu, "mem": mem, "command": command})
+
+            if not process_info:
+                return CommandResponse(True, "No ROS processes found")
+
+            lines = ["#  PID     CPU  MEM  COMMAND", "-" * 120]
+            for i, proc in enumerate(process_info, 1):
+                lines.append(f"{i:<2} {proc['pid']:<7} {proc['cpu']:>4} {proc['mem']:>4}  {proc['command']}")
+            lines += ["-" * 120, f"Total: {len(process_info)} ROS processes", "Use 'system kill <PID>' to kill a process"]
+            return CommandResponse(True, "\n".join(lines))
+
+        except subprocess.TimeoutExpired:
+            return CommandResponse(False, "Process listing timed out")
+        except Exception as e:
+            return CommandResponse(False, f"Error listing processes: {e}")
+
+    def list_launch_processes(self) -> "CommandResponse":
+        from control.commands.robot_controller import CommandResponse
+        try:
+            result = subprocess.run(
+                ["ps", "axo", "pid,pgid,ppid,user,%cpu,%mem,command"],
+                check=False, capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode != 0:
+                return CommandResponse(False, "Failed to list processes")
+
+            all_processes = {}
+            for line in result.stdout.split("\n")[1:]:
+                if "ros2" in line.lower() and "launch" in line.lower():
+                    parts = line.split(None, 6)
+                    if len(parts) >= 7:
+                        all_processes[parts[0]] = {
+                            "pid": parts[0], "pgid": parts[1], "ppid": parts[2],
+                            "cpu": parts[4], "mem": parts[5], "command": parts[6],
+                        }
+
+            parent_processes = []
+            for pid, proc in all_processes.items():
+                if proc["ppid"] in all_processes:
+                    continue
+                command = proc["command"]
+                if len(command) > 94:
+                    command = command[:91] + "..."
+                parent_processes.append({**proc, "command": command})
+
+            if not parent_processes:
+                return CommandResponse(True, "No ros2 launch processes found")
+
+            lines = ["#  PID     PGID    CPU  MEM  COMMAND", "-" * 120]
+            for i, proc in enumerate(parent_processes, 1):
+                lines.append(f"{i:<2} {proc['pid']:<7} {proc['pgid']:<7} {proc['cpu']:>4} {proc['mem']:>4}  {proc['command']}")
+            lines += ["-" * 120,
+                      f"Total: {len(parent_processes)} launch processes (parent processes only)",
+                      "Use 'system kill <PID>' to kill (kills process group if leader)"]
+            return CommandResponse(True, "\n".join(lines))
+
+        except subprocess.TimeoutExpired:
+            return CommandResponse(False, "Process listing timed out")
+        except Exception as e:
+            return CommandResponse(False, f"Error listing processes: {e}")
 
     def destroy_node(self):
         """Clean up all processes and shutdown"""

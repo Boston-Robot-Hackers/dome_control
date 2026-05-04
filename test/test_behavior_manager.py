@@ -47,40 +47,6 @@ class TestBehaviorManager:
                 '{"name": "describe_scene", "source": "cli", "slots": []}'
             )
 
-    def test_handle_describe_scene_announces_summary(self):
-        manager = BehaviorManager()
-        intent = manager.parse_intent(
-            '{"name": "describe_scene", "source": "cli", "slots": {}}'
-        )
-        announcements = []
-
-        result = manager.handle_intent(
-            intent,
-            describe_scene=lambda: "I see 2 cups and 1 can",
-            announce=announcements.append,
-        )
-
-        assert result.handled is True
-        assert result.announcement == "I see 2 cups and 1 can"
-        assert announcements == ["I see 2 cups and 1 can"]
-
-    def test_handle_unsupported_intent_does_not_announce(self):
-        manager = BehaviorManager()
-        intent = manager.parse_intent(
-            '{"name": "start_exploring", "source": "cli", "slots": {}}'
-        )
-        announcements = []
-
-        result = manager.handle_intent(
-            intent,
-            describe_scene=lambda: "unused",
-            announce=announcements.append,
-        )
-
-        assert result.handled is False
-        assert "Unsupported intent" in result.message
-        assert announcements == []
-
     def test_make_announcement_payload(self):
         payload = make_announcement_payload("I see a can")
 

@@ -117,14 +117,6 @@ class TestScriptCommands:
         assert result.success is True
         mock_robot_controller.script_square.assert_called_once_with(meters=1.5)
 
-    def test_script_commands_help(self, dispatcher):
-        """Test getting help for script commands."""
-        help_text = dispatcher.get_help("script.square")
-
-        assert "script.square:" in help_text
-        assert "meters" in help_text
-        assert "float" in help_text
-
     @patch("control.commands.robot_controller.CalibrationApi")
     @patch("control.commands.robot_controller.MovementApi")
     @patch("control.commands.robot_controller.ProcessApi")

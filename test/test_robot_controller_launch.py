@@ -21,11 +21,11 @@ class TestRobotControllerLaunch(unittest.TestCase):
              patch("control.commands.robot_controller.CalibrationApi"):
             self.controller = RobotController(self.config_manager)
 
-        self.controller._process = MagicMock()
+        self.controller.process_node = MagicMock()
 
     def test_launch_list(self):
         """Test launch list returns available launch types"""
-        self.controller._process.get_available_launch_types.return_value = [
+        self.controller.process_node.get_available_launch_types.return_value = [
             "nav",
             "slam",
             "map",
@@ -35,8 +35,8 @@ class TestRobotControllerLaunch(unittest.TestCase):
             "slam": MagicMock(launch_type="slam", description="SLAM toolbox"),
             "map": MagicMock(launch_type="map", description="Map server"),
         }
-        self.controller._process.get_launch_config.side_effect = lambda t: mock_configs[t]
-        self.controller._is_launch_running = MagicMock(return_value=False)
+        self.controller.process_node.get_launch_config.side_effect = lambda t: mock_configs[t]
+        self.controller.is_launch_running = MagicMock(return_value=False)
 
         response = self.controller.launch_list()
 
@@ -46,8 +46,8 @@ class TestRobotControllerLaunch(unittest.TestCase):
 
     def test_launch_start_success(self):
         """Test successful launch start"""
-        self.controller._process.launch_by_type.return_value = "test-process-id"
-        self.controller._is_launch_running = MagicMock(return_value=False)
+        self.controller.process_node.launch_by_type.return_value = "test-process-id"
+        self.controller.is_launch_running = MagicMock(return_value=False)
 
         response = self.controller.launch_start("nav", use_sim_time=True)
 
@@ -57,7 +57,7 @@ class TestRobotControllerLaunch(unittest.TestCase):
 
     def test_launch_start_conflict(self):
         """Test launch start with conflict"""
-        self.controller._is_launch_running = MagicMock(return_value=True)
+        self.controller.is_launch_running = MagicMock(return_value=True)
 
         response = self.controller.launch_start("nav")
 
@@ -66,10 +66,10 @@ class TestRobotControllerLaunch(unittest.TestCase):
 
     def test_launch_start_invalid_type(self):
         """Test launch start with invalid type"""
-        self.controller._process.launch_by_type.side_effect = ValueError(
+        self.controller.process_node.launch_by_type.side_effect = ValueError(
             "Unknown launch type: invalid"
         )
-        self.controller._is_launch_running = MagicMock(return_value=False)
+        self.controller.is_launch_running = MagicMock(return_value=False)
 
         response = self.controller.launch_start("invalid")
 
@@ -79,8 +79,8 @@ class TestRobotControllerLaunch(unittest.TestCase):
     def test_launch_stop_success(self):
         """Test successful launch stop"""
         self.controller.launch_process_ids["nav"] = "test-process-id"
-        self.controller._process.is_process_running.return_value = True
-        self.controller._process.kill_by_type.return_value = True
+        self.controller.process_node.is_process_running.return_value = True
+        self.controller.process_node.kill_by_type.return_value = True
 
         response = self.controller.launch_stop("nav")
 

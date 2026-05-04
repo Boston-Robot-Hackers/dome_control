@@ -62,9 +62,6 @@ class ConfigManager:
     def get_all_variables(self) -> dict[str, object]:
         return self.variables.copy()
 
-    def delete_variable(self, name: str):
-        del self.variables[name]
-
     def variable_exists(self, name: str) -> bool:
         return name in self.variables
 

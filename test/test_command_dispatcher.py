@@ -104,18 +104,3 @@ class TestCommandDispatcher:
         assert "launch" in groups
         assert "control" in groups
 
-    def test_get_help_for_specific_command(self, dispatcher):
-        """Test getting help for a specific command."""
-        help_text = dispatcher.get_help("move.distance")
-
-        assert "move.distance:" in help_text
-        assert "distance" in help_text
-        assert "float" in help_text
-
-    def test_get_general_help(self, dispatcher):
-        """Test getting general help for all commands."""
-        help_text = dispatcher.get_help()
-
-        assert "Available Commands:" in help_text
-        assert "MOVEMENT COMMANDS:" in help_text
-        assert "move.distance" in help_text

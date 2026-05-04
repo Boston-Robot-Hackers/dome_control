@@ -5,7 +5,6 @@ import time
 import rclpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import BatteryState
 
 import control.commands.config_manager as cm
 import control.ros2_api.base_api as base
@@ -28,17 +27,9 @@ class MovementApi(base.BaseApi):
             self.odom_callback,
             10,
         )
-        self.battery_sub = self.create_subscription(
-            BatteryState,
-            "/battery_state",
-            self.battery_callback,
-            10,
-        )
-
         self._validate_config()
 
         self.current_pose = None
-        self.current_voltage = None
 
     @property
     def linear(self) -> float:
@@ -159,7 +150,5 @@ class MovementApi(base.BaseApi):
         """Callback for odometry updates."""
         self.current_pose = msg.pose.pose
 
-    def battery_callback(self, msg):
-        """Callback for battery state updates."""
-        self.current_voltage = msg.voltage
+
 

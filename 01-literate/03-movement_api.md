@@ -1,0 +1,119 @@
+---
+version: "1.1"
+generated: "2026-05-04"
+---
+
+# MovementApi: Velocity Control and Odometry
+
+`MovementApi` is the thin ROS2 layer between the robot's wheels and the command layer. It publishes `Twist` messages to `/cmd_vel` and subscribes to `/odom`. All movement commands in the stack eventually call one of its three primitives: `cmd_vel_helper`, `turn_amount`, or `stop`.
+
+## Inheriting from BaseApi
+
+`MovementApi` extends `BaseApi`, which wraps `rclpy.Node`. This gives it access to `create_publisher`, `create_subscription`, `log_info`, and the `config` property without re-implementing node boilerplate.
+
+```python
+class MovementApi(base.BaseApi):
+    def __init__(self, config_manager: cm.ConfigManager = None):
+        super().__init__("movement_api", config_manager)
+        self.cmd_vel_pub = self.create_publisher(Twist, "/cmd_vel", 1)
+        self.odom_sub = self.create_subscription(
+            Odometry, "/odom", self.odom_callback, 10
+        )
+        self._validate_config()
+        self.current_pose = None
+```
+
+A queue depth of 1 for `cmd_vel` is intentional: if the robot can't keep up with commands, the newest command should win, not queue behind stale ones.
+
+## Speed as Config Properties
+
+Rather than capturing speeds at construction time, each speed is a live property reading from `ConfigManager`. This means `config set linear_speed 0.4` takes effect on the next movement call without restarting the node:
+
+```python
+@property
+def linear(self) -> float:
+    return self.config.get_variable("linear_speed")
+```
+
+The same pattern applies to `angular`, `linear_min`, `linear_max`, `angular_min`, `angular_max`.
+
+## Config Validation at Startup
+
+The six speed variables are required. `_validate_config` checks all of them at construction time so failures are loud and early rather than silent `None` math errors mid-movement:
+
+```python
+def _validate_config(self):
+    required_vars = ["linear_speed", "angular_speed",
+                     "linear_min", "linear_max", "angular_min", "angular_max"]
+    missing = [v for v in required_vars if self.config.get_variable(v) is None]
+    if missing:
+        raise ValueError(f"Missing required configuration variables: {', '.join(missing)}")
+```
+
+## The Central Primitive: cmd_vel_helper
+
+All movement boils down to this method — publish a `Twist` at a fixed rate for a given duration, then stop:
+
+```python
+def cmd_vel_helper(self, linear: float, angular: float, seconds: float):
+    if not self.blocking_ok:
+        raise RuntimeError("cmd_vel_helper called from a non-blocking context")
+    if not self.check_velocity_limits(linear, angular):
+        return
+    if self.config.is_dry_run():
+        self.log_info(f"DRY RUN: Would move linear={linear}, angular={angular} for {seconds}s")
+        return
+
+    twist = Twist()
+    twist.linear.x = linear
+    twist.angular.z = angular
+    start_time = time.time()
+    rate_hz = 10
+    sleep_duration = 1.0 / rate_hz
+    while rclpy.ok() and (time.time() - start_time) < seconds:
+        self.cmd_vel_pub.publish(twist)
+        rclpy.spin_once(self, timeout_sec=sleep_duration)
+        time.sleep(sleep_duration)
+
+    twist.linear.x = 0.0
+    twist.angular.z = 0.0
+    self.cmd_vel_pub.publish(twist)
+```
+
+The `blocking_ok` flag guards against calling this from a lifecycle node's spin loop, where blocking would deadlock. The explicit zero-velocity stop at the end is a safety measure: the robot stops even if the caller crashes after calling this.
+
+## Movement Primitives
+
+The higher-level methods are all thin wrappers over `cmd_vel_helper`:
+
+```python
+def move_dist(self, distance: float):
+    seconds = abs(distance) / self.linear
+    actual_speed = self.linear if distance >= 0 else -self.linear
+    self.cmd_vel_helper(actual_speed, 0.0, seconds)
+
+def turn_amount(self, angle: float):
+    seconds = abs(angle) / self.angular
+    angular_speed = self.angular if angle >= 0 else -self.angular
+    self.cmd_vel_helper(0.0, angular_speed, seconds)
+
+def turn_degrees(self, degrees: float):
+    self.turn_amount(math.radians(degrees))
+```
+
+Sign conventions: positive distance = forward, positive angle = counterclockwise (ROS standard).
+
+## Odometry Subscription
+
+The subscription stores the latest pose but does not act on it. This is a foundation for future closed-loop control:
+
+```python
+def odom_callback(self, msg):
+    self.current_pose = msg.pose.pose
+```
+
+## Observations
+
+- **Open-loop movement.** `move_dist` computes time from speed; it does not use odometry feedback. Wheel slip or hardware variation accumulates as error.
+- **10 Hz fixed rate.** The publish loop runs at a hardcoded 10 Hz. A configurable rate or ROS timer would be more idiomatic.
+- **Blocking architecture.** `cmd_vel_helper` blocks the calling thread. This is simple but prevents concurrent operations and is incompatible with lifecycle node contexts.

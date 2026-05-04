@@ -5,7 +5,6 @@
 """Pure behavior-manager logic for intent dispatch."""
 
 import json
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from control.announcement_contract import (
@@ -15,7 +14,6 @@ from control.announcement_contract import (
 
 __all__ = [
     'BehaviorManager',
-    'BehaviorResult',
     'Intent',
     'make_announcement_msg',
     'make_announcement_payload',
@@ -27,13 +25,6 @@ class Intent:
     name: str
     source: str
     slots: dict
-
-
-@dataclass
-class BehaviorResult:
-    handled: bool
-    message: str
-    announcement: str | None = None
 
 
 class BehaviorManager:
@@ -61,16 +52,3 @@ class BehaviorManager:
             raise ValueError("Intent field 'slots' must be an object")
 
         return Intent(name=name, source=source, slots=slots)
-
-    def handle_intent(
-        self,
-        intent: Intent,
-        describe_scene: Callable[[], str],
-        announce: Callable[[str], None],
-    ) -> BehaviorResult:
-        if intent.name == "describe_scene":
-            summary = describe_scene()
-            announce(summary)
-            return BehaviorResult(True, "describe_scene handled", summary)
-
-        return BehaviorResult(False, f"Unsupported intent: {intent.name}")

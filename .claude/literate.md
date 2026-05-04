@@ -20,3 +20,14 @@ Guidelines:
 - Call out any non-obvious choices, tradeoffs, or assumptions
 
 Output format: a single Markdown document with alternating prose and fenced Python code blocks. Include diagrams of flow, algorithm, interesting or tricky data structures. Do not include the full program text. Put the file in the `01-literate/` directory.
+
+Filename: prefix with a two-digit number so files sort in logical reading sequence (e.g. `01-base_api.md`, `07-robot_controller.md`). Choose the number to reflect dependency order — foundational modules first, higher-level orchestration last. Number those that are sort of trivial or self evident as appendicixes as X01, X02 etc.
+
+Frontmatter: begin every file with YAML frontmatter containing `version` (start at `1.0`) and `generated` (ISO 8601 date). Example:
+
+```yaml
+---
+version: "1.0"
+generated: "2026-05-04"
+---
+```
