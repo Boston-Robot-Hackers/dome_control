@@ -4,6 +4,7 @@ Command Dispatcher - Central command registry and execution dispatcher
 Author: Pito Salas and Claude Code
 Open Source Under MIT license
 """
+import shlex
 from typing import Any
 
 import control.commands.command_def as cd
@@ -183,7 +184,10 @@ class CommandDispatcher:
         return param_def.param_type(value)
 
     def dispatch_text(self, text: str) -> rc.CommandResponse:
-        tokens = text.strip().split()
+        try:
+            tokens = shlex.split(text.strip())
+        except ValueError:
+            tokens = text.strip().split()
         if not tokens:
             return rc.CommandResponse(success=False, message="Empty command")
 
@@ -218,6 +222,13 @@ class CommandDispatcher:
         cmd_def = self.get_command_info(command_name)
         if not cmd_def:
             return self.execute(command_name, {})
+
+        # If last param is str and there are extra tokens, join them into one string
+        if (cmd_def.parameters and
+                cmd_def.parameters[-1].param_type == str and
+                len(args) > len(cmd_def.parameters)):
+            last_idx = len(cmd_def.parameters) - 1
+            args = list(args[:last_idx]) + [" ".join(str(a) for a in args[last_idx:])]
 
         params = {
             cmd_def.parameters[i].name: args[i]

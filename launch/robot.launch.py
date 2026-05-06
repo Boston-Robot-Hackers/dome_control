@@ -19,6 +19,12 @@ def generate_launch_description():
             executable='speech_output',
             name='speech_output',
             output='screen',
+            additional_env={
+                'PIPER_BIN': '/home/pitosalas/ros2_ws/src/control/bin/piper/piper',
+                'PIPER_MODEL_PATH': '/home/pitosalas/ros2_ws/src/control/piper_model/en_US-lessac-medium.onnx',
+                'PIPER_LENGTH_SCALE': '1.0',
+                'SPEECH_GAIN': '0.25',
+            },
         ),
         Node(
             package='control',
