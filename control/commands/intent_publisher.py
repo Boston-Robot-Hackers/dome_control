@@ -5,7 +5,7 @@
 """Publishes intent JSON to /intent. Accepts injected publish_fn for testing."""
 
 import json
-from typing import Callable, Optional
+from typing import Callable
 
 
 class IntentPublisher:
@@ -15,20 +15,20 @@ class IntentPublisher:
     In production, leave publish_fn=None — IntentApi is created lazily.
     """
 
-    def __init__(self, publish_fn: Optional[Callable[[str], None]] = None):
-        self._publish_fn = publish_fn
-        self._api = None
+    def __init__(self, publish_fn: Callable[[str], None] | None = None):
+        self.publish_fn = publish_fn
+        self.api = None
 
-    def publish(self, name: str, source: str = "cli", slots: dict = None) -> None:
+    def publish(self, name: str, source: str = "cli", slots: dict | None = None) -> None:
         payload = json.dumps({"name": name, "source": source, "slots": slots or {}})
-        if self._publish_fn is not None:
-            self._publish_fn(payload)
+        if self.publish_fn is not None:
+            self.publish_fn(payload)
         else:
-            self._get_api().publish(name, source, slots or {})
+            self.get_api().publish(name, source, slots or {})
 
-    def _get_api(self):
-        if self._api is None:
+    def get_api(self):
+        if self.api is None:
             from control.ros2_api.intent_api import IntentApi
             from control.commands.config_manager import ConfigManager
-            self._api = IntentApi(ConfigManager())
-        return self._api
+            self.api = IntentApi(ConfigManager())
+        return self.api

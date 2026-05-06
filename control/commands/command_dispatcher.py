@@ -16,7 +16,7 @@ import control.commands.robot_controller as rc
 import control.commands.system_commands as sys_cmd
 
 
-_ABBREV_TO_FULL = {
+ABBREV_TO_FULL = {
     "m": "move", "t": "turn", "r": "robot", "lch": "launch",
     "c": "config", "sys": "system", "scr": "script",
     "fwd": "forward", "bak": "backward", "dis": "distance", "tim": "time",
@@ -29,16 +29,16 @@ _ABBREV_TO_FULL = {
     "sav": "save", "ser": "serialize",
     "hlp": "help", "q": "exit", "x": "exit",
 }
-_FULL_NAMES = set(_ABBREV_TO_FULL.values())
+FULL_NAMES = set(ABBREV_TO_FULL.values())
 
 
-def _resolve_keyword(word: str) -> str:
-    if word in _FULL_NAMES:
+def resolve_keyword(word: str) -> str:
+    if word in FULL_NAMES:
         return word
-    return _ABBREV_TO_FULL.get(word, word)
+    return ABBREV_TO_FULL.get(word, word)
 
 
-def _parse_value(value_str: str) -> Any:
+def parse_value(value_str: str) -> Any:
     if value_str.lower() in ("true", "yes", "1"):
         return True
     if value_str.lower() in ("false", "no", "0"):
@@ -55,7 +55,7 @@ def _parse_value(value_str: str) -> Any:
     return value_str
 
 
-_BEHAVIOR_COMMANDS: dict[str, str] = {
+BEHAVIOR_COMMANDS: dict[str, str] = {
     "intent.stop": "stop",
     "intent.explore": "explore",
     "intent.describe_scene": "describe_scene",
@@ -169,22 +169,23 @@ class CommandDispatcher:
         if not tokens:
             return rc.CommandResponse(success=False, message="Empty command")
 
-        command = _resolve_keyword(tokens[0])
+        command = resolve_keyword(tokens[0])
 
         if len(tokens) == 1:
             command_name = command
             args = []
         else:
-            second = _resolve_keyword(tokens[1])
+            second = resolve_keyword(tokens[1])
             candidate = f"{command}.{second}"
-            if second in _FULL_NAMES or second != tokens[1] or candidate in self.commands or candidate in _BEHAVIOR_COMMANDS:
+            in_registry = candidate in self.commands or candidate in BEHAVIOR_COMMANDS
+            if second in FULL_NAMES or second != tokens[1] or in_registry:
                 command_name = candidate
-                args = [_parse_value(t) for t in tokens[2:]]
+                args = [parse_value(t) for t in tokens[2:]]
             else:
                 command_name = command
-                args = [_parse_value(t) for t in tokens[1:]]
+                args = [parse_value(t) for t in tokens[1:]]
 
-        intent_name = _BEHAVIOR_COMMANDS.get(command_name)
+        intent_name = BEHAVIOR_COMMANDS.get(command_name)
         if intent_name is not None:
             slots = {}
             cmd_def = self.get_command_info(command_name)
@@ -193,7 +194,7 @@ class CommandDispatcher:
                     cmd_def.parameters[i].name: args[i]
                     for i in range(min(len(args), len(cmd_def.parameters)))
                 }
-            self._publish_intent(intent_name, slots)
+            self.publish_intent(intent_name, slots)
             return rc.CommandResponse(True, f"Intent published: {intent_name}")
 
         cmd_def = self.get_command_info(command_name)
@@ -206,7 +207,7 @@ class CommandDispatcher:
         }
         return self.execute(command_name, params)
 
-    def _publish_intent(self, name: str, slots: dict) -> None:
+    def publish_intent(self, name: str, slots: dict) -> None:
         if self.intent_publisher is not None:
             self.intent_publisher.publish(name, "cli", slots)
         else:

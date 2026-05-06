@@ -51,7 +51,7 @@ class TestPerceptionBehaviorExecute:
         pb.execute(make_intent("describe_scene"))
 
         node.describe_scene_client.call_async.assert_called_once()
-        future.add_done_callback.assert_called_once_with(pb._on_describe_scene_done)
+        future.add_done_callback.assert_called_once_with(pb.on_describe_scene_done)
 
     def test_describe_scene_warns_when_service_not_ready(self):
         node = make_mock_node(service_ready=False)
@@ -90,7 +90,7 @@ class TestPerceptionBehaviorCallbacks:
         future.result.return_value = response
 
         pb = PerceptionBehavior(node)
-        pb._on_describe_scene_done(future)
+        pb.on_describe_scene_done(future)
 
         node.announcement_pub.publish.assert_called_once()
         node.get_logger().info.assert_called_with("I see a chair")
@@ -104,7 +104,7 @@ class TestPerceptionBehaviorCallbacks:
         future.result.return_value = response
 
         pb = PerceptionBehavior(node)
-        pb._on_describe_scene_done(future)
+        pb.on_describe_scene_done(future)
 
         node.announcement_pub.publish.assert_not_called()
         node.get_logger().warn.assert_called_once()
@@ -115,7 +115,7 @@ class TestPerceptionBehaviorCallbacks:
         future.result.side_effect = RuntimeError("timeout")
 
         pb = PerceptionBehavior(node)
-        pb._on_describe_scene_done(future)
+        pb.on_describe_scene_done(future)
 
         node.announcement_pub.publish.assert_not_called()
         node.get_logger().error.assert_called_once()

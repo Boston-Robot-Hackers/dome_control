@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple CLI using SimpleCommandParser instead of Click
+Simple CLI using CommandDispatcher
 Author: Pito Salas and Claude Code
 Open Source Under MIT license
 """
@@ -142,14 +142,14 @@ class SimpleCLI:
         first = tokens[0].lower()
 
         if first in ("help", "hlp"):
-            from control.commands.command_dispatcher import _resolve_keyword
+            from control.commands.command_dispatcher import resolve_keyword
             # Reconstruct minimal parsed structure for help handler
             class _P:
                 pass
             p = _P()
             p.command = "help"
-            p.subcommand = _resolve_keyword(tokens[1]) if len(tokens) > 1 else None
-            p.arguments = [_resolve_keyword(t) for t in tokens[2:]]
+            p.subcommand = resolve_keyword(tokens[1]) if len(tokens) > 1 else None
+            p.arguments = [resolve_keyword(t) for t in tokens[2:]]
             self._handle_help(p)
             return
 

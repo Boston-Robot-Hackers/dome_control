@@ -21,19 +21,19 @@ class PerceptionBehavior:
 
     def execute(self, intent: Intent, node=None) -> None:
         if intent.name == "describe_scene":
-            self._call_describe_scene()
+            self.call_describe_scene()
         elif intent.name == "count_objects":
             self.node.get_logger().warn("count_objects intent not yet implemented")
 
-    def _call_describe_scene(self) -> None:
+    def call_describe_scene(self) -> None:
         if not self.node.describe_scene_client.service_is_ready():
             self.node.get_logger().warn("/describe_scene service is not available")
             return
         from std_srvs.srv import Trigger  # lazy — avoids rclpy at import time
         future = self.node.describe_scene_client.call_async(Trigger.Request())
-        future.add_done_callback(self._on_describe_scene_done)
+        future.add_done_callback(self.on_describe_scene_done)
 
-    def _on_describe_scene_done(self, future) -> None:
+    def on_describe_scene_done(self, future) -> None:
         try:
             response = future.result()
         except Exception as exc:
@@ -46,9 +46,9 @@ class PerceptionBehavior:
             )
             return
 
-        self._publish_announcement(response.message)
+        self.publish_announcement(response.message)
 
-    def _publish_announcement(self, text: str) -> None:
+    def publish_announcement(self, text: str) -> None:
         msg = make_announcement_msg(text)
         self.node.announcement_pub.publish(msg)
         self.node.get_logger().info(text)
