@@ -64,6 +64,15 @@ BEHAVIOR_COMMANDS: dict[str, str] = {
     "scene.count": "count_objects",
 }
 
+BEHAVIOR_COMMAND_DESCRIPTIONS: dict[str, tuple[str, str]] = {
+    "intent.stop":           ("Stop the robot", "intent"),
+    "intent.explore":        ("Start autonomous exploration", "intent"),
+    "intent.describe_scene": ("Describe the current scene", "intent"),
+    "intent.count_objects":  ("Count objects in scene", "intent"),
+    "scene.describe":        ("Describe the current scene", "scene"),
+    "scene.count":           ("Count objects in scene", "scene"),
+}
+
 
 class CommandDispatcher:
     """
@@ -83,11 +92,18 @@ class CommandDispatcher:
         commands.update(nav_cmd.build_navigation_commands())
         commands.update(lch_cmd.build_launch_commands())
         commands.update(sys_cmd.build_system_commands())
+        for name, (description, group) in BEHAVIOR_COMMAND_DESCRIPTIONS.items():
+            commands[name] = cd.CommandDef("", [], description, group)
         return commands
 
     def execute(
         self, command_name: str, params: dict[str, object]
     ) -> rc.CommandResponse:
+        intent_name = BEHAVIOR_COMMANDS.get(command_name)
+        if intent_name is not None:
+            self.publish_intent(intent_name, params)
+            return rc.CommandResponse(True, f"Intent published: {intent_name}")
+
         if command_name not in self.commands:
             return rc.CommandResponse(
                 success=False, message=f"Unknown command: {command_name}"

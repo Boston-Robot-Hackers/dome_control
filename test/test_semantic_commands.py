@@ -37,8 +37,9 @@ class TestSceneCommandsViaDispatchText:
         assert result.success is True
         assert json.loads(published[0])["name"] == "count_objects"
 
-    def test_scene_describe_not_in_registry(self, setup):
-        dispatcher, _ = setup
+    def test_scene_describe_via_execute(self, setup):
+        dispatcher, published = setup
         result = dispatcher.execute("scene.describe", {})
-        assert result.success is False
-        assert "Unknown command" in result.message
+        assert result.success is True
+        import json
+        assert json.loads(published[0])["name"] == "describe_scene"
