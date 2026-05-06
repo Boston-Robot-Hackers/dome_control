@@ -194,6 +194,7 @@ class VoiceRuntime:
             ok_fn=ok_fn,
             timeout_s=wake_timeout_s,
             time_fn=self.time_fn,
+            cooldown_s=self.config.wake_cooldown_secs,
         )
         if not wake["wake_hit"]:
             return VoiceTurn(
@@ -457,7 +458,16 @@ def wait_for_wake(
     ok_fn: Callable[[], bool] = lambda: True,
     timeout_s: float | None = None,
     time_fn: Callable[[], float] = time.monotonic,
+    cooldown_s: float = 0.0,
 ) -> dict[str, Any]:
+    # Drain buffered pipe audio before scoring — prevents stale chunks from
+    # immediately re-triggering the wake word after a turn completes.
+    if cooldown_s > 0:
+        drain_end = time_fn() + cooldown_s
+        while ok_fn() and time_fn() < drain_end:
+            if read_mono_chunk(stream, CHUNK, live_filter) is None:
+                break
+
     noise_window: collections.deque[float] = collections.deque(maxlen=50)
     scores: list[float] = []
     wake_hits = 0

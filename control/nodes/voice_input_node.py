@@ -3,7 +3,6 @@
 
 import json
 import os
-import time
 
 import rclpy
 from rclpy.node import Node
@@ -82,7 +81,6 @@ def main():
                 break
             node.process_turn(turn, device_index=device_index)
             node.publish_state("IDLE")
-            time.sleep(voice_config.wake_cooldown_secs)
 
     finally:
         runtime.close()
