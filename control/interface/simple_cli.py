@@ -124,7 +124,7 @@ class SimpleCLI:
             print(f"No help available for: {command_str}")
 
     def handle_help(self, subcommand: str | None, arguments: list) -> None:
-        if len(arguments) == 1 and arguments[0] == "commands":
+        if subcommand == "commands":
             self.show_all_commands()
             return
         if subcommand:

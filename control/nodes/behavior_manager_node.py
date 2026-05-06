@@ -4,6 +4,7 @@
 # Open Source Under MIT license
 """ROS2 node that receives intents and routes to domain behavior handlers."""
 
+import os
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -16,13 +17,15 @@ from control.behaviors.perception_behavior import PerceptionBehavior
 from control.commands.config_manager import ConfigManager
 from control.commands.robot_controller import RobotController
 
+DEFAULT_CONFIG = os.path.expanduser("~/ros2_ws/src/control/config/control-config.yaml")
+
 
 class BehaviorManagerNode(Node):
     def __init__(self):
         super().__init__("behavior_manager")
         self.parser = IntentParser()
 
-        rc = RobotController(ConfigManager())
+        rc = RobotController(ConfigManager(DEFAULT_CONFIG))
         self.handlers = [
             MotionBehavior(rc),
             PerceptionBehavior(self),
