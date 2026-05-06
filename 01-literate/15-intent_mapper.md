@@ -1,26 +1,32 @@
 ---
 version: "1.0"
-generated: "2026-05-04"
+generated: "2026-05-06"
 ---
 
 # IntentMapper
 
-`intent_mapper.py` converts raw transcription text into structured intent dicts. It is deliberately isolated: no ROS2, no audio, no network — pure string matching. This makes it independently testable.
+`intent_mapper.py` is the small translation layer between Vosk transcript text
+and normalized intent dictionaries. Its job is not to understand language in a
+general sense. It maps a constrained command vocabulary into the robot's
+existing intent contract, with the smallest amount of logic needed to keep the
+voice path predictable.
 
-## Constrained Vocabulary
+## Why This Module Exists
+
+Voice input is already constrained by the recognizer. That makes a full NLU
+stack unnecessary here and, more importantly, undesirable. The mapper stays as
+plain substring matching so it is easy to reason about, easy to test, and easy
+to keep aligned with the wake-word and grammar lists used by the runtime.
 
 ```python
 VOSK_COMMANDS = json.dumps([
+    "go forward", "go backward", "turn left", "turn right",
     "what do you see", "describe the scene", "what do you see around you",
     "look around", "what's there",
     "how many", "count",
     "stop", "halt",
-    "go home", "return home", "come back", "home",
     "start exploring", "explore",
-    "follow me", "follow",
     "be quiet", "quiet",
-    "go to sleep", "sleep",
-    "wake up",
     "battery", "battery level",
     "where are you", "where",
     "get status", "what's your status", "what's going on",
@@ -28,62 +34,93 @@ VOSK_COMMANDS = json.dumps([
 ])
 ```
 
-This list is passed to Vosk's `KaldiRecognizer` as the allowed vocabulary. Vosk constrains its beam search to only produce tokens from this list, which dramatically improves recognition accuracy for short command phrases at the cost of rejecting anything not in the list. `[unk]` is the Vosk token for "I heard speech but it matched nothing".
+This list is both documentation and a recognition fence. Anything not in the
+list is intentionally out of scope for the voice path. The current set is
+trimmed to the intents the robot actually supports from voice.
 
-The vocabulary list must stay in sync with the phrases matched in `map_intent`. If a phrase is matched in `map_intent` but not in `VOSK_COMMANDS`, Vosk will never transcribe it.
-
-## Intent Mapping
+## Mapping Strategy
 
 ```python
-class IntentMapper:
-    def map_intent(self, text: str) -> Optional[dict]:
-        t = text.lower().strip()
-        if not t or t == "[unk]":
-            return None
-
-        if _contains(t, "what do you see", "describe", "what's there", "look around", ...):
-            return {"name": "describe_scene", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "how many", "count"):
-            obj = _extract_object(t)
-            return {"name": "count_objects", "source": "voice",
-                    "slots": {"object_type": obj} if obj else {}}
-        ...
-        return None
+PHRASE_INTENTS = (
+    (("stop", "halt"), "stop"),
+    (("go forward",), "move_forward"),
+    (("go backward",), "move_backward"),
+    (("turn left",), "turn_left"),
+    (("turn right",), "turn_right"),
+    (("start exploring", "explore"), "start_exploring"),
+    (("be quiet", "quiet"), "be_quiet"),
+    (("battery",), "get_battery"),
+    (("where are you", "where"), "get_location"),
+    (("get status", "what's your status", "what's going on", "status"), "get_status"),
+)
 ```
 
-The mapping is a sequence of `if _contains(...)` checks — no fancy NLU, no regex, just substring matching on lowercased text. This is appropriate for constrained-vocabulary voice commands where the recogniser already ensures the text is one of a small set of phrases.
-
-`None` return means "no recognisable intent" — the caller (`VoiceInputNode`) responds with "say again."
-
-## Object Extraction
+The mapper is intentionally table-driven. The data structure is the important
+part: it makes the accepted phrases obvious, keeps the `map_intent()` body
+small, and makes future additions or removals mechanical.
 
 ```python
-OBJECT_TYPES = ["can", "bottle", "person", "chair", "table", "ball", "cup", "box"]
+def map_intent(self, text: str) -> dict | None:
+    normalized_text = text.lower().strip()
+    if not normalized_text or normalized_text == "[unk]":
+        return None
 
-def _extract_object(text: str) -> Optional[str]:
-    for obj in OBJECT_TYPES:
-        if obj in text:
-            return obj
+    if contains_phrase(normalized_text, DESCRIBE_SCENE_PHRASES):
+        return {"name": "describe_scene", "source": self.SOURCE, "slots": {}}
+
+    if contains_phrase(normalized_text, COUNT_OBJECT_PHRASES):
+        return make_count_objects_intent(normalized_text, self.SOURCE)
+
+    for phrases, name in PHRASE_INTENTS:
+        if contains_phrase(normalized_text, phrases):
+            return {"name": name, "source": self.SOURCE, "slots": {}}
+
     return None
 ```
 
-For `count_objects`, the mapper tries to extract what type of object to count from the transcript. "How many chairs" → `slots: {object_type: "chair"}`. If no object type is found, `slots` is empty and the behavior manager must decide how to handle the underspecified intent.
+The function performs three steps:
 
-## Module-Level Compatibility Wrapper
+1. Normalize the transcript.
+2. Check for the semantic query patterns first.
+3. Fall back to the command phrase table.
+
+That order matters. A voice command like `count cans` should route into the
+object-count path before the generic intent matcher sees the word `count`.
+
+## Object Extraction
+
+`count_objects` is the only intent here that carries a slot.
 
 ```python
-_DEFAULT_MAPPER = IntentMapper()
-
-def map_intent(text: str) -> Optional[dict]:
-    """Compatibility wrapper for existing call sites and tests."""
-    return _DEFAULT_MAPPER.map_intent(text)
+def make_count_objects_intent(text: str, source: str) -> dict:
+    object_type = extract_object(text)
+    slots = {"object_type": object_type} if object_type else {}
+    return {"name": "count_objects", "source": source, "slots": slots}
 ```
 
-A module-level `map_intent` function wraps the class for callers that imported the old functional API before `IntentMapper` was introduced as a class.
+The extraction step is intentionally simple. It looks for known object words
+and fills the slot if one is present. If no object type appears in the
+transcript, the intent is still valid and the behavior layer can decide how to
+respond.
+
+## Compatibility
+
+```python
+DEFAULT_MAPPER = IntentMapper()
+
+def map_intent(text: str) -> dict | None:
+    return DEFAULT_MAPPER.map_intent(text)
+```
+
+The module-level wrapper keeps the old call sites working while the class-based
+API remains the canonical implementation.
 
 ## Observations
 
-- `_contains` matches substrings, so "quiet" would match inside "not quiet". For the constrained Vosk vocabulary this isn't a problem in practice, but it's a subtle correctness issue if vocabulary expands.
-- Intents like `return_home`, `start_exploring`, `follow_me`, `sleep`, `wake`, `get_battery`, `get_location`, `get_status` are mapped but `BehaviorManager.handle_intent` only handles `describe_scene`. All others silently log "Unsupported intent."
-- Adding new intents requires changes in three places: `VOSK_COMMANDS` vocabulary, `map_intent` matching, and `BehaviorManager.handle_intent` handling.
+- The mapper is deliberately conservative. If a phrase is removed from the
+  grammar or the intent table, the voice path stops recognizing it instead of
+  guessing.
+- The current voice contract does not include `go home`, `follow me`, `sleep`,
+  or `wake`, so those phrases are intentionally absent from this version.
+- The matcher uses substring checks. That is enough for the constrained grammar
+  and keeps the implementation easy to audit.

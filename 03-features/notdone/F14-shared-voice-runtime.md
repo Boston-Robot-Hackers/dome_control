@@ -2,9 +2,9 @@
 ## F14 — Shared tuned voice runtime with thin ROS wrapper
 **Priority**: High
 **Done:** no
-**Tasks File Created:** no
-**Tests Written:** no
-**Test Passing:** no
+**Tasks File Created:** yes
+**Tests Written:** yes
+**Test Passing:** yes
 **Description**: Replace the current ROS-heavy voice input implementation with a
 small shared runtime in `control/voice` that owns the Raspberry Pi audio loop:
 microphone capture, live filtering, wake-word detection, command capture, and

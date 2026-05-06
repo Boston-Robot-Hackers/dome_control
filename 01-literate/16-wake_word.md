@@ -1,13 +1,16 @@
 ---
 version: "1.0"
-generated: "2026-05-04"
+generated: "2026-05-06"
 ---
 
 # WakeWordDetector
 
-`wake_word.py` continuously listens for a wake phrase ("Hey Jarvis") using openWakeWord. When detected, it signals the voice pipeline to start listening for a command.
+`wake_word.py` provides the wake-word half of the voice loop. It keeps the
+openWakeWord dependency isolated behind a small class that can be configured at
+construction time and used from the ROS adapter or from tests with injected
+fakes.
 
-## Lazy Dependency Loading
+## Dependency Isolation
 
 ```python
 def _load_deps():
@@ -16,56 +19,68 @@ def _load_deps():
         import pyaudio
         from openwakeword.model import Model
     except ImportError as exc:
-        raise RuntimeError("Install voice deps: pip install openwakeword pyaudio numpy") from exc
+        raise RuntimeError(
+            "Install voice deps: pip install openwakeword pyaudio numpy"
+        ) from exc
     return np, pyaudio, Model
 ```
 
-Dependencies are imported inside a function rather than at module top-level. This allows the rest of the control package to import `wake_word` on systems without audio libraries installed — the error only surfaces when `WakeWordDetector()` is constructed.
+This lazy import pattern keeps the rest of `control` importable on machines that
+do not have the voice stack installed. The error only appears when the wake-word
+detector is actually constructed.
 
-## Detection Loop
+## Model Selection
+
+The detector now accepts a wake-word name, threshold, and wake-hit count rather
+than baking those values into the class. That makes it match the tuned voice
+parameters exposed in `control.voice.runtime`.
+
+```python
+def _resolve_model_path(name_or_path: str) -> str:
+    if os.path.isabs(name_or_path) and os.path.exists(name_or_path):
+        return name_or_path
+
+    import openwakeword as oww
+
+    models_dir = os.path.join(os.path.dirname(oww.__file__), "resources", "models")
+    ...
+```
+
+The resolver still supports either an explicit ONNX path or a short model name.
+That keeps the detector useful for both the stock bundled model and custom tuned
+models.
+
+## Wake Detection
 
 ```python
 def wait_for_wake(self, ok_fn: Callable[[], bool] = lambda: True) -> bool:
     self._model.reset()
+    wake_hits = 0
     while ok_fn():
         audio = self._np.frombuffer(
             self._stream.read(self.FRAME_LENGTH, exception_on_overflow=False),
             dtype=self._np.int16,
         )
         score = list(self._model.predict(audio).values())[0]
-        now = time.time()
-        if score > self.THRESHOLD and (now - self._last_wake) > self.DEBOUNCE_S:
-            self._last_wake = now
-            return True
-    return False
+        ...
 ```
 
-`ok_fn` is a callable checked each iteration — `rclpy.ok` in production, `lambda: True` in tests. This lets the loop terminate cleanly when the ROS2 context shuts down without requiring a separate thread or event.
+The detector requires a configured number of consecutive wake hits before it
+fires. That matches the tuning workflow, where one threshold is not always
+enough to eliminate chatter.
 
-The model is reset at the start of each `wait_for_wake` call to clear any residual scores from the previous detection window.
+The `ok_fn` callback remains the shutdown hook. In production it is `rclpy.ok`;
+in tests it can be a constant lambda.
 
-## Debouncing
+## Stream Lifecycle
 
-```python
-THRESHOLD = 0.5
-DEBOUNCE_S = 4.0
-```
-
-After a wake word fires, the detector ignores further detections for 4 seconds. This prevents the robot from repeatedly triggering on the wake word audio that leaks back from its own speaker during TTS playback.
-
-## Buffered Audio Flush
-
-```python
-def start(self) -> None:
-    self._stream = self._pa.open(...)
-    for _ in range(5):
-        self._stream.read(self.FRAME_LENGTH, exception_on_overflow=False)
-```
-
-When the audio stream is re-opened (after being closed at the end of a listening cycle), PyAudio's internal ring buffer may contain old audio that accumulated while the stream was closed. Reading and discarding 5 frames (5 × 1280 samples at 16kHz ≈ 400ms) flushes this stale audio.
+The stream is opened and closed explicitly with `start()` and `stop()`. That is
+important because the wake-word loop is continuous, while the command capture
+phase is separate and should own the microphone during its turn.
 
 ## Observations
 
-- `FRAME_LENGTH = 1280` matches openWakeWord's expected input size (80ms at 16kHz). This is a fixed model requirement; changing it would break detection.
-- The model path falls back to the default Hey Jarvis ONNX model bundled with the `openwakeword` package. A custom wake phrase requires training a new model and setting `OWW_MODEL_PATH`.
-- `wait_for_wake` blocks indefinitely (until `ok_fn()` returns False or a wake word fires). The calling code in `VoiceInputNode.main` handles the `not detected` return by breaking the main loop cleanly.
+- The detector still flushes a few frames after reopening the stream to avoid
+  stale buffered audio.
+- The code path is intentionally thin. All tuning now lives in the shared voice
+  runtime configuration instead of this module.

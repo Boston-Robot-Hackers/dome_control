@@ -1,72 +1,79 @@
 ---
 version: "1.0"
-generated: "2026-05-04"
+generated: "2026-05-06"
 ---
 
 # VoiceInputNode
 
-`voice_input_node.py` wires the voice pipeline together into a ROS2 node. It coordinates `WakeWordDetector`, `SpeechTranscriber`, and `IntentMapper`, and publishes results to `/intent`, `/voice/state`, and `/announcement`.
+`voice_input_node.py` is now a ROS2 shell around the shared voice runtime. It
+no longer owns wake-word detection or speech recognition directly; instead it
+consumes a `VoiceTurn` from `control.voice.runtime`, maps the transcript to an
+intent, and publishes the ROS messages that the rest of the system expects.
 
-## Pipeline State Machine
+## Pipeline Shape
 
-```
+```text
 IDLE
-  ↓ wake word detected
-LISTENING  (beep at 880 Hz)
-  ↓ transcribe() returns
-PROCESSING
-  ↓ intent mapped
-SPEAKING   (beep at 330 Hz if intent found, else speak "say again")
-  ↓
-IDLE
+  -> runtime.next_turn()
+  -> LISTENING (beep at wake)
+  -> PROCESSING (map transcript)
+  -> SPEAKING (beep or "say again")
+  -> IDLE
 ```
 
-State transitions are published to `/voice/state` as plain strings. Any node (e.g., a UI, a logging node) can subscribe to track what the voice pipeline is doing.
+The state topic remains a plain string topic because it is meant to be consumed
+by simple listeners such as a UI, a light indicator, or logs.
 
-## Topic Layout
+## ROS Topics
 
 | Topic | Direction | Type | Purpose |
 |-------|-----------|------|---------|
 | `/intent` | publish | `std_msgs/String` | Mapped intent JSON |
-| `/voice/state` | publish | `std_msgs/String` | IDLE/LISTENING/PROCESSING/SPEAKING |
-| `/announcement` | publish | `AnnouncementMsg` | "I didn't catch that" |
+| `/voice/state` | publish | `std_msgs/String` | `IDLE` / `LISTENING` / `PROCESSING` / `SPEAKING` |
+| `/announcement` | publish | `AnnouncementMsg` | Failure feedback |
 
-The node publishes to `/announcement` only on failed recognition. Successful intents are published to `/intent` and the behavior manager is responsible for generating any announcement.
+The node only publishes an announcement on mapping failure. If the transcript is
+recognized and mapped, it publishes the intent and leaves any higher-level
+spoken response to the behavior manager or speech output node.
 
-## Main Loop
+## Wake Callback
+
+The runtime accepts a small callback that fires when wake is detected. The ROS
+node uses that hook to publish `LISTENING` and play a short beep immediately.
 
 ```python
-while rclpy.ok():
-    detector.start()
-    detected = detector.wait_for_wake(ok_fn=rclpy.ok)
-    detector.stop()
-
-    if not detected:
-        break
-
+def on_wake(_wake):
+    node.get_logger().info("Wake word detected — speak your command")
     node.publish_state("LISTENING")
     beep(frequency=880, duration=0.02, device_index=device_index)
 
-    text = transcriber.transcribe()
-    node.process_transcript(text, device_index=device_index)
-    node.publish_state("IDLE")
+turn = runtime.next_turn(ok_fn=rclpy.ok, on_wake=on_wake)
 ```
 
-`detector.start()` and `detector.stop()` bracket each wake word listen cycle. The detector is stopped during transcription so the microphone stream is not shared between two consumers simultaneously.
+That keeps the runtime free of ROS imports while preserving the user-facing
+timing of the listen state.
 
-`ok_fn=rclpy.ok` means the wake word loop exits cleanly when the ROS2 context shuts down (e.g., Ctrl+C). Without this, `wait_for_wake` would block indefinitely.
+## Transcript Handling
 
-## Audio Feedback
+```python
+def process_turn(self, turn: VoiceTurn, device_index: int = 0) -> None:
+    if turn.empty:
+        self.publish_state("SPEAKING")
+        speak("say again")
+        self.publish_announcement("I didn't catch that")
+        return
+    self.process_transcript(turn.text, device_index=device_index)
+```
 
-Two beep tones provide auditory confirmation without requiring TTS synthesis:
-
-- 880 Hz (high): "I'm listening" — plays immediately after wake word
-- 330 Hz (low): "Intent received" — plays after successful mapping
-
-On failed recognition, `speak("say again")` uses `espeak-ng` for a simple voice prompt.
+The node has one job after the runtime returns: turn the transcript into a
+normalized intent or a failure announcement. This is the layer where the voice
+contract meets the rest of the robot.
 
 ## Observations
 
-- The node does not call `rclpy.spin()` — it drives the executor manually via `wait_for_wake`'s `ok_fn=rclpy.ok` callback. This means ROS2 callbacks (subscriptions, service responses) are not processed during the wake word listen phase.
-- `VOICE_DEVICE_INDEX` environment variable selects the audio device. On a Raspberry Pi with a USB microphone this is essential; the default device index `0` is often the wrong device.
-- The node publishes `"SPEAKING"` before the actual speech/beep completes. Renaming this state to `"RESPONDING"` would be more accurate.
+- The ROS loop still runs synchronously, so it does not process other callbacks
+  while waiting on a voice turn.
+- The `VOICE_DEVICE_INDEX` environment variable still selects the audio device.
+  The value defaults to the runtime's capture card if the variable is not set.
+- `SPEAKING` is still the published state name, although it mostly means
+  "responding" now.
