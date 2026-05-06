@@ -8,11 +8,6 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from control.announcement_contract import (
-    AnnouncementMsg,
-    PRIORITY_QUERY_REPLY,
-    make_announcement_msg,
-)
 from control.voice.audio_feedback import beep
 from control.voice.intent_mapper import IntentMapper
 from control.voice.runtime import VoiceRuntime, VoiceTurn, load_voice_runtime_config
@@ -25,9 +20,6 @@ class VoiceInputNode(Node):
         super().__init__("voice_input")
         self.intent_pub = self.create_publisher(String, "/intent", 10)
         self.state_pub = self.create_publisher(String, "/voice/state", 10)
-        self.announcement_pub = self.create_publisher(
-            AnnouncementMsg, "/announcement", 10
-        )
         self.intent_mapper = IntentMapper()
 
     def publish_intent(self, intent: dict) -> None:
@@ -42,14 +34,6 @@ class VoiceInputNode(Node):
         self.state_pub.publish(msg)
         self.get_logger().info(f"Voice state: {state}")
 
-    def publish_announcement(self, text: str) -> None:
-        msg = make_announcement_msg(
-            text,
-            priority=PRIORITY_QUERY_REPLY,
-            source="voice_input",
-        )
-        self.announcement_pub.publish(msg)
-
     def process_transcript(self, text: str, device_index: int = 0) -> None:
         self.get_logger().info(f"Transcribed: '{text}'")
         self.publish_state("PROCESSING")
@@ -61,12 +45,12 @@ class VoiceInputNode(Node):
             beep(frequency=330, duration=0.02, device_index=device_index)
         else:
             self.publish_state("SPEAKING")
-            self.publish_announcement("I didn't catch that")
+            beep(frequency=220, duration=0.15, device_index=device_index)
 
     def process_turn(self, turn: VoiceTurn, device_index: int = 0) -> None:
         if turn.empty:
             self.publish_state("SPEAKING")
-            self.publish_announcement("I didn't catch that")
+            beep(frequency=220, duration=0.15, device_index=device_index)
             return
         self.process_transcript(turn.text, device_index=device_index)
 
