@@ -1,0 +1,68 @@
+ROS2 Topics - Publishers and Subscribers
+============================================================
+
+TOPIC: /announcement
+  Type:        control/msg/Announcement
+  Publishers:  behavior_manager, speech_api (CLI/remote)
+  Subscribers: speech_output
+  Fields:      text, priority (0-5), source, dedup_key, stamp
+  Purpose:     Robot speech output bus. Any node that wants the robot to
+               speak publishes here. speech_output_node receives, synthesizes
+               via Piper TTS, and plays via ALSA (plughw:0,0).
+  Priority levels:
+    0 SAFETY        Highest — safety warnings
+    1 STATUS        Robot status updates
+    2 QUERY_REPLY   Responses to voice commands
+    3 ACTION_ACK    Acknowledgement of actions
+    4 DISCOVERY     Discovery/exploration results
+    5 CHITCHAT      Lowest — casual responses
+
+TOPIC: /intent
+  Type:        std_msgs/String (JSON payload)
+  Publishers:  voice_input, intent_api (CLI/remote)
+  Subscribers: behavior_manager
+  Payload:     {"name": "<intent>", "source": "<voice|cli>", "slots": {...}}
+  Purpose:     Voice and CLI command bus. voice_input_node publishes after
+               wake word + STT + intent mapping. CLI publishes via intent_api
+               for programmatic command injection. behavior_manager routes
+               to the appropriate behavior handler.
+  Known intents: stop, go_forward, go_backward, turn_left, turn_right,
+                 count_objects, describe_scene, explore
+
+TOPIC: /voice/state
+  Type:        std_msgs/String
+  Publishers:  voice_input
+  Subscribers: (none currently)
+  Values:      IDLE | LISTENING | PROCESSING | SPEAKING
+  Purpose:     Diagnostic state of the voice pipeline. IDLE = waiting for
+               wake word. LISTENING = captured wake, recording command.
+               PROCESSING = running STT + intent mapping. SPEAKING = playing
+               audio feedback beep. Currently published for observability;
+               no node subscribes yet.
+
+TOPIC: /cmd_vel
+  Type:        geometry_msgs/Twist
+  Publishers:  movement_api
+  Subscribers: (robot base driver, e.g. linorobot2)
+  Purpose:     Robot velocity commands. movement_api publishes Twist messages
+               to drive the robot. linear.x = forward/backward speed (m/s),
+               angular.z = rotation speed (rad/s). Clamped to limits in
+               config: linear_min/max, angular_min/max.
+
+TOPIC: /odom
+  Type:        nav_msgs/Odometry
+  Publishers:  (robot base driver, e.g. linorobot2)
+  Subscribers: movement_api
+  Purpose:     Robot odometry. movement_api subscribes to track current pose
+               for distance-based movement commands (move_dist, turn_amount).
+
+============================================================
+ROS2 BUILT-IN TOPICS (informational)
+
+TOPIC: /rosout
+  Aggregated log stream from all nodes. ros2 topic echo /rosout shows
+  live logs across the entire graph.
+
+TOPIC: /parameter_events
+  Published by every node when its ROS2 parameters change. Used by
+  parameter monitoring tools; not consumed by this package.
