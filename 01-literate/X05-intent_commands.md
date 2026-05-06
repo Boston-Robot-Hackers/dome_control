@@ -1,18 +1,13 @@
 ---
-version: "1.0"
-generated: "2026-05-04"
+version: "2.0"
+generated: "2026-05-06"
+status: "removed"
 ---
 
-# Intent Commands (Appendix)
+# Intent Commands (Removed in F15/T07)
 
-`intent_commands.py` defines CLI commands that publish to the `/intent` topic.
+`intent_commands.py` defined CLI commands that published to `/intent` via `RobotController` methods (`publish_intent_stop`, `publish_intent_explore`, etc.). These were entries in the `CommandDispatcher` registry.
 
-```python
-"intent.stop":          CommandDef("publish_intent_stop",           [], ...)
-"intent.explore":       CommandDef("publish_intent_explore",        [], ...)
-"intent.describe_scene":CommandDef("publish_intent_describe_scene", [], ...)
-"intent.count_objects": CommandDef("publish_intent_count_objects",
-                            [ParameterDef("object_type", str, True, ...)], ...)
-```
+The file was deleted in F15/T07. Intent routing now lives in `BEHAVIOR_COMMANDS` in `command_dispatcher.py`, handled by `dispatch_text` without going through the registry. `IntentPublisher` replaced the `RobotController` intent methods.
 
-These are the raw intent publishing commands. `scene.describe` and `scene.count` in `semantic_commands.py` map to the same `RobotController` methods with more user-friendly names. The `intent.*` variants are kept for completeness and debugging.
+See `12-command_dispatcher.md` for the current routing mechanism.

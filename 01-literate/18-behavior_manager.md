@@ -1,11 +1,13 @@
 ---
-version: "1.1"
-generated: "2026-05-04"
+version: "1.2"
+generated: "2026-05-06"
 ---
 
-# BehaviorManager: Pure Intent Dispatch Logic
+# IntentParser: Pure Intent Parsing Logic
 
-`BehaviorManager` holds the pure logic for parsing and validating intents — with no ROS2 dependency. This separation matters: the ROS2 node layer (`BehaviorManagerNode`) handles subscriptions and callbacks; `BehaviorManager` handles the semantics. Tests for intent parsing run in milliseconds without a ROS2 context.
+`behavior_manager.py` holds `IntentParser` — pure logic for parsing and validating intents with no ROS2 dependency. The name `BehaviorManager` was retired in F15/T01; the class is now `IntentParser` to reflect its single responsibility.
+
+The ROS2 node layer (`BehaviorManagerNode`) handles subscriptions and callbacks; `IntentParser` handles only the JSON parsing semantics. Tests for intent parsing run without a ROS2 context.
 
 ## The Intent Dataclass
 
@@ -45,11 +47,11 @@ def parse_intent(self, payload: str) -> Intent:
     return Intent(name=name, source=source, slots=slots)
 ```
 
-Each check raises with a descriptive message. The caller (the ROS2 node) can log the error and discard the message without crashing the node.
+Each check raises with a descriptive message. The caller (the ROS2 node) can log the error and discard the message without crashing.
 
 ## Announcement Helpers
 
-Two helpers live alongside `BehaviorManager` and are re-exported from this module:
+Two helpers are re-exported from this module:
 
 ```python
 from control.announcement_contract import (
@@ -58,14 +60,10 @@ from control.announcement_contract import (
 )
 ```
 
-`make_announcement_payload` builds a JSON string; `make_announcement_msg` builds a typed `Announcement` ROS2 message. Both are imported here so callers can access them from a single import. The actual implementation lives in `announcement_contract.py` to avoid a circular dependency with the ROS2 message type.
-
-## What Was Removed
-
-An earlier version of this module had a `handle_intent` method and a `BehaviorResult` dataclass — a full dispatch layer mapping intent names to handler functions. This was removed because it duplicated the `CommandDispatcher` pattern and added a second dispatch mechanism with no clear boundary. Intent handling now flows through `CommandDispatcher` via the intent command group.
+The actual implementation lives in `announcement_contract.py` to avoid a circular dependency with the ROS2 message type.
 
 ## Observations
 
-- **No slot validation.** `parse_intent` validates structure but not slot contents. An intent `{"name": "count_objects", "slots": {}}` (missing `object_type`) will parse successfully and fail later. Schema validation per intent name would catch this earlier.
-- **`source` default is "unknown".** The default should probably be required, not silently defaulted, to ensure traceability in logs.
-- **Single method class.** `BehaviorManager` has one public method. It could be a module-level function. The class form is kept for future expansion (e.g., intent history, rate limiting).
+- **No slot validation.** `parse_intent` validates structure but not slot contents. An intent `{"name": "count_objects", "slots": {}}` (missing `object_type`) will parse successfully and fail later.
+- **`source` default is "unknown".** Could be required rather than silently defaulted.
+- **Single method class.** `IntentParser` has one public method. The class form is kept for future expansion (e.g., intent history, rate limiting).

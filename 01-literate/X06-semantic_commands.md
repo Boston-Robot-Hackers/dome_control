@@ -1,16 +1,13 @@
 ---
-version: "1.0"
-generated: "2026-05-04"
+version: "2.0"
+generated: "2026-05-06"
+status: "removed"
 ---
 
-# Semantic Commands (Appendix)
+# Semantic Commands (Removed in F15/T07)
 
-`semantic_commands.py` defines user-friendly aliases for the two most common intent commands.
+`semantic_commands.py` defined user-friendly aliases (`scene.describe`, `scene.count`) that mapped to the same `RobotController` methods as the `intent.*` commands. These were entries in the `CommandDispatcher` registry.
 
-```python
-"scene.describe": CommandDef("publish_intent_describe_scene", [], ...)
-"scene.count":    CommandDef("publish_intent_count_objects",
-                     [ParameterDef("object_type", str, True, ...)], ...)
-```
+The file was deleted in F15/T07. The `scene.*` aliases survive as entries in `BEHAVIOR_COMMANDS` in `command_dispatcher.py`, routed by `dispatch_text`.
 
-These map to the same `RobotController` methods as `intent.describe_scene` and `intent.count_objects`. The `scene.*` vocabulary is preferred for interactive use ("scene describe" reads more naturally than "intent describe_scene"). The `intent.*` forms remain available for scripting and debugging.
+See `12-command_dispatcher.md` for the current routing mechanism.

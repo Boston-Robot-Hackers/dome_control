@@ -1,15 +1,15 @@
 ---
-version: "1.1"
-generated: "2026-05-04"
+version: "2.0"
+generated: "2026-05-06"
 ---
 
 # CommandDispatcher: Command Registry and Execution
 
-`CommandDispatcher` is the single entry point for all command execution. The CLI, REST API, and any future interface all call `dispatcher.execute(name, params)` and get back a `CommandResponse`. The dispatcher handles parameter validation, type coercion, and method dispatch — callers never touch `RobotController` methods directly.
+`CommandDispatcher` is the single entry point for all command execution. The CLI, REST API, and any future interface call `dispatcher.execute(name, params)` or `dispatcher.dispatch_text(text)` and get back a `CommandResponse`. The dispatcher handles parameter validation, type coercion, and method dispatch — callers never touch `RobotController` methods directly.
 
 ## Registry as a Dict
 
-The command registry is a plain `dict[str, CommandDef]` built at construction time from module-level builder functions:
+The command registry is a plain `dict[str, CommandDef]` built at construction time:
 
 ```python
 def _build_command_registry(self) -> dict[str, cd.CommandDef]:
@@ -19,74 +19,119 @@ def _build_command_registry(self) -> dict[str, cd.CommandDef]:
     commands.update(nav_cmd.build_navigation_commands())
     commands.update(lch_cmd.build_launch_commands())
     commands.update(sys_cmd.build_system_commands())
-    commands.update(intent_cmd.build_intent_commands())
-    commands.update(sem_cmd.build_semantic_commands())
     return commands
 ```
 
-Each `build_*` function returns a dict of `"group.command" → CommandDef`. The flat merge means duplicate names from different modules would silently shadow each other — something to watch when adding new command groups.
+Each `build_*` function returns a dict of `"group.command" → CommandDef`. Intent commands and semantic commands were in this registry prior to F15/T07; they are now handled entirely by `dispatch_text` routing. The flat merge means duplicate names from different modules would silently shadow each other.
 
 ## The Execute Path
 
 ```
-dispatcher.execute("move.distance", {"distance": "1.5"})
+dispatcher.execute("move.forward", {"meters": "1.5"})
     │
     ├── look up CommandDef in registry
     ├── _validate_parameters → coerce "1.5" → 1.5 (float)
-    ├── getattr(robot_controller, "move_distance")
-    └── method(distance=1.5) → CommandResponse
+    ├── getattr(robot_controller, "move_forward")
+    └── method(meters=1.5) → CommandResponse
 ```
+
+## dispatch_text: Text-to-Command Routing
+
+`dispatch_text(text)` is the entry point for free-form text input (CLI, voice transcripts):
 
 ```python
-def execute(self, command_name: str, params: dict) -> rc.CommandResponse:
-    if command_name not in self.commands:
-        return rc.CommandResponse(success=False, message=f"Unknown command: {command_name}")
-
-    command_def = self.commands[command_name]
-    validated_params = self._validate_parameters(command_def, params)
-    method = getattr(self.robot_controller, command_def.method_name)
-    result = method(**validated_params) if validated_params else method()
-
-    if isinstance(result, rc.CommandResponse):
-        return result
-    return rc.CommandResponse(success=True, message=str(result) if result is not None else "Command completed")
+def dispatch_text(self, text: str) -> rc.CommandResponse:
+    tokens = text.strip().split()
+    command = resolve_keyword(tokens[0])
+    ...
+    intent_name = BEHAVIOR_COMMANDS.get(command_name)
+    if intent_name is not None:
+        self.publish_intent(intent_name, slots)
+        return rc.CommandResponse(True, f"Intent published: {intent_name}")
+    ...
+    return self.execute(command_name, params)
 ```
 
-The `isinstance` check at the end handles the case where a method returns `CommandResponse` directly (the norm) vs. something else (e.g., `None` from a method that hasn't been updated yet).
+Two routing paths:
+
+- **Behavior path** — command name is in `BEHAVIOR_COMMANDS` → publish to `/intent` via `IntentPublisher`, return immediately.
+- **Direct path** — everything else → look up `CommandDef`, validate params, call `RobotController` method.
+
+## BEHAVIOR_COMMANDS
+
+Maps CLI command names to intent names:
+
+```python
+BEHAVIOR_COMMANDS: dict[str, str] = {
+    "intent.stop":           "stop",
+    "intent.explore":        "explore",
+    "intent.describe_scene": "describe_scene",
+    "intent.count_objects":  "count_objects",
+    "scene.describe":        "describe_scene",
+    "scene.count":           "count_objects",
+}
+```
+
+The `scene.*` forms are the preferred interactive vocabulary; `intent.*` forms are kept for completeness and scripting.
+
+## Abbreviation Resolution
+
+`ABBREV_TO_FULL` and `FULL_NAMES` are module-level constants. `resolve_keyword` expands short tokens:
+
+```python
+ABBREV_TO_FULL = {"m": "move", "fwd": "forward", "stp": "stop", ...}
+FULL_NAMES = set(ABBREV_TO_FULL.values())
+
+def resolve_keyword(word: str) -> str:
+    if word in FULL_NAMES:
+        return word
+    return ABBREV_TO_FULL.get(word, word)
+```
+
+Unknown tokens pass through unchanged; errors surface at execution time.
+
+## Subcommand Detection
+
+After resolving the first token, the parser checks whether the second token forms a compound command:
+
+```python
+second = resolve_keyword(tokens[1])
+candidate = f"{command}.{second}"
+in_registry = candidate in self.commands or candidate in BEHAVIOR_COMMANDS
+if second in FULL_NAMES or second != tokens[1] or in_registry:
+    command_name = candidate   # compound: "move.forward"
+    args = [parse_value(t) for t in tokens[2:]]
+else:
+    command_name = command     # simple: "stop"
+    args = [parse_value(t) for t in tokens[1:]]
+```
+
+The `in_registry` check ensures `scene describe` routes correctly even though "describe" is not in `FULL_NAMES`.
+
+## IntentPublisher Injection
+
+```python
+def __init__(self, robot_controller, intent_publisher=None):
+    ...
+    self.intent_publisher = intent_publisher
+```
+
+In production, leave `intent_publisher=None` — `publish_intent` creates an `IntentPublisher` lazily. In tests, pass `IntentPublisher(publish_fn=published.append)` to capture published payloads without ROS2.
 
 ## Parameter Validation and Coercion
 
-`_validate_parameters` enforces required params and hands each value to `_convert_parameter_value`:
+`_convert_parameter_value` handles booleans specially:
 
 ```python
-def _convert_parameter_value(self, param_def, value):
-    if param_def.param_type == bool:
-        if isinstance(value, str):
-            return value.lower() in ("true", "1", "yes", "on")
-        return bool(value)
-    if param_def.param_type == str:
-        return str(value)
-    return param_def.param_type(value)
+if param_def.param_type == bool:
+    if isinstance(value, str):
+        return value.lower() in ("true", "1", "yes", "on")
+    return bool(value)
 ```
 
-Boolean gets special treatment because Python's `bool("false")` is `True` — a common trap. Everything else is a direct constructor call (`float("1.5")`, `int("3")`).
-
-Optional parameters with a `None` default are simply omitted from the validated dict if not provided, so the method's own default handling applies.
-
-## Query Methods
-
-Three methods support introspection:
-
-```python
-def list_commands(self, group: str | None = None) -> list[str]
-def get_command_info(self, command_name: str) -> cd.CommandDef | None
-def get_groups(self) -> list[str]
-```
-
-These power the CLI help display and allow the REST API to describe available commands without hardcoding.
+Python's `bool("false")` is `True`, so string booleans need explicit mapping.
 
 ## Observations
 
-- **Silent shadowing.** If two `build_*` functions return the same key, the last one wins silently. A uniqueness check during construction would catch this at startup.
-- **`bare except Exception` in execute.** The catch-all around `method(**validated_params)` swallows `KeyboardInterrupt` and other non-`Exception` exceptions. Should be tightened to catch only expected runtime errors.
-- **Method lookup via `getattr`.** If a `CommandDef.method_name` doesn't exist on `RobotController`, it returns `CommandResponse(False, "Method ... not found")` at runtime rather than failing at registry build time. A startup validation pass would catch stale `method_name` references.
+- **Silent shadowing.** Duplicate keys across `build_*` functions are silently overwritten.
+- **Method lookup at runtime.** A stale `method_name` in a `CommandDef` fails at call time, not at registry build time.
