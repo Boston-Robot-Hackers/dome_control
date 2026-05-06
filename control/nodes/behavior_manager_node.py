@@ -25,7 +25,7 @@ class BehaviorManagerNode(Node):
         super().__init__("behavior_manager")
         self.parser = IntentParser()
 
-        rc = RobotController(ConfigManager(DEFAULT_CONFIG))
+        rc = RobotController(ConfigManager.create(DEFAULT_CONFIG))
         self.handlers = [
             MotionBehavior(rc),
             PerceptionBehavior(self),

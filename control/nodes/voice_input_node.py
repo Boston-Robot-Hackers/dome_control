@@ -13,7 +13,7 @@ from control.announcement_contract import (
     PRIORITY_QUERY_REPLY,
     make_announcement_msg,
 )
-from control.voice.audio_feedback import beep, speak
+from control.voice.audio_feedback import beep
 from control.voice.intent_mapper import IntentMapper
 from control.voice.runtime import VoiceRuntime, VoiceTurn, load_voice_runtime_config
 
@@ -61,13 +61,11 @@ class VoiceInputNode(Node):
             beep(frequency=330, duration=0.02, device_index=device_index)
         else:
             self.publish_state("SPEAKING")
-            speak("say again")
             self.publish_announcement("I didn't catch that")
 
     def process_turn(self, turn: VoiceTurn, device_index: int = 0) -> None:
         if turn.empty:
             self.publish_state("SPEAKING")
-            speak("say again")
             self.publish_announcement("I didn't catch that")
             return
         self.process_transcript(turn.text, device_index=device_index)

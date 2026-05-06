@@ -24,6 +24,7 @@ def generate_launch_description():
                 'PIPER_MODEL_PATH': '/home/pitosalas/ros2_ws/src/control/piper_model/en_US-lessac-medium.onnx',
                 'PIPER_LENGTH_SCALE': '1.0',
                 'SPEECH_GAIN': '0.25',
+                'SPEECH_ALSA_DEVICE': 'plughw:0,0',
             },
         ),
         Node(
