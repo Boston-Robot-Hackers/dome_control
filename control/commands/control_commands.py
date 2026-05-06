@@ -5,6 +5,7 @@ Author: Pito Salas and Claude Code
 Open Source Under MIT license
 """
 import control.commands.command_def as cd
+import control.commands.parameter_def as pd
 
 
 def build_control_commands() -> dict[str, cd.CommandDef]:
@@ -19,6 +20,14 @@ def build_control_commands() -> dict[str, cd.CommandDef]:
             method_name="get_robot_status",
             parameters=[],
             description="Get current robot status",
+            group="control",
+        ),
+        "robot.speak": cd.CommandDef(
+            method_name="speak_text",
+            parameters=[
+                pd.ParameterDef("text", str, True, None, "Text for robot to speak")
+            ],
+            description="Speak text aloud via speech output",
             group="control",
         ),
     }

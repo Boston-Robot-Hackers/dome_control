@@ -13,6 +13,7 @@ from control.ros2_api.calibration_api import CalibrationApi
 from control.ros2_api.intent_api import IntentApi
 from control.ros2_api.movement_api import MovementApi
 from control.ros2_api.process_api import CommandConfig, ProcessApi
+from control.ros2_api.speech_api import SpeechApi
 
 
 @dataclass
@@ -34,6 +35,7 @@ class RobotController:
         self.calibration_node = None
         self.process_node = None
         self.intent_node = None
+        self.speech_node = None
         self.launch_process_ids = dict.fromkeys(self.config.get_launch_templates().keys())
 
     @property
@@ -61,6 +63,13 @@ class RobotController:
             # allow DDS publisher-subscriber discovery before first publish
             time.sleep(0.5)
         return self.intent_node
+
+    @property
+    def speech(self) -> SpeechApi:
+        if self.speech_node is None:
+            self.speech_node = SpeechApi(self.config)
+            time.sleep(0.5)
+        return self.speech_node
 
     def is_launch_running(self, launch_type: str) -> bool:
         process_id = self.launch_process_ids.get(launch_type)
@@ -171,6 +180,10 @@ class RobotController:
     def stop_robot(self) -> CommandResponse:
         self.movement.stop()
         return CommandResponse(True, "Robot stopped")
+
+    def speak_text(self, text: str) -> CommandResponse:
+        self.speech.speak(text)
+        return CommandResponse(True, f"Speaking: {text!r}")
 
     def script_square(self, meters: float) -> CommandResponse:
         self.calibration.run_square_pattern(meters)
