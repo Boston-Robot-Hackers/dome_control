@@ -18,7 +18,7 @@ import numpy as np
 
 RATE = 16000
 CHUNK = 1280
-WAKE_SKIP_CHUNKS = 4
+WAKE_SKIP_CHUNKS = 1
 FLOOR_MAX_DBFS = -25.0
 
 DEFAULT_GRAMMAR = (
@@ -40,7 +40,7 @@ TUNED_VOICE_PARAMETERS = {
     "stream_settings": {
         "wake_word": "alexa",
         "threshold": 0.3,
-        "wake_hits": 1,
+        "wake_hits": 3,
         "live_filter": True,
         "vosk_model": "small",
         "grammar": list(DEFAULT_GRAMMAR),
