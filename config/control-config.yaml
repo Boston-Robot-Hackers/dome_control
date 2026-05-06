@@ -34,3 +34,11 @@ launch_templates:
     name: Foxglove
     command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml
     description: Foxglove driver
+  robot:
+    name: control_robot
+    command: ros2 launch control robot.launch.py
+    description: Control nodes for on-robot (behavior_manager, speech_output, voice_input)
+  remote:
+    name: control_remote
+    command: ros2 launch control remote.launch.py
+    description: Control nodes for remote machine (describe_scene_stub)
