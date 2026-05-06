@@ -1,21 +1,25 @@
 # Tasks for Feature F13
 
 ## T01 — Create launch/onboard.launch.py
-**Status**: not done
+**Status**: partial
 **Description**: Write `launch/onboard.launch.py`. Always starts `speech_output`
 and `describe_scene_stub`. Launch args: `voice:=false` (adds `voice_input_node`
 when true), `behavior:=true` (adds `behavior_manager` when true). Pass relevant
 env vars through to each node.
+**Note**: `launch/robot.launch.py` created (starts behavior_manager, speech_output,
+voice_input unconditionally). Conditional launch args not yet implemented.
 
 ## T02 — Create launch/offboard.launch.py
-**Status**: not done
+**Status**: partial
 **Description**: Write `launch/offboard.launch.py`. Launch args: `voice:=true`
 (adds `voice_input_node`), `behavior:=false` (adds `behavior_manager`). Pass
 relevant env vars through. No nodes are unconditional — file may start nothing
 if both args are false.
+**Note**: `launch/remote.launch.py` created (starts describe_scene_stub only).
+Conditional launch args not yet implemented.
 
 ## T03 — Update CMakeLists.txt to install launch/
-**Status**: not done
+**Status**: done
 **Description**: Add `install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME})`
 to `CMakeLists.txt` so launch files are installed and discoverable by
 `ros2 launch control`.

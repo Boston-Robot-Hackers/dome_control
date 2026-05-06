@@ -14,11 +14,10 @@ prints a detection event. Manual hardware step, no code change.
 confirm Vosk transcribes it correctly. Manual hardware step, no code change.
 
 ## T03 — Validate existing voice_input_node on hardware
-**Status**: not done
-**Description**: Run `ros2 run control voice_input` (hardcoded Porcupine stub —
-will be replaced), or skip directly to T04 if T01/T02 pass. Confirm `/intent`
-receives the describe_scene message. Can be skipped if moving straight to
-openWakeWord integration.
+**Status**: done
+**Description**: Superseded by T04. Old Porcupine stub node was replaced entirely
+by the openWakeWord + Vosk implementation in T04. No separate validation of the
+old node needed.
 
 ## T04 — Replace voice_input_node with openWakeWord + Vosk
 **Status**: done
