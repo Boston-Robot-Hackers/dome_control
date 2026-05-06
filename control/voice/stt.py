@@ -5,6 +5,7 @@ import json
 import os
 
 from control.voice.intent_mapper import VOSK_COMMANDS
+from control.voice.runtime import VOSK_MODEL_PATHS
 
 
 def _load_deps():
@@ -24,11 +25,20 @@ class SpeechTranscriber:
 
     DEFAULT_MODEL_PATH = os.path.expanduser("~/models/vosk-model-small-en-us-0.15")
 
-    def __init__(self, device_index: int = 0, model_path: str = ""):
+    def __init__(
+        self,
+        device_index: int = 0,
+        model_path: str = "",
+        grammar: list[str] | tuple[str, ...] | str | None = None,
+    ):
         self._pyaudio, self._KaldiRecognizer, Model = _load_deps()
-        path = model_path or os.environ.get("VOSK_MODEL_PATH") or self.DEFAULT_MODEL_PATH
+        configured_path = model_path or os.environ.get("VOSK_MODEL_PATH")
+        if configured_path in VOSK_MODEL_PATHS:
+            configured_path = VOSK_MODEL_PATHS[configured_path]
+        path = os.path.expanduser(configured_path or self.DEFAULT_MODEL_PATH)
         self._model = Model(path)
-        self._rec = self._KaldiRecognizer(self._model, 16000, VOSK_COMMANDS)
+        self._grammar = _grammar_json(grammar)
+        self._rec = self._KaldiRecognizer(self._model, 16000, self._grammar)
         self._pa = self._pyaudio.PyAudio()
         self._device_index = device_index
 
@@ -66,3 +76,15 @@ class SpeechTranscriber:
 
     def close(self) -> None:
         self._pa.terminate()
+
+
+def _grammar_json(grammar: list[str] | tuple[str, ...] | str | None) -> str:
+    if grammar is None:
+        return VOSK_COMMANDS
+    if isinstance(grammar, str):
+        phrases = [item.strip() for item in grammar.split(",") if item.strip()]
+    else:
+        phrases = [str(item).strip() for item in grammar if str(item).strip()]
+    if "[unk]" not in phrases:
+        phrases.append("[unk]")
+    return json.dumps(phrases)

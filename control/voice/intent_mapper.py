@@ -1,23 +1,47 @@
 #!/usr/bin/env python3
-"""Maps Vosk transcript text to structured intent dicts. No ROS2, no audio."""
+"""
+intent_mapper.py — maps Vosk transcripts to structured intent dicts.
+
+Author: Pito Salas and Claude Code
+Open Source Under MIT license
+"""
 
 import json
-from typing import Optional
 
 OBJECT_TYPES = ["can", "bottle", "person", "chair", "table", "ball", "cup", "box"]
 
+DESCRIBE_SCENE_PHRASES = (
+    "what do you see",
+    "describe",
+    "what's there",
+    "look around",
+    "what do you see around",
+)
+
+COUNT_OBJECT_PHRASES = ("how many", "count")
+
+PHRASE_INTENTS = (
+    (("stop", "halt"), "stop"),
+    (("go forward",), "move_forward"),
+    (("go backward",), "move_backward"),
+    (("turn left",), "turn_left"),
+    (("turn right",), "turn_right"),
+    (("start exploring", "explore"), "start_exploring"),
+    (("be quiet", "quiet"), "be_quiet"),
+    (("battery",), "get_battery"),
+    (("where are you", "where"), "get_location"),
+    (("get status", "what's your status", "what's going on", "status"), "get_status"),
+)
+
 # Vosk constrained vocabulary — must cover every phrase matched in map_intent()
 VOSK_COMMANDS = json.dumps([
+    "go forward", "go backward", "turn left", "turn right",
     "what do you see", "describe the scene", "what do you see around you",
     "look around", "what's there",
     "how many", "count",
     "stop", "halt",
-    "go home", "return home", "come back", "home",
     "start exploring", "explore",
-    "follow me", "follow",
     "be quiet", "quiet",
-    "go to sleep", "sleep",
-    "wake up",
     "battery", "battery level",
     "where are you", "where",
     "get status", "what's your status", "what's going on",
@@ -25,8 +49,8 @@ VOSK_COMMANDS = json.dumps([
 ])
 
 
-def _contains(text: str, *phrases: str) -> bool:
-    return any(p in text for p in phrases)
+def contains_phrase(text: str, phrases: tuple[str, ...]) -> bool:
+    return any(phrase in text for phrase in phrases)
 
 
 class IntentMapper:
@@ -34,63 +58,40 @@ class IntentMapper:
 
     SOURCE = "voice"
 
-    def map_intent(self, text: str) -> Optional[dict]:
-        t = text.lower().strip()
-        if not t or t == "[unk]":
+    def map_intent(self, text: str) -> dict | None:
+        normalized_text = text.lower().strip()
+        if not normalized_text or normalized_text == "[unk]":
             return None
 
-        if _contains(t, "what do you see", "describe", "what's there", "look around",
-                     "what do you see around"):
+        if contains_phrase(normalized_text, DESCRIBE_SCENE_PHRASES):
             return {"name": "describe_scene", "source": self.SOURCE, "slots": {}}
 
-        if _contains(t, "how many", "count"):
-            obj = _extract_object(t)
-            return {"name": "count_objects", "source": self.SOURCE,
-                    "slots": {"object_type": obj} if obj else {}}
+        if contains_phrase(normalized_text, COUNT_OBJECT_PHRASES):
+            return make_count_objects_intent(normalized_text, self.SOURCE)
 
-        if _contains(t, "stop", "halt"):
-            return {"name": "stop", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "go home", "return home", "come back", "home"):
-            return {"name": "return_home", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "start exploring", "explore"):
-            return {"name": "start_exploring", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "follow me", "follow"):
-            return {"name": "follow_me", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "be quiet", "quiet"):
-            return {"name": "be_quiet", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "go to sleep", "sleep"):
-            return {"name": "sleep", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "wake up"):
-            return {"name": "wake", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "battery"):
-            return {"name": "get_battery", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "where are you", "where"):
-            return {"name": "get_location", "source": self.SOURCE, "slots": {}}
-
-        if _contains(t, "get status", "what's your status", "what's going on", "status"):
-            return {"name": "get_status", "source": self.SOURCE, "slots": {}}
+        for phrases, name in PHRASE_INTENTS:
+            if contains_phrase(normalized_text, phrases):
+                return {"name": name, "source": self.SOURCE, "slots": {}}
 
         return None
 
 
-_DEFAULT_MAPPER = IntentMapper()
+DEFAULT_MAPPER = IntentMapper()
 
 
-def map_intent(text: str) -> Optional[dict]:
+def map_intent(text: str) -> dict | None:
     """Compatibility wrapper for existing call sites and tests."""
-    return _DEFAULT_MAPPER.map_intent(text)
+    return DEFAULT_MAPPER.map_intent(text)
 
 
-def _extract_object(text: str) -> Optional[str]:
-    for obj in OBJECT_TYPES:
-        if obj in text:
-            return obj
+def make_count_objects_intent(text: str, source: str) -> dict:
+    object_type = extract_object(text)
+    slots = {"object_type": object_type} if object_type else {}
+    return {"name": "count_objects", "source": source, "slots": slots}
+
+
+def extract_object(text: str) -> str | None:
+    for object_type in OBJECT_TYPES:
+        if object_type in text:
+            return object_type
     return None

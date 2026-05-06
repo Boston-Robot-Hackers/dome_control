@@ -15,8 +15,7 @@ from control.announcement_contract import (
 )
 from control.voice.audio_feedback import beep, speak
 from control.voice.intent_mapper import IntentMapper
-from control.voice.stt import SpeechTranscriber
-from control.voice.wake_word import WakeWordDetector
+from control.voice.runtime import VoiceRuntime, VoiceTurn, load_voice_runtime_config
 
 VOICE_STATES = ("IDLE", "LISTENING", "PROCESSING", "SPEAKING")
 
@@ -65,38 +64,44 @@ class VoiceInputNode(Node):
             speak("say again")
             self.publish_announcement("I didn't catch that")
 
+    def process_turn(self, turn: VoiceTurn, device_index: int = 0) -> None:
+        if turn.empty:
+            self.publish_state("SPEAKING")
+            speak("say again")
+            self.publish_announcement("I didn't catch that")
+            return
+        self.process_transcript(turn.text, device_index=device_index)
+
 
 def main():
-    device_index = int(os.environ.get("VOICE_DEVICE_INDEX", "0"))
+    voice_config = load_voice_runtime_config()
+    device_index = int(os.environ.get("VOICE_DEVICE_INDEX", voice_config.capture_card))
 
     rclpy.init()
     node = VoiceInputNode()
-    detector = WakeWordDetector(device_index=device_index)
-    transcriber = SpeechTranscriber(device_index=device_index)
+    runtime = VoiceRuntime(voice_config)
 
     try:
-        node.get_logger().info("Voice input ready — listening for 'Hey Jarvis'")
+        node.get_logger().info(
+            f"Voice input ready — listening for '{voice_config.wake_word}' "
+            f"from {voice_config.source_path or 'built-in defaults'}"
+        )
         node.publish_state("IDLE")
 
         while rclpy.ok():
-            detector.start()
-            detected = detector.wait_for_wake(ok_fn=rclpy.ok)
-            detector.stop()
+            def on_wake(_wake):
+                node.get_logger().info("Wake word detected — speak your command")
+                node.publish_state("LISTENING")
+                beep(frequency=880, duration=0.02, device_index=device_index)
 
-            if not detected:
+            turn = runtime.next_turn(ok_fn=rclpy.ok, on_wake=on_wake)
+            if turn.metadata and not turn.metadata.get("wake", {}).get("wake_hit", False):
                 break
-
-            node.get_logger().info("Wake word detected — speak your command")
-            node.publish_state("LISTENING")
-            beep(frequency=880, duration=0.02, device_index=device_index)
-
-            text = transcriber.transcribe()
-            node.process_transcript(text, device_index=device_index)
+            node.process_turn(turn, device_index=device_index)
             node.publish_state("IDLE")
 
     finally:
-        detector.close()
-        transcriber.close()
+        runtime.close()
         node.destroy_node()
         rclpy.shutdown()
 
