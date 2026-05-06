@@ -38,12 +38,19 @@ TUNED_VOICE_PARAMETERS = {
     "capture_card": 0,
     "playback_card": 0,
     "stream_settings": {
-        "wake_word": "alexa",
-        "threshold": 0.5,
-        "wake_hits": 3,
-        "live_filter": True,
-        "vosk_model": "small",
-        "grammar": list(DEFAULT_GRAMMAR),
+        "wake_word": "alexa",          # openWakeWord model name to load
+        "threshold": 0.7,              # min score per chunk to count as wake hit (0.0–1.0); raise if false triggers
+        "wake_hits": 3,                # consecutive chunks above threshold required; raise to resist noise spikes
+        "wake_cooldown_secs": 1.5,     # seconds to drain mic buffer after a turn before re-entering wake detection
+        "live_filter": True,           # apply highpass/lowpass bandpass filter to mic input
+        "vosk_model": "small",         # "small" or "large" — see VOSK_MODEL_PATHS
+        "grammar": list(DEFAULT_GRAMMAR),  # constrained Vosk vocabulary; must include every phrase in intent_mapper
+        "silence_dbfs": None,          # override silence floor (dBFS); None = auto from noise window
+        "silence_margin": 5.0,         # dB above noise floor to classify as silence
+        "silence_secs": 1.0,           # seconds of silence to end a command
+        "min_command_secs": 0.4,       # minimum command duration before silence can end it
+        "command_start_secs": 2.5,     # max seconds to wait for speech to start after wake
+        "max_command_secs": 8.0,       # hard cap on total command capture time
     },
     "sox_chain": {
         "highpass": 120,

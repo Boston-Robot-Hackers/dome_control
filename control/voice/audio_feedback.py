@@ -1,43 +1,26 @@
 #!/usr/bin/env python3
 """Simple audio feedback tones and speech for voice state transitions."""
 
-import ctypes
 import math
+import os
 
 _pa = None
-
-# No-op error handlers — must be kept alive (not GC'd) for the lifetime of the process
-_ALSA_ERROR_HANDLER = None
-_JACK_ERROR_HANDLER = None
-
-
-def _suppress_audio_noise() -> None:
-    global _ALSA_ERROR_HANDLER, _JACK_ERROR_HANDLER
-
-    try:
-        asound = ctypes.cdll.LoadLibrary("libasound.so.2")
-        _ALSA_ERROR_HANDLER = ctypes.CFUNCTYPE(
-            None, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p
-        )(lambda *_: None)
-        asound.snd_lib_error_set_handler(_ALSA_ERROR_HANDLER)
-    except Exception:
-        pass
-
-    try:
-        jack = ctypes.cdll.LoadLibrary("libjack.so.0")
-        _JACK_ERROR_HANDLER = ctypes.CFUNCTYPE(None, ctypes.c_char_p)(lambda *_: None)
-        jack.jack_set_error_function(_JACK_ERROR_HANDLER)
-        jack.jack_set_info_function(_JACK_ERROR_HANDLER)
-    except Exception:
-        pass
 
 
 def _get_pa():
     global _pa
     if _pa is None:
-        _suppress_audio_noise()
-        import pyaudio
-        _pa = pyaudio.PyAudio()
+        # Suppress ALSA/JACK stderr spam during device enumeration
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        saved = os.dup(2)
+        os.dup2(devnull, 2)
+        os.close(devnull)
+        try:
+            import pyaudio
+            _pa = pyaudio.PyAudio()
+        finally:
+            os.dup2(saved, 2)
+            os.close(saved)
     return _pa
 
 
@@ -48,18 +31,22 @@ def beep(frequency: int = 880, duration: float = 0.15, device_index: int = 0) ->
     except ImportError:
         return
 
-    pa = _get_pa()
-    sample_rate = 16000
-    n = int(sample_rate * duration)
-    t = np.arange(n) / sample_rate
-    samples = (np.sin(2 * math.pi * frequency * t) * 32767 * 0.05).astype(np.int16)
-
-    stream = pa.open(
-        format=pa.get_format_from_width(2), channels=1, rate=sample_rate,
-        output=True, output_device_index=device_index,
-    )
     try:
-        stream.write(samples.tobytes())
-    finally:
-        stream.stop_stream()
-        stream.close()
+        import pyaudio
+        pa = _get_pa()
+        sample_rate = 16000
+        n = int(sample_rate * duration)
+        t = np.arange(n) / sample_rate
+        samples = (np.sin(2 * math.pi * frequency * t) * 32767 * 0.05).astype(np.int16)
+
+        stream = pa.open(
+            format=pyaudio.paInt16, channels=1, rate=sample_rate,
+            output=True, output_device_index=device_index,
+        )
+        try:
+            stream.write(samples.tobytes())
+        finally:
+            stream.stop_stream()
+            stream.close()
+    except Exception:
+        pass
