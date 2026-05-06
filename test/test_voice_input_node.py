@@ -86,3 +86,32 @@ def test_process_transcript_unknown_intent():
     node.publish_intent.assert_not_called()
     node.publish_announcement.assert_called_once_with("I didn't catch that")
     mock_speak.assert_called_once_with("say again")
+
+
+def test_process_turn_transcript_path():
+    _, node = _make_voice_node()
+    from control.voice.runtime import VoiceTurn
+    from control.voice_input_node import VoiceInputNode
+
+    node.process_transcript = MagicMock()
+    turn = VoiceTurn(text="stop", raw_text="stop", empty=False)
+
+    VoiceInputNode.process_turn(node, turn, device_index=1)
+
+    node.process_transcript.assert_called_once_with("stop", device_index=1)
+
+
+def test_process_turn_empty_announces_failure():
+    _, node = _make_voice_node()
+    from control.voice.runtime import VoiceTurn
+    from control.voice_input_node import VoiceInputNode
+
+    node.publish_state = MagicMock()
+    node.publish_announcement = MagicMock()
+
+    with patch("control.voice_input_node.speak") as mock_speak:
+        VoiceInputNode.process_turn(node, VoiceTurn(empty=True))
+
+    node.publish_state.assert_called_once_with("SPEAKING")
+    node.publish_announcement.assert_called_once_with("I didn't catch that")
+    mock_speak.assert_called_once_with("say again")

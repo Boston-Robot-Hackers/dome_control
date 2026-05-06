@@ -12,15 +12,27 @@ def test_stop():
     assert map_intent("halt")["name"] == "stop"
 
 
-def test_return_home():
-    assert map_intent("go home")["name"] == "return_home"
-    assert map_intent("come back")["name"] == "return_home"
-    assert map_intent("home")["name"] == "return_home"
+def test_tuned_motion_phrases():
+    assert map_intent("go forward")["name"] == "move_forward"
+    assert map_intent("go backward")["name"] == "move_backward"
+    assert map_intent("turn left")["name"] == "turn_left"
+    assert map_intent("turn right")["name"] == "turn_right"
+
+
+def test_return_home_words_are_not_voice_intents():
+    assert map_intent("go home") is None
+    assert map_intent("come back") is None
+    assert map_intent("home") is None
 
 
 def test_explore():
     assert map_intent("start exploring")["name"] == "start_exploring"
     assert map_intent("explore")["name"] == "start_exploring"
+
+
+def test_follow_words_are_not_voice_intents():
+    assert map_intent("follow me") is None
+    assert map_intent("follow") is None
 
 
 def test_count_objects_with_slot():
@@ -43,9 +55,13 @@ def test_get_location():
     assert map_intent("where are you")["name"] == "get_location"
 
 
-def test_sleep_wake():
-    assert map_intent("go to sleep")["name"] == "sleep"
-    assert map_intent("wake up")["name"] == "wake"
+def test_sleep_words_are_not_voice_intents():
+    assert map_intent("go to sleep") is None
+    assert map_intent("sleep") is None
+
+
+def test_wake_words_are_not_voice_intents():
+    assert map_intent("wake up") is None
 
 
 def test_unknown_returns_none():
