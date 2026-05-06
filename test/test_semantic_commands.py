@@ -1,52 +1,44 @@
 #!/usr/bin/env python3
-# test_semantic_commands.py — tests for scene command aliases
+# test_semantic_commands.py — tests for scene command routing
 # Author: Pito Salas and Claude Code
 # Open Source Under MIT license
-from unittest.mock import MagicMock
+# Note: registry-based scene command tests removed in F15/T07.
+# scene.describe and scene.count now route via dispatch_text → _BEHAVIOR_COMMANDS.
+# See test_command_dispatcher_text.py::TestDispatchTextBehaviorIntents.
+import json
+from unittest.mock import Mock
 
 import pytest
 
 from control.commands.command_dispatcher import CommandDispatcher
-from control.commands.robot_controller import CommandResponse, RobotController
+from control.commands.robot_controller import CommandResponse
 
 
-class TestSemanticCommands:
-
-    @pytest.fixture
-    def mock_rc(self):
-        mock = MagicMock(spec=RobotController)
-        mock.publish_intent_describe_scene.return_value = CommandResponse(
-            True, "Intent published: describe_scene"
-        )
-        mock.publish_intent_count_objects.return_value = CommandResponse(
-            True, "Intent published: count_objects"
-        )
-        return mock
+class TestSceneCommandsViaDispatchText:
 
     @pytest.fixture
-    def dispatcher(self, mock_rc):
-        return CommandDispatcher(mock_rc)
+    def setup(self):
+        rc = Mock()
+        published = []
+        from control.commands.intent_publisher import IntentPublisher
+        pub = IntentPublisher(publish_fn=published.append)
+        dispatcher = CommandDispatcher(rc, intent_publisher=pub)
+        return dispatcher, published
 
-    def test_scene_describe_dispatches_describe_scene_intent(self, dispatcher, mock_rc):
+    def test_scene_describe_publishes_describe_scene_intent(self, setup):
+        dispatcher, published = setup
+        result = dispatcher.dispatch_text("scene describe")
+        assert result.success is True
+        assert json.loads(published[0])["name"] == "describe_scene"
+
+    def test_scene_count_publishes_count_objects_intent(self, setup):
+        dispatcher, published = setup
+        result = dispatcher.dispatch_text("scene count")
+        assert result.success is True
+        assert json.loads(published[0])["name"] == "count_objects"
+
+    def test_scene_describe_not_in_registry(self, setup):
+        dispatcher, _ = setup
         result = dispatcher.execute("scene.describe", {})
-
-        assert result.success is True
-        mock_rc.publish_intent_describe_scene.assert_called_once_with()
-
-    def test_scene_count_dispatches_count_objects_intent(self, dispatcher, mock_rc):
-        result = dispatcher.execute("scene.count", {"object_type": "can"})
-
-        assert result.success is True
-        mock_rc.publish_intent_count_objects.assert_called_once_with(object_type="can")
-
-    def test_scene_count_requires_object_type(self, dispatcher):
-        result = dispatcher.execute("scene.count", {})
-
         assert result.success is False
-        assert "object_type" in result.message
-
-    def test_scene_commands_in_registry(self, dispatcher):
-        cmds = dispatcher.list_commands(group="scene")
-
-        assert "scene.describe" in cmds
-        assert "scene.count" in cmds
+        assert "Unknown command" in result.message

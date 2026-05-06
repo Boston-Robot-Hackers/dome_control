@@ -16,13 +16,11 @@ from prompt_toolkit.history import FileHistory
 import control.commands.command_dispatcher as cd
 import control.commands.config_manager as cm
 import control.commands.robot_controller as rc
-from control.interface.simple_parser import ParsedCommand, SimpleCommandParser
 
 
 class SimpleCLI:
 
     def __init__(self):
-        self.parser = SimpleCommandParser()
         config_path = os.environ.get("CONTROL_CONFIG", str(Path.home() / ".control" / "config.yaml"))
         self.config_manager = cm.ConfigManager.create(config_path)
         self.robot_controller = rc.RobotController(self.config_manager)
@@ -34,28 +32,6 @@ class SimpleCLI:
         self.command_history_file = control_dir / "command_history.txt"
         history_file = control_dir / "prompt_history.txt"
         self.prompt_history = FileHistory(str(history_file))
-
-    def _map_to_dispatcher_format(self, parsed: ParsedCommand):
-        # Build command name
-        if parsed.subcommand:
-            command_name = f"{parsed.command}.{parsed.subcommand}"
-        else:
-            command_name = parsed.command
-
-        # Get command definition to map arguments to parameter names
-        cmd_def = self.dispatcher.get_command_info(command_name)
-
-        if not cmd_def:
-            return command_name, {}
-
-        # Map positional arguments to named parameters
-        params = {}
-        for i, arg in enumerate(parsed.arguments):
-            if i < len(cmd_def.parameters):
-                param_name = cmd_def.parameters[i].name
-                params[param_name] = arg
-
-        return command_name, params
 
     def _load_help_file(self, filename: str):
         # Resolve symlinks to get actual source directory
@@ -162,34 +138,35 @@ class SimpleCLI:
         if not input_text.strip():
             return
 
-        parsed, error = self.parser.parse(input_text)
+        tokens = input_text.strip().split()
+        first = tokens[0].lower()
 
-        if error:
-            print(f"Error: {error.message}")
+        if first in ("help", "hlp"):
+            from control.commands.command_dispatcher import _resolve_keyword
+            # Reconstruct minimal parsed structure for help handler
+            class _P:
+                pass
+            p = _P()
+            p.command = "help"
+            p.subcommand = _resolve_keyword(tokens[1]) if len(tokens) > 1 else None
+            p.arguments = [_resolve_keyword(t) for t in tokens[2:]]
+            self._handle_help(p)
             return
 
-        # Handle special commands
-        if parsed.command == "help":
-            self._handle_help(parsed)
-            return
-
-        if parsed.command == "exit":
+        if first in ("exit", "quit", "q", "x"):
             print("Goodbye!")
             self.running = False
             return
 
-        # Map to dispatcher format and execute
-        command_name, params = self._map_to_dispatcher_format(parsed)
-        result = self.dispatcher.execute(command_name, params)
+        result = self.dispatcher.dispatch_text(input_text)
 
-        # Display result
         if result.success:
             print(f"✓ {result.message}")
             if result.data:
                 self._print_data(result.data)
         else:
             print(f"✗ {result.message}")
-            # If command not found, suggest available subcommands
+            command_name = tokens[0]
             if "Unknown command" in result.message and "." not in command_name:
                 self._show_subcommand_suggestions(
                     command_name,

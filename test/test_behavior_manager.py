@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# test_behavior_manager.py — tests for pure behavior-manager logic
+# test_behavior_manager.py — tests for IntentParser
 # Author: Pito Salas and Claude Code
 # Open Source Under MIT license
 import json
@@ -7,17 +7,17 @@ import json
 import pytest
 
 from control.behavior_manager import (
-    BehaviorManager,
+    IntentParser,
     make_announcement_msg,
     make_announcement_payload,
 )
 from control.announcement_contract import PRIORITY_QUERY_REPLY
 
 
-class TestBehaviorManager:
+class TestIntentParser:
 
     def test_parse_intent_json(self):
-        manager = BehaviorManager()
+        manager = IntentParser()
 
         intent = manager.parse_intent(
             '{"name": "describe_scene", "source": "cli", "slots": {}}'
@@ -28,19 +28,19 @@ class TestBehaviorManager:
         assert intent.slots == {}
 
     def test_parse_rejects_invalid_json(self):
-        manager = BehaviorManager()
+        manager = IntentParser()
 
         with pytest.raises(ValueError, match="Invalid intent JSON"):
             manager.parse_intent("{")
 
     def test_parse_rejects_missing_name(self):
-        manager = BehaviorManager()
+        manager = IntentParser()
 
         with pytest.raises(ValueError, match="name"):
             manager.parse_intent('{"source": "cli", "slots": {}}')
 
     def test_parse_rejects_non_object_slots(self):
-        manager = BehaviorManager()
+        manager = IntentParser()
 
         with pytest.raises(ValueError, match="slots"):
             manager.parse_intent(

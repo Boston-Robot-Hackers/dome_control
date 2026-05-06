@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# behavior_manager.py — pure intent dispatch logic
+# behavior_manager.py — pure intent parsing logic
 # Author: Pito Salas and Claude Code
 # Open Source Under MIT license
-"""Pure behavior-manager logic for intent dispatch."""
+"""Pure intent parser — no ROS2 dependency."""
 
 import json
 from dataclasses import dataclass
@@ -13,7 +13,7 @@ from control.announcement_contract import (
 )
 
 __all__ = [
-    'BehaviorManager',
+    'IntentParser',
     'Intent',
     'make_announcement_msg',
     'make_announcement_payload',
@@ -27,8 +27,8 @@ class Intent:
     slots: dict
 
 
-class BehaviorManager:
-    """Dispatch normalized intents without depending on ROS2."""
+class IntentParser:
+    """Parse raw intent JSON into Intent dataclass. No ROS2 dependency."""
 
     def parse_intent(self, payload: str) -> Intent:
         try:
