@@ -20,7 +20,8 @@
       "Bash(grep *)",
       "Bash(awk 'length > 88 {print FILENAME \":\" NR \": \" length \" chars\"}' tune/*.py tune/**/*.py tests/*.py)",
       "Bash(git *)",
-      "Bash(xargs cat)"
+      "Bash(xargs cat)",
+      "Bash(piper --version)"
     ]
   }
 }
