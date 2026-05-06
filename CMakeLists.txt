@@ -16,6 +16,10 @@ install(DIRECTORY control
   FILES_MATCHING PATTERN "*.py"
 )
 
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 install(PROGRAMS
   scripts/behavior_manager
   scripts/describe_scene_stub
