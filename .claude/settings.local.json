@@ -19,7 +19,8 @@
       "Bash(tune --version)",
       "Bash(grep *)",
       "Bash(awk 'length > 88 {print FILENAME \":\" NR \": \" length \" chars\"}' tune/*.py tune/**/*.py tests/*.py)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(xargs cat)"
     ]
   }
 }

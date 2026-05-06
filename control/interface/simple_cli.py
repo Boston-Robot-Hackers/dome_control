@@ -16,34 +16,33 @@ from prompt_toolkit.history import FileHistory
 import control.commands.command_dispatcher as cd
 import control.commands.config_manager as cm
 import control.commands.robot_controller as rc
+from control.commands.command_dispatcher import resolve_keyword
 
 
 class SimpleCLI:
 
     def __init__(self):
-        config_path = os.environ.get("CONTROL_CONFIG", str(Path.home() / ".control" / "config.yaml"))
+        default_cfg = str(Path.home() / ".control" / "config.yaml")
+        config_path = os.environ.get("CONTROL_CONFIG", default_cfg)
         self.config_manager = cm.ConfigManager.create(config_path)
         self.robot_controller = rc.RobotController(self.config_manager)
         self.dispatcher = cd.CommandDispatcher(self.robot_controller)
         self.running = True
 
-        # Set up command history with timestamps in control directory
         control_dir = self.config_manager.get_control_dir()
         self.command_history_file = control_dir / "command_history.txt"
-        history_file = control_dir / "prompt_history.txt"
-        self.prompt_history = FileHistory(str(history_file))
+        self.prompt_history = FileHistory(str(control_dir / "prompt_history.txt"))
 
-    def _load_help_file(self, filename: str):
-        # Resolve symlinks to get actual source directory
-        module_path = Path(__file__).resolve()
-        docs_dir = module_path.parent.parent.parent / "docs"
+    def load_help_file(self, filename: str) -> str | None:
+        docs_dir = Path(__file__).resolve().parent.parent.parent / "docs"
         help_file = docs_dir / filename
-
         if help_file.exists():
             return help_file.read_text()
         return None
 
-    def _show_subcommand_suggestions(self, command_name, header, footer=None):
+    def show_subcommand_suggestions(
+        self, command_name: str, header: str, footer: str | None = None
+    ) -> bool:
         suggestions = [
             cmd for cmd in self.dispatcher.commands.keys()
             if cmd.startswith(f"{command_name}.")
@@ -60,7 +59,7 @@ class SimpleCLI:
             print(footer)
         return True
 
-    def _show_common_commands(self):
+    def show_common_commands(self) -> None:
         print("Common Commands:")
         print()
         print("Movement:")
@@ -81,15 +80,17 @@ class SimpleCLI:
         print("  launch start <type>")
         print("  launch stop <type>")
         print()
-        print("Scripts:")
-        print("  script square --meters <value>")
+        print("Behaviors (publish to /intent):")
+        print("  scene describe")
+        print("  scene count")
+        print("  intent stop")
         print()
         print("Other:")
         print("  help <command>        - Show help for specific command")
         print("  help commands         - Show all available commands")
         print("  exit                  - Exit the program")
 
-    def _show_all_commands(self):
+    def show_all_commands(self) -> None:
         print("All Available Commands (alphabetical):")
         print("=" * 70)
         for cmd_name in sorted(self.dispatcher.commands.keys()):
@@ -98,43 +99,40 @@ class SimpleCLI:
             print(f"  {display_name:<30} - {cmd_def.description}")
         print("\nFor detailed help on any command: help <command> <subcommand>")
 
-    def _show_specific_help(self, parsed: ParsedCommand):
-        if parsed.arguments:
-            filename = f"{parsed.subcommand}.{parsed.arguments[0]}.txt"
+    def show_specific_help(
+        self, subcommand: str | None, arguments: list
+    ) -> None:
+        if arguments:
+            filename = f"{subcommand}.{arguments[0]}.txt"
         else:
-            filename = f"{parsed.subcommand}.txt"
+            filename = f"{subcommand}.txt"
 
-        help_text = self._load_help_file(filename)
+        help_text = self.load_help_file(filename)
         if help_text:
             print(help_text)
             return
 
-        command_name = parsed.subcommand
-        found = self._show_subcommand_suggestions(
-            command_name,
-            f"Available '{command_name}' commands:",
-            f"\nFor detailed help, use: help {command_name} <subcommand>"
+        found = self.show_subcommand_suggestions(
+            subcommand,
+            f"Available '{subcommand}' commands:",
+            f"\nFor detailed help, use: help {subcommand} <subcommand>",
         )
         if not found:
             command_str = (
-                f"{parsed.subcommand} {parsed.arguments[0]}"
-                if parsed.arguments
-                else parsed.subcommand
+                f"{subcommand} {arguments[0]}" if arguments else subcommand
             )
             print(f"No help available for: {command_str}")
 
-    def _handle_help(self, parsed: ParsedCommand):
-        if parsed.arguments and len(parsed.arguments) == 1 and parsed.arguments[0] == "commands":
-            self._show_all_commands()
+    def handle_help(self, subcommand: str | None, arguments: list) -> None:
+        if len(arguments) == 1 and arguments[0] == "commands":
+            self.show_all_commands()
             return
-
-        if parsed.subcommand:
-            self._show_specific_help(parsed)
+        if subcommand:
+            self.show_specific_help(subcommand, arguments)
         else:
-            self._show_common_commands()
+            self.show_common_commands()
 
-
-    def execute_command(self, input_text: str):
+    def execute_command(self, input_text: str) -> None:
         if not input_text.strip():
             return
 
@@ -142,15 +140,9 @@ class SimpleCLI:
         first = tokens[0].lower()
 
         if first in ("help", "hlp"):
-            from control.commands.command_dispatcher import resolve_keyword
-            # Reconstruct minimal parsed structure for help handler
-            class _P:
-                pass
-            p = _P()
-            p.command = "help"
-            p.subcommand = resolve_keyword(tokens[1]) if len(tokens) > 1 else None
-            p.arguments = [resolve_keyword(t) for t in tokens[2:]]
-            self._handle_help(p)
+            subcommand = resolve_keyword(tokens[1]) if len(tokens) > 1 else None
+            arguments = [resolve_keyword(t) for t in tokens[2:]]
+            self.handle_help(subcommand, arguments)
             return
 
         if first in ("exit", "quit", "q", "x"):
@@ -163,17 +155,15 @@ class SimpleCLI:
         if result.success:
             print(f"✓ {result.message}")
             if result.data:
-                self._print_data(result.data)
+                self.print_data(result.data)
         else:
             print(f"✗ {result.message}")
-            command_name = tokens[0]
-            if "Unknown command" in result.message and "." not in command_name:
-                self._show_subcommand_suggestions(
-                    command_name,
-                    "Did you mean one of these?"
+            if "Unknown command" in result.message and "." not in tokens[0]:
+                self.show_subcommand_suggestions(
+                    tokens[0], "Did you mean one of these?"
                 )
 
-    def _print_data(self, data):
+    def print_data(self, data) -> None:
         if isinstance(data, dict):
             for key, value in data.items():
                 if isinstance(value, dict):
@@ -187,53 +177,39 @@ class SimpleCLI:
         else:
             print(data)
 
-    def _log_command(self, command: str):
+    def log_command(self, command: str) -> None:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         with open(self.command_history_file, "a") as f:
             f.write(f"\n# {timestamp}\n")
             f.write(f"+{command}\n")
 
-    def repl(self):
-        print("Robot Control CLI (Simple Parser)")
+    def repl(self) -> None:
+        print("Robot Control CLI")
         print("Type 'help' for available commands, 'exit' to quit")
         print()
 
         while self.running:
             try:
-                # Read command with history support
                 input_text = prompt("robot> ", history=self.prompt_history)
-
-                # Skip empty commands
                 if not input_text.strip():
                     continue
-
-                # Log command to file
-                self._log_command(input_text.strip())
-
-                # Execute command
+                self.log_command(input_text.strip())
                 self.execute_command(input_text)
-
             except EOFError:
-                # Ctrl+D
                 print()
                 print("Goodbye!")
                 self.running = False
             except KeyboardInterrupt:
-                # Ctrl+C
                 print()
                 print("Use 'exit' to quit")
 
 
-
-def main():
+def main() -> None:
     cli = SimpleCLI()
 
     if len(sys.argv) > 1:
-        # Non-interactive: execute command from args
-        command = " ".join(sys.argv[1:])
-        cli.execute_command(command)
+        cli.execute_command(" ".join(sys.argv[1:]))
     else:
-        # Interactive REPL
         cli.repl()
 
 

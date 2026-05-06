@@ -1,27 +1,27 @@
 ---
-version: "1.0"
-generated: "2026-05-04"
+version: "2.0"
+generated: "2026-05-06"
 ---
 
 # SimpleCLI
 
-`simple_cli.py` is the top-level entry point for the robot control CLI. It assembles the full stack — config, controller, dispatcher, parser — and provides both an interactive REPL and a non-interactive single-command mode.
+`simple_cli.py` is the top-level entry point for the robot control CLI. It assembles the full stack — config, controller, dispatcher — and provides both an interactive REPL and a non-interactive single-command mode.
 
 ## Assembly at Startup
 
 ```python
 class SimpleCLI:
     def __init__(self):
-        self.parser = SimpleCommandParser()
-        config_path = os.environ.get("CONTROL_CONFIG", str(Path.home() / ".control" / "config.yaml"))
+        default_cfg = str(Path.home() / ".control" / "config.yaml")
+        config_path = os.environ.get("CONTROL_CONFIG", default_cfg)
         self.config_manager = cm.ConfigManager.create(config_path)
         self.robot_controller = rc.RobotController(self.config_manager)
         self.dispatcher = cd.CommandDispatcher(self.robot_controller)
 ```
 
-Construction order matters: `ConfigManager` → `RobotController` → `CommandDispatcher`. The config must exist before the controller initialises (it reads launch templates), and the controller must exist before the dispatcher (it needs a controller to dispatch to).
+Construction order: `ConfigManager` → `RobotController` → `CommandDispatcher`. `CONTROL_CONFIG` env var overrides the default config path.
 
-`CONTROL_CONFIG` environment variable allows pointing to a non-default config file, useful for running with a test config or a different robot profile.
+`SimpleCommandParser` was removed in F15/T05. All text parsing now goes through `CommandDispatcher.dispatch_text`.
 
 ## Two Modes
 
@@ -29,62 +29,58 @@ Construction order matters: `ConfigManager` → `RobotController` → `CommandDi
 def main():
     cli = SimpleCLI()
     if len(sys.argv) > 1:
-        command = " ".join(sys.argv[1:])
-        cli.execute_command(command)
+        cli.execute_command(" ".join(sys.argv[1:]))
     else:
         cli.repl()
 ```
 
-Non-interactive mode: `ros2 run control run move forward 1.0` — the CLI executes one command and exits. Useful for scripting and testing.
+Non-interactive: `ros2 run control run move forward 1.0` — executes one command and exits. Interactive REPL: `prompt_toolkit` with persistent history in `~/.control/prompt_history.txt`. Commands are also timestamped to `~/.control/command_history.txt`.
 
-Interactive REPL: uses `prompt_toolkit` for readline-style history with persistence to `~/.control/prompt_history.txt`. Every command typed is also logged with a timestamp to `~/.control/command_history.txt`.
-
-## Parsing → Dispatcher Mapping
+## execute_command
 
 ```python
-def _map_to_dispatcher_format(self, parsed: ParsedCommand):
-    if parsed.subcommand:
-        command_name = f"{parsed.command}.{parsed.subcommand}"
-    else:
-        command_name = parsed.command
+def execute_command(self, input_text: str) -> None:
+    tokens = input_text.strip().split()
+    first = tokens[0].lower()
 
-    cmd_def = self.dispatcher.get_command_info(command_name)
-    params = {}
-    for i, arg in enumerate(parsed.arguments):
-        if i < len(cmd_def.parameters):
-            params[cmd_def.parameters[i].name] = arg
+    if first in ("help", "hlp"):
+        subcommand = resolve_keyword(tokens[1]) if len(tokens) > 1 else None
+        arguments = [resolve_keyword(t) for t in tokens[2:]]
+        self.handle_help(subcommand, arguments)
+        return
 
-    return command_name, params
+    if first in ("exit", "quit", "q", "x"):
+        ...
+
+    result = self.dispatcher.dispatch_text(input_text)
 ```
 
-Positional arguments from the parser are mapped to named parameters using the `ParameterDef` list order. If the user provides more arguments than the command has parameters, the extra arguments are silently dropped.
+Three paths: help handling (in-CLI), exit handling (in-CLI), everything else goes to `dispatch_text`. Help and exit are intercepted before dispatch because they require CLI-level state (`self.running`, `self.dispatcher.commands`).
 
 ## Help System
 
-The CLI has a three-tier help system:
-
 ```
-help                → _show_common_commands()   (curated list of frequent commands)
-help commands       → _show_all_commands()       (full alphabetical registry dump)
-help <group>        → _show_subcommand_suggestions()  (all commands in that group)
-help <group> <sub>  → _load_help_file()          (detailed text file from docs/)
+help                      → show_common_commands()
+help commands             → show_all_commands()
+help <group>              → show_subcommand_suggestions()
+help <group> <subcommand> → load_help_file() → docs/<group>.<sub>.txt
 ```
 
-Detailed help files are loaded from a `docs/` directory relative to the package source. If the file doesn't exist, the CLI falls back to listing group subcommands.
+`show_all_commands` dumps the full `dispatcher.commands` registry alphabetically, including behavior commands (intent/scene group). Detailed help files load from `docs/` relative to the package source root.
 
 ## Error Feedback
 
-When an unknown command is typed, the CLI tries to be helpful:
+When an unknown command is entered:
 
 ```python
-if "Unknown command" in result.message and "." not in command_name:
-    self._show_subcommand_suggestions(command_name, "Did you mean one of these?")
+if "Unknown command" in result.message and "." not in tokens[0]:
+    self.show_subcommand_suggestions(tokens[0], "Did you mean one of these?")
 ```
 
-If the user typed a valid group name with no subcommand (e.g., `move` alone), it lists all `move.*` commands. This reduces the need to consult help text for the common case of forgetting a subcommand.
+Lists all `<group>.*` commands if the token looks like a group name.
 
 ## Observations
 
-- `_log_command` writes to a file on every keypress in the REPL. There is no buffering or rotation — the history file will grow indefinitely.
-- The help file loading (`_load_help_file`) resolves the package path via `Path(__file__).resolve()` and traverses up three levels. This is brittle to package layout changes.
-- Empty input is silently ignored (`if not input_text.strip(): return`). This is correct behaviour for the REPL but means non-interactive mode with an empty argument string exits silently with no feedback.
+- `log_command` writes to file on every command with no buffering or rotation — history file grows indefinitely.
+- `load_help_file` traverses three levels up from `__file__` to find `docs/`. Brittle to layout changes.
+- Empty input is silently ignored in both REPL and non-interactive mode.

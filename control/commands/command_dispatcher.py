@@ -163,8 +163,10 @@ class CommandDispatcher:
             try:
                 validated[param_name] = self._convert_parameter_value(param_def, value)
             except (ValueError, TypeError):
+                expected = param_def.param_type.__name__
+                got = type(value).__name__
                 raise ValueError(
-                    f"Invalid type for {param_name}: expected {param_def.param_type.__name__}, got {type(value).__name__}"
+                    f"Invalid type for {param_name}: expected {expected}, got {got}"
                 )
 
         return validated

@@ -19,7 +19,9 @@ class IntentPublisher:
         self.publish_fn = publish_fn
         self.api = None
 
-    def publish(self, name: str, source: str = "cli", slots: dict | None = None) -> None:
+    def publish(
+        self, name: str, source: str = "cli", slots: dict | None = None
+    ) -> None:
         payload = json.dumps({"name": name, "source": source, "slots": slots or {}})
         if self.publish_fn is not None:
             self.publish_fn(payload)
