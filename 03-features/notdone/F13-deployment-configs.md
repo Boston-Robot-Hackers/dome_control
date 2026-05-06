@@ -10,6 +10,11 @@ configurations via two parameterized launch files. Hardware-locked nodes stay on
 the robot; pure-logic nodes can run anywhere. ROS2 DDS handles cross-machine
 routing transparently — no code changes needed, only launch infrastructure.
 
+**Partial progress**: `launch/robot.launch.py` (behavior_manager, speech_output,
+voice_input) and `launch/remote.launch.py` (describe_scene_stub) created and
+installed via CMakeLists. Both registered in `launch_templates` config.
+Remaining: conditional `voice:=` / `behavior:=` launch args not yet implemented.
+
 ## Architecture
 
 Stable interface boundary — two topics:

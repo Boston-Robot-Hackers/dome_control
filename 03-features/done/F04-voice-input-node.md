@@ -1,7 +1,7 @@
 # Feature description for feature F04
-## F04 — Voice input node (Porcupine + Rhino)
+## F04 — Voice input node (openWakeWord + Vosk)
 **Priority**: High
-**Done:** no
+**Done:** yes
 **Tasks File Created:** yes
 **Tests Written:** yes
 **Test Passing:** yes

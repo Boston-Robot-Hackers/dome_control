@@ -3,8 +3,8 @@
 **Priority**: High
 **Done:** no
 **Tasks File Created:** yes
-**Tests Written:** no
-**Test Passing:** no
+**Tests Written:** yes
+**Test Passing:** yes
 **Description**: Refactor the command and behavior layers so that high-level
 behaviors are triggerable from any source — CLI, `/intent` topic, speech, future
 REST API — through a single consistent path. Primitives and admin commands keep
@@ -100,24 +100,28 @@ into `CommandDispatcher.dispatch_text()`)
 
 ```
 control/behaviors/__init__.py
-control/behaviors/motion_behavior.py      # MotionBehavior
-control/behaviors/perception_behavior.py  # PerceptionBehavior
+control/behaviors/motion_behavior.py       # MotionBehavior
+control/behaviors/perception_behavior.py   # PerceptionBehavior
+control/commands/intent_publisher.py       # IntentPublisher (injectable for tests)
+control/nodes/__init__.py
 ```
 
 ## Modified Files
 
-- `behavior_manager.py` — rename class `BehaviorManager` → `IntentParser`
-- `behavior_manager_node.py` — add `RobotController`, route to both behavior
-  handlers, remove inline `describe_scene` logic
-- `command_dispatcher.py` — absorb text-parsing from `simple_parser`; behavior
-  commands publish to `/intent` instead of calling `RobotController` directly
-- `simple_cli.py` — minor: call `dispatcher.dispatch_text()` instead of parser
-- `intent_commands.py`, `semantic_commands.py` — remove from `CommandDispatcher`
-  registry; these commands now publish to `/intent` via dispatcher routing
+- `control/commands/intent_parser.py` — renamed from `behavior_manager.py`;
+  class `BehaviorManager` → `IntentParser`; file moved to `commands/`
+- `control/nodes/behavior_manager_node.py` — moved from root; added
+  `RobotController`, routes to handler list, removed inline `describe_scene` logic
+- `control/commands/command_dispatcher.py` — absorbed text-parsing from
+  `simple_parser`; behavior commands publish to `/intent` via `IntentPublisher`;
+  behavior commands added to registry so they appear in `help commands`
+- `control/interface/simple_cli.py` — calls `dispatcher.dispatch_text()` directly
 
 ## Deleted Files
 
 - `control/interface/simple_parser.py` — logic merged into `CommandDispatcher`
+- `control/commands/intent_commands.py` — replaced by `BEHAVIOR_COMMANDS` routing
+- `control/commands/semantic_commands.py` — replaced by `BEHAVIOR_COMMANDS` routing
 
 ## Behavior Handler Interface
 
