@@ -39,7 +39,7 @@ TUNED_VOICE_PARAMETERS = {
     "playback_card": 0,
     "stream_settings": {
         "wake_word": "alexa",
-        "threshold": 0.3,
+        "threshold": 0.5,
         "wake_hits": 3,
         "live_filter": True,
         "vosk_model": "small",
