@@ -13,7 +13,13 @@
       "Bash(git stash *)",
       "Bash(git rm *)",
       "Read(//home/pitosalas/ros2_ws/src/oak_roboflow/02-doc/**)",
-      "Read(//home/pitosalas/ros2_ws/src/oak_roboflow/**)"
+      "Read(//home/pitosalas/ros2_ws/src/oak_roboflow/**)",
+      "Bash(mv /home/pitosalas/ros2_ws/src/control/tune /home/pitosalas/tune)",
+      "Read(//home/pitosalas/**)",
+      "Bash(tune --version)",
+      "Bash(grep *)",
+      "Bash(awk 'length > 88 {print FILENAME \":\" NR \": \" length \" chars\"}' tune/*.py tune/**/*.py tests/*.py)",
+      "Bash(git *)"
     ]
   }
 }
