@@ -4,7 +4,7 @@
 # Open Source Under MIT license
 """Handles motion-domain intents. No ROS2 dependency."""
 
-from control.behavior_manager import Intent
+from control.commands.intent_parser import Intent
 
 MOTION_INTENTS = {"stop", "explore", "drive_square"}
 

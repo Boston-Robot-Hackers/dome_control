@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# behavior_manager.py — pure intent parsing logic
+# intent_parser.py — pure intent parsing logic
 # Author: Pito Salas and Claude Code
 # Open Source Under MIT license
 """Pure intent parser — no ROS2 dependency."""

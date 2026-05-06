@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from control.behavior_manager import Intent
+from control.commands.intent_parser import Intent
 from control.behaviors.perception_behavior import PerceptionBehavior
 
 

@@ -9,7 +9,7 @@ from control.announcement_contract import (
     PRIORITY_QUERY_REPLY,
     make_announcement_msg,
 )
-from control.speech_output_node import (
+from control.nodes.speech_output_node import (
     apply_wav_gain,
     parse_length_scale,
     parse_speech_gain,
@@ -20,7 +20,7 @@ from control.speech_output_node import (
 
 def _make_node():
     with patch("rclpy.node.Node.__init__", return_value=None):
-        from control.speech_output_node import SpeechOutputNode
+        from control.nodes.speech_output_node import SpeechOutputNode
 
         node = SpeechOutputNode.__new__(SpeechOutputNode)
         node.get_logger = MagicMock(return_value=MagicMock())
@@ -81,7 +81,7 @@ def test_on_announcement_ignores_empty():
     node.speak_text.assert_not_called()
 
 
-@patch("control.speech_output_node.subprocess.run")
+@patch("control.nodes.speech_output_node.subprocess.run")
 def test_synthesize_to_wav_invokes_piper(mock_run):
     synthesize_to_wav(
         text="test speech",
@@ -101,7 +101,7 @@ def test_synthesize_to_wav_invokes_piper(mock_run):
     assert "--quiet" in cmd
 
 
-@patch("control.speech_output_node.subprocess.run")
+@patch("control.nodes.speech_output_node.subprocess.run")
 def test_play_wav_invokes_aplay(mock_run):
     play_wav("/tmp/out.wav", alsa_device="hw:1,0")
     mock_run.assert_called_once_with(
@@ -165,11 +165,11 @@ def test_apply_wav_gain_reduces_sample_amplitude(tmp_path):
     assert _read_test_sample(quiet_path) == 3500
 
 
-@patch("control.speech_output_node.play_wav")
-@patch("control.speech_output_node.apply_wav_gain")
-@patch("control.speech_output_node.synthesize_to_wav")
+@patch("control.nodes.speech_output_node.play_wav")
+@patch("control.nodes.speech_output_node.apply_wav_gain")
+@patch("control.nodes.speech_output_node.synthesize_to_wav")
 def test_speak_text_applies_gain_when_configured(mock_synth, mock_gain, mock_play):
-    from control.speech_output_node import SpeechOutputNode
+    from control.nodes.speech_output_node import SpeechOutputNode
 
     node = SpeechOutputNode.__new__(SpeechOutputNode)
     node.piper_bin = "piper"

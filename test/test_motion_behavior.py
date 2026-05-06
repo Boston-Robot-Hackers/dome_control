@@ -4,7 +4,7 @@
 # Open Source Under MIT license
 from unittest.mock import Mock
 
-from control.behavior_manager import Intent
+from control.commands.intent_parser import Intent
 from control.behaviors.motion_behavior import MotionBehavior
 
 

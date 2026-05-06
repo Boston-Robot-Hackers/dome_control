@@ -10,7 +10,7 @@ from std_msgs.msg import String
 from std_srvs.srv import Trigger
 
 from control.announcement_contract import AnnouncementMsg
-from control.behavior_manager import IntentParser
+from control.commands.intent_parser import IntentParser
 from control.behaviors.motion_behavior import MotionBehavior
 from control.behaviors.perception_behavior import PerceptionBehavior
 from control.commands.config_manager import ConfigManager

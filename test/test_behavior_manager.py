@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from control.behavior_manager import (
+from control.commands.intent_parser import (
     IntentParser,
     make_announcement_msg,
     make_announcement_payload,

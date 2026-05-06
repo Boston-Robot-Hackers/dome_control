@@ -7,7 +7,7 @@ from control.announcement_contract import PRIORITY_QUERY_REPLY
 
 def _make_voice_node():
     with patch("rclpy.node.Node.__init__", return_value=None):
-        import control.voice_input_node as vin
+        import control.nodes.voice_input_node as vin
 
         node = vin.VoiceInputNode.__new__(vin.VoiceInputNode)
         node.intent_pub = MagicMock()
@@ -19,7 +19,7 @@ def _make_voice_node():
 
 def test_publish_intent():
     _, node = _make_voice_node()
-    from control.voice_input_node import VoiceInputNode
+    from control.nodes.voice_input_node import VoiceInputNode
     VoiceInputNode.publish_intent(node, {"name": "stop", "source": "voice", "slots": {}})
     node.intent_pub.publish.assert_called_once()
     msg = node.intent_pub.publish.call_args[0][0]
@@ -28,7 +28,7 @@ def test_publish_intent():
 
 def test_publish_state():
     _, node = _make_voice_node()
-    from control.voice_input_node import VoiceInputNode
+    from control.nodes.voice_input_node import VoiceInputNode
     VoiceInputNode.publish_state(node, "LISTENING")
     node.state_pub.publish.assert_called_once()
     msg = node.state_pub.publish.call_args[0][0]
@@ -37,7 +37,7 @@ def test_publish_state():
 
 def test_publish_announcement():
     _, node = _make_voice_node()
-    from control.voice_input_node import VoiceInputNode
+    from control.nodes.voice_input_node import VoiceInputNode
     VoiceInputNode.publish_announcement(node, "I didn't catch that")
     node.announcement_pub.publish.assert_called_once()
     msg = node.announcement_pub.publish.call_args[0][0]
@@ -48,7 +48,7 @@ def test_publish_announcement():
 
 def test_process_transcript_known_intent():
     _, node = _make_voice_node()
-    from control.voice_input_node import VoiceInputNode
+    from control.nodes.voice_input_node import VoiceInputNode
 
     node.intent_mapper = MagicMock()
     node.intent_mapper.map_intent.return_value = {
@@ -58,7 +58,7 @@ def test_process_transcript_known_intent():
     node.publish_intent = MagicMock()
     node.publish_announcement = MagicMock()
 
-    with patch("control.voice_input_node.beep") as mock_beep:
+    with patch("control.nodes.voice_input_node.beep") as mock_beep:
         VoiceInputNode.process_transcript(node, "what do you see", device_index=2)
 
     node.publish_state.assert_any_call("PROCESSING")
@@ -70,7 +70,7 @@ def test_process_transcript_known_intent():
 
 def test_process_transcript_unknown_intent():
     _, node = _make_voice_node()
-    from control.voice_input_node import VoiceInputNode
+    from control.nodes.voice_input_node import VoiceInputNode
 
     node.intent_mapper = MagicMock()
     node.intent_mapper.map_intent.return_value = None
@@ -78,7 +78,7 @@ def test_process_transcript_unknown_intent():
     node.publish_intent = MagicMock()
     node.publish_announcement = MagicMock()
 
-    with patch("control.voice_input_node.speak") as mock_speak:
+    with patch("control.nodes.voice_input_node.speak") as mock_speak:
         VoiceInputNode.process_transcript(node, "blah blah")
 
     node.publish_state.assert_any_call("PROCESSING")
@@ -91,7 +91,7 @@ def test_process_transcript_unknown_intent():
 def test_process_turn_transcript_path():
     _, node = _make_voice_node()
     from control.voice.runtime import VoiceTurn
-    from control.voice_input_node import VoiceInputNode
+    from control.nodes.voice_input_node import VoiceInputNode
 
     node.process_transcript = MagicMock()
     turn = VoiceTurn(text="stop", raw_text="stop", empty=False)
@@ -104,12 +104,12 @@ def test_process_turn_transcript_path():
 def test_process_turn_empty_announces_failure():
     _, node = _make_voice_node()
     from control.voice.runtime import VoiceTurn
-    from control.voice_input_node import VoiceInputNode
+    from control.nodes.voice_input_node import VoiceInputNode
 
     node.publish_state = MagicMock()
     node.publish_announcement = MagicMock()
 
-    with patch("control.voice_input_node.speak") as mock_speak:
+    with patch("control.nodes.voice_input_node.speak") as mock_speak:
         VoiceInputNode.process_turn(node, VoiceTurn(empty=True))
 
     node.publish_state.assert_called_once_with("SPEAKING")
