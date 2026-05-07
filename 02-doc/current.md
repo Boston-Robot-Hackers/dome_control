@@ -27,37 +27,34 @@ management, map operations, configuration, scripts, and intent publishing.
 - `BehaviorManagerNode`: subscribes to `/intent` and `/oak/detections`, routes to domain handlers.
   Caches latest `Detection2DArray` in `latest_detections` for `PerceptionBehavior`.
 - `MotionBehavior`: handles `stop`, `explore`, `drive_square`, `turn_right`, `turn_left`, `get_status`.
-- `PerceptionBehavior`: handles `describe_scene` (async service call), `list_objects` (cached detections).
+- `PerceptionBehavior`: handles `describe_scene` (async `/describe_scene` Trigger service call to
+  `SemanticMapNode`), `list_objects` (cached detections from `/oak/detections`).
+  If service not ready, publishes user-facing "Oak Camera not connected" message.
 - `IntentParser`: pure Python JSON→Intent parser.
 - `describe_scene_stub` node for smoke testing without vision hardware.
-- Voice pipeline extracted to sibling package `robot_voice` (see `src/robot_voice/`).
-  `voice_input_node.py` is the ROS2 adapter in control that imports from `robot_voice`.
+- Voice pipeline in sibling package `robot_voice`. `voice_input_node.py` lives there.
 - Voice intent mapping: 8 single-word commands — stop, right, left, explore, describe, objects, status, help.
 - Wake word: "alexa". Threshold 0.7, wake_hits 3, cooldown 1.5s.
 - `audio_feedback.py` (in robot_voice): beep via aplay, 20% amplitude.
-- Launch files:
-  - `launch/robot.launch.py` — robot nodes. Args: `voice`, `behavior`, `oak`.
-    `oak:=true` launches `oak_roboflow_ros_node` (lifecycle) instead of `describe_scene_stub`.
-  - `launch/remote.launch.py` — remote/dev nodes.
+- Launch files — each package owns its own robot/remote launches:
+  - `control/launch/robot.launch.py` — speech_output + behavior_manager (no args)
+  - `control/launch/remote.launch.py` — optional behavior_manager
+  - `robot_voice/launch/robot.launch.py` — voice_input (Seeed board assumed)
+  - `oak_roboflow_ros/launch/robot.launch.py` — oak camera + semantic_map + optional spin_survey
 - Feature files:
-  - `F01`–`F03`, `F13`–`F15`: done
-  - `F16` list-detected-objects: in progress
+  - `F01`–`F03`, `F13`–`F16`: done
 
 ## Known Issues / Pending
 
 - **Empty STT turns**: voice turns returning empty. Debug log in `voice_input_node` shows
   `floor`/`cutoff`/`command_started`/`raw_text`. Next: observe on hardware.
 - **Wake re-trigger**: cooldown fix unconfirmed on hardware.
-- **`scene describe` with real oak**: `oak_roboflow_ros` has no `/describe_scene` service.
-  With `oak:=true`, `scene describe` silently no-ops. Need to implement service in oak_roboflow_ros
-  or wire describe_scene through `/oak/detections` same as `list_objects`.
 
 ## Likely Next Steps
 
-1. Implement `/describe_scene` service in `oak_roboflow_ros` for real camera.
-2. Test `scene objects` with real oak hardware (`bl control robot.launch.py oak:=true`).
-3. Observe empty-turn voice debug log on hardware.
-4. Split `RobotController` into smaller modules.
+1. Test `scene describe` and `scene objects` with real oak hardware on robot.
+2. Observe empty-turn voice debug log on hardware.
+3. Split `RobotController` into smaller modules.
 
 ## Quick Commands
 
@@ -65,15 +62,15 @@ management, map operations, configuration, scripts, and intent publishing.
 # Tests
 python3 -m pytest test/ -v
 
-# CLI
+# CLI (dev machine)
 ros2 run control run
 
-# Launch robot (stub)
+# On robot — three separate terminals:
 bl control robot.launch.py
+bl robot_voice robot.launch.py
+bl oak_roboflow_ros robot.launch.py
 
-# Launch robot with real oak camera
-bl control robot.launch.py oak:=true
-
-# Launch full stack
-bl control robot.launch.py oak:=true voice:=true
+# Stub mode (no oak hardware):
+bl control robot.launch.py
+# manually: ros2 run control describe_scene_stub
 ```
