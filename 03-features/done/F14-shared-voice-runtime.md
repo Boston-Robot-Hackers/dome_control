@@ -1,7 +1,7 @@
 # Feature description for feature F14
 ## F14 — Shared tuned voice runtime with thin ROS wrapper
 **Priority**: High
-**Done:** no
+**Done:** yes
 **Tasks File Created:** yes
 **Tests Written:** yes
 **Test Passing:** yes

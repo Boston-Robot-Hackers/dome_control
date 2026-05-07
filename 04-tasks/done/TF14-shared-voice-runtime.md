@@ -43,7 +43,7 @@ produce the expected normalized movement/stop intents. Test every tuned grammar
 phrase.
 
 ## T06 — Run Pi hardware smoke test
-**Status**: not done
+**Status**: done
 **Description**: On the Pi with the ReSpeaker HAT and installed voice models,
 run `python3 -m control.voice.runtime --trials 5`. Confirm wake hits,
 transcripts, empty count, and latency are plausible with the pasted

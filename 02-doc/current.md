@@ -41,15 +41,16 @@ The repository has been migrated to the numbered process/documentation layout:
 - Wake word: "alexa". Threshold 0.7, wake_hits 3, cooldown 1.5s (flushes OWW model state).
 - `audio_feedback.py`: beep via aplay (same ALSA device as Piper), 20% amplitude.
 - Colcon-compatible launch files:
-  - `launch/robot.launch.py` — on-robot nodes (behavior_manager, speech_output, voice_input)
-  - `launch/remote.launch.py` — remote/dev nodes (describe_scene_stub)
+  - `launch/robot.launch.py` — on-robot nodes, with `voice` and `behavior` launch args
+  - `launch/remote.launch.py` — remote/dev nodes, with `voice` and `behavior` launch args
   - Both registered in `launch_templates` in `control-config.yaml` as `robot` and `remote`.
 - Existing feature files:
   - `F01` intent publishing: done
   - `F02` structural code cleanup: done
   - `F03` semantic behavior pipeline MVP: done
-  - `F14` shared tuned voice runtime: code done; Pi hardware smoke test pending
-  - `F15` unified intent architecture: T01–T07 done; T08 (smoke test) pending
+  - `F13` multi-machine deployment configurations: done
+  - `F14` shared tuned voice runtime: done
+  - `F15` unified intent architecture: done
 
 ## Known Issues / Pending
 
@@ -68,12 +69,9 @@ The repository has been migrated to the numbered process/documentation layout:
    `floor`/`cutoff`/`command_started`/`raw_text`. If `command_started=False`, mic too quiet
    or silence_margin too strict. If `command_started=True` and `raw_text=''`, Vosk grammar mismatch.
 
-2. **T08: Smoke test F15 end-to-end with ROS2 running.**
-   CLI `stop` → `/intent` → behavior_manager → RobotController.
+2. **Replace describe_scene_stub with real oak_roboflow query path.**
 
-3. **Replace describe_scene_stub with real oak_roboflow query path.**
-
-4. **Split `RobotController` into smaller modules.**
+3. **Split `RobotController` into smaller modules.**
 
 ## Quick Commands
 
@@ -92,7 +90,7 @@ ros2 run control run
 Launch on robot:
 
 ```bash
-ros2 launch control robot.launch.py
+bl control robot.launch.py
 ```
 
 Voice runtime smoke test:

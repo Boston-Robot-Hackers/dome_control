@@ -1,7 +1,7 @@
 # Feature description for feature F15
 ## F15 — Unified intent architecture with split behavior handlers
 **Priority**: High
-**Done:** no
+**Done:** yes
 **Tasks File Created:** yes
 **Tests Written:** yes
 **Test Passing:** yes

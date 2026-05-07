@@ -123,7 +123,7 @@ T06 routing logic.
 ---
 
 ## T08 — Smoke test end-to-end
-**Status**: not done
+**Status**: done
 **Test tier**: ROS2 no-robot (all steps — verify topic publishes, not robot movement)
 **Description**: Manual verification with ROS2 running:
 1. CLI `stop` → `/intent` topic receives stop intent, behavior_manager handles it
@@ -135,3 +135,5 @@ T06 routing logic.
 6. CLI `config list` → synchronous response in REPL
 
 Run: `python3 -m pytest test/ -v`
+
+**Test**: ROS2 no-robot smoke test completed manually.

@@ -1,19 +1,18 @@
 # Feature description for feature F13
 ## F13 — Multi-machine deployment configurations
 **Priority**: Medium
-**Done:** no
+**Done:** yes
 **Tasks File Created:** yes
-**Tests Written:** no
-**Test Passing:** no
+**Tests Written:** yes
+**Test Passing:** yes
 **Description**: Support running control package nodes across multiple deployment
 configurations via two parameterized launch files. Hardware-locked nodes stay on
 the robot; pure-logic nodes can run anywhere. ROS2 DDS handles cross-machine
 routing transparently — no code changes needed, only launch infrastructure.
 
-**Partial progress**: `launch/robot.launch.py` (behavior_manager, speech_output,
-voice_input) and `launch/remote.launch.py` (describe_scene_stub) created and
-installed via CMakeLists. Both registered in `launch_templates` config.
-Remaining: conditional `voice:=` / `behavior:=` launch args not yet implemented.
+**Status**: Complete. `launch/robot.launch.py` and `launch/remote.launch.py`
+created and installed via CMakeLists. Both registered in `launch_templates`
+config.
 
 ## Architecture
 
@@ -41,34 +40,34 @@ Any source publishing valid JSON to `/intent` works regardless of machine.
 
 Two launch files, both in `launch/`:
 
-### `onboard.launch.py`
+### `robot.launch.py`
 Always starts: `speech_output`, `describe_scene_stub`
 Args:
-- `voice:=false` — set true if mic is physically on robot
-- `behavior:=true` — set false to move behavior_manager offboard
+- `--voice False` — set true if mic is physically on robot
+- `--behavior True` — set false to move behavior_manager offboard
 
-### `offboard.launch.py`
+### `remote.launch.py`
 Args:
-- `voice:=true` — set false if mic is onboard or not used
-- `behavior:=false` — set true to run behavior_manager offboard
+- `--voice True` — set false if mic is onboard or not used
+- `--behavior False` — set true to run behavior_manager offboard
 
 ### Common invocations
 
 ```bash
 # Config A — everything onboard, mic on robot
-ros2 launch control onboard.launch.py voice:=true
+bl control robot.launch.py --voice True
 
 # Config B — mic offboard, everything else onboard
-# robot:    ros2 launch control onboard.launch.py
-# offboard: ros2 launch control offboard.launch.py
+# robot:    bl control robot.launch.py
+# offboard: bl control remote.launch.py
 
 # Config D — CLI offboard, no voice
-# robot:    ros2 launch control onboard.launch.py
+# robot:    bl control robot.launch.py
 # offboard: ros2 run control run   (interactive, not a launch file)
 
 # Config E — behavior_manager offboard
-# robot:    ros2 launch control onboard.launch.py behavior:=false
-# offboard: ros2 launch control offboard.launch.py behavior:=true voice:=false
+# robot:    bl control robot.launch.py --behavior False
+# offboard: bl control remote.launch.py --behavior True --voice False
 ```
 
 ## Known Wart
@@ -79,9 +78,9 @@ setup. Fix later by routing through `/announcement` if robot-side feedback neede
 
 ## What Needs Building
 
-1. `launch/onboard.launch.py` — `speech_output` + `describe_scene_stub` always;
+1. `launch/robot.launch.py` — `speech_output` + `describe_scene_stub` always;
    `voice_input` and `behavior_manager` conditional on args.
-2. `launch/offboard.launch.py` — `voice_input` and `behavior_manager` conditional on args.
+2. `launch/remote.launch.py` — `voice_input` and `behavior_manager` conditional on args.
 3. `CMakeLists.txt` update — install `launch/` directory.
 4. `rf_input_node` — future, hardware TBD. Publishes to `/intent`. Implement when hardware chosen.
 
@@ -102,8 +101,8 @@ setup. Fix later by routing through `/announcement` if robot-side feedback neede
 **Setup**: Two machines, same network, same `ROS_DOMAIN_ID`. ROS2 sourced on both.
 
 **Steps** (config B — mic offboard, speaker on robot):
-1. Robot: `ros2 launch control onboard.launch.py`
-2. Offboard: `ros2 launch control offboard.launch.py`
+1. Robot: `bl control robot.launch.py`
+2. Offboard: `bl control remote.launch.py`
 3. Speak wake word and command into offboard mic.
 
 **Expected output**: intent published from offboard, behavior_manager on robot
