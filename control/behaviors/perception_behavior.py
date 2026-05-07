@@ -29,7 +29,9 @@ class PerceptionBehavior:
 
     def call_describe_scene(self) -> None:
         if not self.node.describe_scene_client.service_is_ready():
-            self.node.get_logger().warn("/describe_scene service is not available")
+            self.publish_announcement(
+                "Oak Camera not connected. Make sure you run the right launch file onboard the robot."
+            )
             return
         from std_srvs.srv import Trigger  # lazy — avoids rclpy at import time
         future = self.node.describe_scene_client.call_async(Trigger.Request())

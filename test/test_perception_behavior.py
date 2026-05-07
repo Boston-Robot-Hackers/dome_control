@@ -53,14 +53,16 @@ class TestPerceptionBehaviorExecute:
         node.describe_scene_client.call_async.assert_called_once()
         future.add_done_callback.assert_called_once_with(pb.on_describe_scene_done)
 
-    def test_describe_scene_warns_when_service_not_ready(self):
+    def test_describe_scene_publishes_error_when_service_not_ready(self):
         node = make_mock_node(service_ready=False)
 
         pb = PerceptionBehavior(node)
         pb.execute(make_intent("describe_scene"))
 
         node.describe_scene_client.call_async.assert_not_called()
-        node.get_logger().warn.assert_called_once()
+        node.announcement_pub.publish.assert_called_once()
+        published_text = node.announcement_pub.publish.call_args[0][0].text
+        assert "Oak Camera" in published_text
 
     def test_count_objects_logs_unimplemented(self):
         node = make_mock_node()
