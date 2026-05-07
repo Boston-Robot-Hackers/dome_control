@@ -2,35 +2,47 @@
 # robot.launch.py — ROS2 nodes that run on the physical robot
 # Author: Pito Salas and Claude Code
 # Open Source Under MIT license
-from launch import LaunchDescription
-from launch_ros.actions import Node
+from better_launch import BetterLaunch, launch_this
+
+PIPER_BIN = "/home/pitosalas/ros2_ws/src/control/bin/piper/piper"
+PIPER_MODEL_PATH = (
+    "/home/pitosalas/ros2_ws/src/control/piper_model/en_US-lessac-medium.onnx"
+)
 
 
-def generate_launch_description():
-    return LaunchDescription([
-        Node(
-            package='control',
-            executable='behavior_manager',
-            name='behavior_manager',
-            output='screen',
-        ),
-        Node(
-            package='control',
-            executable='speech_output',
-            name='speech_output',
-            output='screen',
-            additional_env={
-                'PIPER_BIN': '/home/pitosalas/ros2_ws/src/control/bin/piper/piper',
-                'PIPER_MODEL_PATH': '/home/pitosalas/ros2_ws/src/control/piper_model/en_US-lessac-medium.onnx',
-                'PIPER_LENGTH_SCALE': '1.0',
-                'SPEECH_GAIN': '0.25',
-                'SPEECH_ALSA_DEVICE': 'plughw:0,0',
-            },
-        ),
-        Node(
-            package='control',
-            executable='voice_input',
-            name='voice_input',
-            output='screen',
-        ),
-    ])
+@launch_this(ui=False)
+def robot_launch(voice: bool = False, behavior: bool = True):
+    bl = BetterLaunch()
+
+    bl.node(
+        "control",
+        "speech_output",
+        "speech_output",
+        env={
+            "PIPER_BIN": PIPER_BIN,
+            "PIPER_MODEL_PATH": PIPER_MODEL_PATH,
+            "PIPER_LENGTH_SCALE": "1.0",
+            "SPEECH_GAIN": "0.25",
+            "SPEECH_ALSA_DEVICE": "plughw:0,0",
+        },
+    )
+
+    bl.node(
+        "control",
+        "describe_scene_stub",
+        "describe_scene_stub",
+    )
+
+    if behavior:
+        bl.node(
+            "control",
+            "behavior_manager",
+            "behavior_manager",
+        )
+
+    if voice:
+        bl.node(
+            "control",
+            "voice_input",
+            "voice_input",
+        )
