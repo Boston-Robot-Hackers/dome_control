@@ -1,6 +1,6 @@
 ---
-version: "1.1"
-generated: "2026-05-04"
+version: "1.2"
+generated: "2026-05-06"
 ---
 
 # MovementApi: Velocity Control and Odometry
@@ -52,7 +52,7 @@ def _validate_config(self):
 
 ## The Central Primitive: cmd_vel_helper
 
-All movement boils down to this method — publish a `Twist` at a fixed rate for a given duration, then stop:
+All movement boils down to this method — publish a `Twist` at 10 Hz for a given duration, then stop:
 
 ```python
 def cmd_vel_helper(self, linear: float, angular: float, seconds: float):
@@ -72,7 +72,6 @@ def cmd_vel_helper(self, linear: float, angular: float, seconds: float):
     sleep_duration = 1.0 / rate_hz
     while rclpy.ok() and (time.time() - start_time) < seconds:
         self.cmd_vel_pub.publish(twist)
-        rclpy.spin_once(self, timeout_sec=sleep_duration)
         time.sleep(sleep_duration)
 
     twist.linear.x = 0.0
@@ -80,11 +79,15 @@ def cmd_vel_helper(self, linear: float, angular: float, seconds: float):
     self.cmd_vel_pub.publish(twist)
 ```
 
-The `blocking_ok` flag guards against calling this from a lifecycle node's spin loop, where blocking would deadlock. The explicit zero-velocity stop at the end is a safety measure: the robot stops even if the caller crashes after calling this.
+The 10 Hz re-publish loop is needed because many ROS2 motor drivers treat a stale `/cmd_vel` as a stop command. The explicit zero-velocity stop at the end is a safety measure.
+
+### Why Not spin_once?
+
+An earlier version called `rclpy.spin_once(self, timeout_sec=sleep_duration)` inside the loop. This crashed with `RuntimeError: Executor is already spinning` when `cmd_vel_helper` was invoked from within a `BehaviorManagerNode` callback (already being spun by `rclpy.spin`). Publishers do not need executor spinning — only subscribers do. Removing `spin_once` and replacing it with `time.sleep` fixes the nested-spin crash. The tradeoff is that the odometry subscription (`odom_callback`) does not fire during movement.
 
 ## Movement Primitives
 
-The higher-level methods are all thin wrappers over `cmd_vel_helper`:
+The higher-level methods are thin wrappers:
 
 ```python
 def move_dist(self, distance: float):
@@ -105,7 +108,7 @@ Sign conventions: positive distance = forward, positive angle = counterclockwise
 
 ## Odometry Subscription
 
-The subscription stores the latest pose but does not act on it. This is a foundation for future closed-loop control:
+The subscription stores the latest pose but does not act on it during movement (since `odom_callback` is not serviced during `cmd_vel_helper`). This is a foundation for future closed-loop control:
 
 ```python
 def odom_callback(self, msg):
@@ -115,5 +118,6 @@ def odom_callback(self, msg):
 ## Observations
 
 - **Open-loop movement.** `move_dist` computes time from speed; it does not use odometry feedback. Wheel slip or hardware variation accumulates as error.
-- **10 Hz fixed rate.** The publish loop runs at a hardcoded 10 Hz. A configurable rate or ROS timer would be more idiomatic.
-- **Blocking architecture.** `cmd_vel_helper` blocks the calling thread. This is simple but prevents concurrent operations and is incompatible with lifecycle node contexts.
+- **Blocking architecture.** `cmd_vel_helper` blocks the calling thread for the full movement duration. No other intents are processed during a turn.
+- **Odometry inactive during movement.** Without `spin_once`, `odom_callback` never fires while the robot is moving. Closed-loop control would require a dedicated executor thread.
+- **10 Hz fixed rate.** The publish rate is hardcoded. A configurable rate or ROS timer would be more idiomatic.
