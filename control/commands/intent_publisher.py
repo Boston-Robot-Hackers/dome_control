@@ -21,12 +21,12 @@ class IntentPublisher:
 
     def publish(
         self, name: str, source: str = "cli", slots: dict | None = None
-    ) -> None:
+    ) -> str | None:
         payload = json.dumps({"name": name, "source": source, "slots": slots or {}})
         if self.publish_fn is not None:
             self.publish_fn(payload)
-        else:
-            self.get_api().publish(name, source, slots or {})
+            return None
+        return self.get_api().publish(name, source, slots or {})
 
     def get_api(self):
         if self.api is None:

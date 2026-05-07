@@ -106,8 +106,9 @@ class CommandDispatcher:
     ) -> rc.CommandResponse:
         intent_name = BEHAVIOR_COMMANDS.get(command_name)
         if intent_name is not None:
-            self.publish_intent(intent_name, params)
-            return rc.CommandResponse(True, f"Intent published: {intent_name}")
+            reply = self.publish_intent(intent_name, params)
+            msg = reply if reply is not None else f"Intent published: {intent_name}"
+            return rc.CommandResponse(True, msg)
 
         if command_name not in self.commands:
             return rc.CommandResponse(
@@ -220,8 +221,9 @@ class CommandDispatcher:
                     cmd_def.parameters[i].name: args[i]
                     for i in range(min(len(args), len(cmd_def.parameters)))
                 }
-            self.publish_intent(intent_name, slots)
-            return rc.CommandResponse(True, f"Intent published: {intent_name}")
+            reply = self.publish_intent(intent_name, slots)
+            msg = reply if reply is not None else f"Intent published: {intent_name}"
+            return rc.CommandResponse(True, msg)
 
         cmd_def = self.get_command_info(command_name)
         if not cmd_def:
@@ -240,12 +242,11 @@ class CommandDispatcher:
         }
         return self.execute(command_name, params)
 
-    def publish_intent(self, name: str, slots: dict) -> None:
+    def publish_intent(self, name: str, slots: dict) -> str | None:
         if self.intent_publisher is not None:
-            self.intent_publisher.publish(name, "cli", slots)
-        else:
-            from control.commands.intent_publisher import IntentPublisher
-            IntentPublisher().publish(name, "cli", slots)
+            return self.intent_publisher.publish(name, "cli", slots)
+        from control.commands.intent_publisher import IntentPublisher
+        return IntentPublisher().publish(name, "cli", slots)
 
     def list_commands(self, group: str | None = None) -> list[str]:
         if group:
