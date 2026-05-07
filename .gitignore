@@ -9,3 +9,5 @@ __pycache__/
 .pytest_cache/
 bin/
 piper_model/
+.DS_Store
+*.egg-info/
