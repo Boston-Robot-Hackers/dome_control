@@ -1,5 +1,5 @@
 You are an expert in literate programming. Convert the following Python program 
-into a literate programming document in Markdown format.
+into a literate programming document in Markdown format. Use mermaid for diagrams.
 
 Structure the document as a narrative that a thoughtful programmer would want 
 to read — not a comment-by-comment translation, but a coherent explanation of 
@@ -31,3 +31,12 @@ version: "1.0"
 generated: "2026-05-04"
 ---
 ```
+# If I ask you to create the final assembly literate pdf then do this:
+
+1. Write a 00-overview.md which contains a "theory of operation" and a way for the reader to understand the package
+2. Use pandoc to create a pdf from specifically all the numbered chapters not the appendices
+3. Put them in numerical order and generate a command for example like this: 
+
+pandoc file.md file2.md -o literate.pdf --pdf-engine=xelatex \
+  -V monofont="Fira Code"
+
