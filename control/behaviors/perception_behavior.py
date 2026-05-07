@@ -28,7 +28,10 @@ class PerceptionBehavior:
             self.node.get_logger().warn("count_objects intent not yet implemented")
 
     def call_describe_scene(self) -> None:
-        if not self.node.describe_scene_client.service_is_ready():
+        client = self.node.describe_scene_client
+        if not client.service_is_ready():
+            client.wait_for_service(timeout_sec=2.0)
+        if not client.service_is_ready():
             self.publish_announcement(
                 "Oak Camera not connected. Make sure you run the right launch file onboard the robot."
             )
