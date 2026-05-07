@@ -17,6 +17,7 @@ import control.commands.command_dispatcher as cd
 import control.commands.config_manager as cm
 import control.commands.robot_controller as rc
 from control.commands.command_dispatcher import resolve_keyword
+from control.commands.intent_publisher import IntentPublisher
 
 
 class SimpleCLI:
@@ -26,7 +27,9 @@ class SimpleCLI:
         config_path = os.environ.get("CONTROL_CONFIG", default_cfg)
         self.config_manager = cm.ConfigManager.create(config_path)
         self.robot_controller = rc.RobotController(self.config_manager)
-        self.dispatcher = cd.CommandDispatcher(self.robot_controller)
+        self.intent_publisher = IntentPublisher()
+        self.intent_publisher.get_api()  # warm up ROS2 node + DDS discovery at startup
+        self.dispatcher = cd.CommandDispatcher(self.robot_controller, self.intent_publisher)
         self.running = True
 
         control_dir = self.config_manager.get_control_dir()
