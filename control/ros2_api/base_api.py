@@ -16,7 +16,7 @@ class BaseApi(Node, ABC):
     def __init__(self, node_name: str, config_manager: cm.ConfigManager = None):
         super().__init__(node_name)
 
-        self.config = config_manager or cm.ConfigManager()
+        self.config = config_manager
 
     def get_topics(self):
         return self.get_topic_names_and_types()
