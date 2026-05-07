@@ -10,7 +10,7 @@ PIPER_MODEL_PATH = (
 )
 
 
-@launch_this(ui=False)
+@launch_this(ui=True)
 def robot_launch():
     bl = BetterLaunch()
 
