@@ -103,6 +103,6 @@ def test_missing_tune_config_falls_back_to_tuned_defaults(tmp_path: Path):
     cfg = load_voice_runtime_config(tmp_path / "missing.yaml")
 
     assert cfg.wake_word == "alexa"
-    assert cfg.threshold == 0.3
-    assert cfg.wake_hits == 1
+    assert cfg.threshold == 0.7
+    assert cfg.wake_hits == 3
     assert cfg.grammar == DEFAULT_GRAMMAR

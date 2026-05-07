@@ -29,8 +29,9 @@ def beep(frequency: int = 880, duration: float = 0.15, device_index: int = 0) ->
         cmd.extend(["-D", alsa_device])
     try:
         subprocess.run(cmd, input=bytes(samples), check=False, capture_output=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        import sys
+        print(f"beep: aplay failed: {exc}", file=sys.stderr)
 ```
 
 `SPEECH_ALSA_DEVICE` is the same environment variable consumed by `speech_output_node`, so both speech and beeps route to the same output device without separate configuration.

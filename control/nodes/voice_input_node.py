@@ -50,9 +50,13 @@ class VoiceInputNode(Node):
     def process_turn(self, turn: VoiceTurn, device_index: int = 0) -> None:
         if turn.empty:
             cmd = (turn.metadata or {}).get("command", {})
+            floor = cmd.get("floor")
+            cutoff = cmd.get("cutoff")
             self.get_logger().info(
-                f"Empty turn: floor={cmd.get('floor'):.1f} cutoff={cmd.get('cutoff'):.1f} "
+                f"Empty turn: floor={floor:.1f} cutoff={cutoff:.1f} "
                 f"started={cmd.get('command_started')} raw={cmd.get('raw_text')!r}"
+                if floor is not None and cutoff is not None
+                else "Empty turn: no command metadata"
             )
             self.publish_state("SPEAKING")
             beep(frequency=220, duration=0.15, device_index=device_index)

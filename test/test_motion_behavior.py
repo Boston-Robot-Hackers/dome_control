@@ -26,6 +26,18 @@ class TestMotionBehaviorHandles:
         mb = MotionBehavior(Mock())
         assert mb.handles("drive_square") is True
 
+    def test_handles_turn_right(self):
+        mb = MotionBehavior(Mock())
+        assert mb.handles("turn_right") is True
+
+    def test_handles_turn_left(self):
+        mb = MotionBehavior(Mock())
+        assert mb.handles("turn_left") is True
+
+    def test_handles_get_status(self):
+        mb = MotionBehavior(Mock())
+        assert mb.handles("get_status") is True
+
     def test_does_not_handle_describe_scene(self):
         mb = MotionBehavior(Mock())
         assert mb.handles("describe_scene") is False
@@ -59,6 +71,33 @@ class TestMotionBehaviorExecute:
         rc = Mock()
         mb = MotionBehavior(rc)
         mb.execute(make_intent("explore"))  # not yet implemented, must not crash
+
+    def test_turn_right_calls_turn_clockwise(self):
+        rc = Mock()
+        mb = MotionBehavior(rc)
+        mb.execute(make_intent("turn_right"))
+        rc.turn_clockwise.assert_called_once_with(90)
+
+    def test_turn_left_calls_turn_counterclockwise(self):
+        rc = Mock()
+        mb = MotionBehavior(rc)
+        mb.execute(make_intent("turn_left"))
+        rc.turn_counterclockwise.assert_called_once_with(90)
+
+    def test_get_status_publishes_announcement(self):
+        rc = Mock()
+        rc.get_robot_status.return_value = Mock(
+            data={"status": {"speeds": {"linear": 0.3, "angular": 0.5}}}
+        )
+        node = Mock()
+        mb = MotionBehavior(rc)
+        mb.execute(make_intent("get_status"), node)
+        node.announcement_pub.publish.assert_called_once()
+
+    def test_get_status_without_node_does_not_raise(self):
+        rc = Mock()
+        mb = MotionBehavior(rc)
+        mb.execute(make_intent("get_status"))  # node=None, must not crash
 
     def test_unknown_intent_does_nothing(self):
         rc = Mock()

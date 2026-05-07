@@ -31,13 +31,15 @@ The repository has been migrated to the numbered process/documentation layout:
 - Launch management through configured templates.
 - Map save/list/serialize commands.
 - `BehaviorManagerNode`: subscribes to `/intent`, routes to domain behavior handlers
-  (`MotionBehavior`, `PerceptionBehavior`). Handler list is extensible.
-- `MotionBehavior`: handles `stop`, `explore`, `drive_square` intents.
+  (`MotionBehavior`, `PerceptionBehavior`). `get_help` intent handled inline (speaks command list).
+- `MotionBehavior`: handles `stop`, `explore`, `drive_square`, `turn_right`, `turn_left`, `get_status` intents.
 - `PerceptionBehavior`: handles `describe_scene` (async ROS2 service call → `/announcement`).
-- `IntentParser` (renamed from `BehaviorManager`): pure Python JSON→Intent parser.
+- `IntentParser`: pure Python JSON→Intent parser.
 - `describe_scene_stub` node for smoke testing without vision hardware.
 - Shared tuned voice runtime in `control/voice/runtime.py` with thin `voice_input` adapter.
-- Voice intent mapping covers tuned motion phrases from `~/tune`.
+- Voice intent mapping: 7 single-word commands — stop, right, left, explore, describe, status, help.
+- Wake word: "alexa". Threshold 0.7, wake_hits 3, cooldown 1.5s (flushes OWW model state).
+- `audio_feedback.py`: beep via aplay (same ALSA device as Piper), 20% amplitude.
 - Colcon-compatible launch files:
   - `launch/robot.launch.py` — on-robot nodes (behavior_manager, speech_output, voice_input)
   - `launch/remote.launch.py` — remote/dev nodes (describe_scene_stub)
@@ -49,45 +51,36 @@ The repository has been migrated to the numbered process/documentation layout:
   - `F14` shared tuned voice runtime: code done; Pi hardware smoke test pending
   - `F15` unified intent architecture: T01–T07 done; T08 (smoke test) pending
 
+## Known Issues / Pending
+
+- **Empty STT turns**: All voice turns returning empty (no transcription). Debug log added to
+  voice_input_node to show `floor`/`cutoff`/`command_started`/`raw_text` on each empty turn.
+  Next: observe log output to distinguish mic level problems from grammar mismatch.
+- **Wake re-trigger**: OWW model cooldown now feeds chunks to model to flush sliding window.
+  Threshold 0.7 + wake_hits 3. Not yet confirmed fully fixed on hardware.
+- `turn_right`, `turn_left` now wired to `turn_clockwise(90)` / `turn_counterclockwise(90)`.
+  `cmd_vel_helper` blocks behavior_manager callback thread during turn (open-loop, no odom).
+- `get_status` speaks linear/angular speed via announcement bus.
+
 ## Likely Next Steps
 
-1. **T08: Smoke test F15 end-to-end with ROS2 running.**
-   CLI `stop` → `/intent` → behavior_manager → RobotController. Verify with
-   `ros2 topic echo /intent` and `ros2 topic echo /announcement`.
+1. **Observe empty-turn debug log** — run robot, say "alexa stop", check log for
+   `floor`/`cutoff`/`command_started`/`raw_text`. If `command_started=False`, mic too quiet
+   or silence_margin too strict. If `command_started=True` and `raw_text=''`, Vosk grammar mismatch.
 
-2. **Implement `speak` CLI command.**
-   Direct path: `speak <text>` → `RobotController.speak_text` → publishes to `/announcement`.
-   Robot side needs only `speech_output_node` — no `BehaviorManagerNode` required.
+2. **T08: Smoke test F15 end-to-end with ROS2 running.**
+   CLI `stop` → `/intent` → behavior_manager → RobotController.
 
 3. **Replace describe_scene_stub with real oak_roboflow query path.**
-   Feature: no feature yet. Provide a real `/describe_scene` service backed by
-   `/targets/confirmed`, then point `PerceptionBehavior` at that.
 
-4. **Run F14 voice runtime hardware smoke test on the Pi.**
-   Feature: `F14`. Command: `python3 -m control.voice.runtime --trials 5` on Pi with
-   ReSpeaker/openWakeWord/Vosk installed.
-
-5. **Split `RobotController` into smaller modules.**
-   Feature: no feature yet. `robot_controller.py` is still large.
-
-6. **Add health checks for launched processes.**
-   Feature: no feature yet.
-
-## Loose Issues Not Yet Converted To Features
-
-- `robot_controller.py` is large and should be split.
-- Some debug print statements may remain in controller/API code.
-- Process health checks are not implemented.
-- Map operations should validate map file existence more defensively.
-- F14 voice runtime still needs Pi hardware smoke testing.
-- F15/T08 smoke test still pending (needs ROS2 environment).
+4. **Split `RobotController` into smaller modules.**
 
 ## Quick Commands
 
 Run tests:
 
 ```bash
-python3 -m pytest test/ -v --ignore=test/__init__.py
+python3 -m pytest test/ --ignore=test/test_voice_runtime.py -v
 ```
 
 Run the CLI:
@@ -102,13 +95,7 @@ Launch on robot:
 ros2 launch control robot.launch.py
 ```
 
-Launch on remote machine:
-
-```bash
-ros2 launch control remote.launch.py
-```
-
-Run voice runtime smoke test:
+Voice runtime smoke test:
 
 ```bash
 python3 -m control.voice.runtime --trials 5

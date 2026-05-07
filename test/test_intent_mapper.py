@@ -3,20 +3,28 @@ from control.voice.intent_mapper import IntentMapper, map_intent
 
 
 def test_describe_scene():
-    assert map_intent("what do you see")["name"] == "describe_scene"
-    assert map_intent("describe the scene")["name"] == "describe_scene"
+    assert map_intent("describe")["name"] == "describe_scene"
 
 
 def test_stop():
     assert map_intent("stop")["name"] == "stop"
-    assert map_intent("halt")["name"] == "stop"
 
 
-def test_tuned_motion_phrases():
-    assert map_intent("go forward")["name"] == "move_forward"
-    assert map_intent("go backward")["name"] == "move_backward"
-    assert map_intent("turn left")["name"] == "turn_left"
-    assert map_intent("turn right")["name"] == "turn_right"
+def test_single_word_motion_phrases():
+    assert map_intent("right")["name"] == "turn_right"
+    assert map_intent("left")["name"] == "turn_left"
+
+
+def test_explore():
+    assert map_intent("explore")["name"] == "explore"
+
+
+def test_status():
+    assert map_intent("status")["name"] == "get_status"
+
+
+def test_help():
+    assert map_intent("help")["name"] == "get_help"
 
 
 def test_return_home_words_are_not_voice_intents():
@@ -25,34 +33,9 @@ def test_return_home_words_are_not_voice_intents():
     assert map_intent("home") is None
 
 
-def test_explore():
-    assert map_intent("start exploring")["name"] == "start_exploring"
-    assert map_intent("explore")["name"] == "start_exploring"
-
-
 def test_follow_words_are_not_voice_intents():
     assert map_intent("follow me") is None
     assert map_intent("follow") is None
-
-
-def test_count_objects_with_slot():
-    result = map_intent("how many cans do you see")
-    assert result["name"] == "count_objects"
-    assert result["slots"]["object_type"] == "can"
-
-
-def test_count_objects_no_slot():
-    result = map_intent("how many")
-    assert result["name"] == "count_objects"
-    assert result["slots"] == {}
-
-
-def test_get_battery():
-    assert map_intent("battery level")["name"] == "get_battery"
-
-
-def test_get_location():
-    assert map_intent("where are you")["name"] == "get_location"
 
 
 def test_sleep_words_are_not_voice_intents():
