@@ -9,6 +9,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
+from vision_msgs.msg import Detection2DArray
 
 from control.announcement_contract import AnnouncementMsg, make_announcement_msg, PRIORITY_QUERY_REPLY
 from control.commands.intent_parser import IntentParser
@@ -34,10 +35,17 @@ class BehaviorManagerNode(Node):
         self.intent_sub = self.create_subscription(
             String, "/intent", self.on_intent, 10
         )
+        self.detections_sub = self.create_subscription(
+            Detection2DArray, "/oak/detections", self.on_detections, 10
+        )
+        self.latest_detections: Detection2DArray | None = None
         self.announcement_pub = self.create_publisher(
             AnnouncementMsg, "/announcement", 10
         )
         self.describe_scene_client = self.create_client(Trigger, "/describe_scene")
+
+    def on_detections(self, msg: Detection2DArray) -> None:
+        self.latest_detections = msg
 
     def on_intent(self, msg: String) -> None:
         try:

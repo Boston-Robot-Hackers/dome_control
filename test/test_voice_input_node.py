@@ -72,7 +72,7 @@ def test_process_transcript_unknown_intent():
 
 def test_process_turn_transcript_path():
     _, node = _make_voice_node()
-    from control.voice.runtime import VoiceTurn
+    from robot_voice import VoiceTurn
     from control.nodes.voice_input_node import VoiceInputNode
 
     node.process_transcript = MagicMock()
@@ -85,7 +85,7 @@ def test_process_turn_transcript_path():
 
 def test_process_turn_empty_plays_beep():
     _, node = _make_voice_node()
-    from control.voice.runtime import VoiceTurn
+    from robot_voice import VoiceTurn
     from control.nodes.voice_input_node import VoiceInputNode
 
     node.publish_state = MagicMock()

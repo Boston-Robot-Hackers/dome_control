@@ -7,7 +7,7 @@
 from control.commands.intent_parser import Intent
 from control.commands.intent_parser import make_announcement_msg
 
-PERCEPTION_INTENTS = {"describe_scene", "count_objects"}
+PERCEPTION_INTENTS = {"describe_scene", "count_objects", "list_objects"}
 
 
 class PerceptionBehavior:
@@ -22,6 +22,8 @@ class PerceptionBehavior:
     def execute(self, intent: Intent, node=None) -> None:
         if intent.name == "describe_scene":
             self.call_describe_scene()
+        elif intent.name == "list_objects":
+            self.report_detections()
         elif intent.name == "count_objects":
             self.node.get_logger().warn("count_objects intent not yet implemented")
 
@@ -47,6 +49,21 @@ class PerceptionBehavior:
             return
 
         self.publish_announcement(response.message)
+
+    def report_detections(self) -> None:
+        detections = getattr(self.node, "latest_detections", None)
+        if detections is None or not detections.detections:
+            self.publish_announcement("No objects detected.")
+            return
+        parts = []
+        for det in detections.detections:
+            if det.results:
+                best = max(det.results, key=lambda r: r.hypothesis.score)
+                label = best.hypothesis.class_id
+                score = round(best.hypothesis.score, 2)
+                parts.append(f"{label} {score}")
+        text = "I see: " + ", ".join(parts) if parts else "No objects detected."
+        self.publish_announcement(text)
 
     def publish_announcement(self, text: str) -> None:
         msg = make_announcement_msg(text)

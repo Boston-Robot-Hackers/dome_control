@@ -61,8 +61,10 @@ BEHAVIOR_COMMANDS: dict[str, str] = {
     "intent.explore": "explore",
     "intent.describe_scene": "describe_scene",
     "intent.count_objects": "count_objects",
+    "intent.list_objects": "list_objects",
     "scene.describe": "describe_scene",
     "scene.count": "count_objects",
+    "scene.objects": "list_objects",
 }
 
 BEHAVIOR_COMMAND_DESCRIPTIONS: dict[str, tuple[str, str]] = {
@@ -70,8 +72,10 @@ BEHAVIOR_COMMAND_DESCRIPTIONS: dict[str, tuple[str, str]] = {
     "intent.explore":        ("Start autonomous exploration", "intent"),
     "intent.describe_scene": ("Describe the current scene", "intent"),
     "intent.count_objects":  ("Count objects in scene", "intent"),
+    "intent.list_objects":   ("List currently detected objects", "intent"),
     "scene.describe":        ("Describe the current scene", "scene"),
     "scene.count":           ("Count objects in scene", "scene"),
+    "scene.objects":         ("List currently detected objects", "scene"),
 }
 
 
