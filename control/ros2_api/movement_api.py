@@ -138,7 +138,6 @@ class MovementApi(base.BaseApi):
         sleep_duration = 1.0 / rate_hz
         while rclpy.ok() and (time.time() - start_time) < seconds:
             self.cmd_vel_pub.publish(twist)
-            rclpy.spin_once(self, timeout_sec=sleep_duration)
             time.sleep(sleep_duration)
 
         # Stop the robot
