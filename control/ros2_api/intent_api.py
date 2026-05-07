@@ -6,8 +6,10 @@
 import json
 import time
 
+import rclpy
 from std_msgs.msg import String
 
+from control.announcement_contract import AnnouncementMsg
 import control.commands.config_manager as cm
 import control.ros2_api.base_api as base
 
@@ -20,12 +22,11 @@ class IntentApi(base.BaseApi):
     def __init__(self, config_manager: cm.ConfigManager = None):
         super().__init__("intent_api", config_manager)
         self.intent_pub = self.create_publisher(String, "/intent", 10)
-        self._reply_text: str | None = None
-        from control.announcement_contract import AnnouncementMsg
-        self.create_subscription(AnnouncementMsg, "/announcement", self._on_announcement, 10)
+        self.reply_text: str | None = None
+        self.create_subscription(AnnouncementMsg, "/announcement", self.on_announcement, 10)
 
-    def _on_announcement(self, msg) -> None:
-        self._reply_text = msg.text
+    def on_announcement(self, msg) -> None:
+        self.reply_text = msg.text
 
     def publish(self, name: str, source: str, slots: dict) -> str | None:
         msg = String()
@@ -36,9 +37,8 @@ class IntentApi(base.BaseApi):
         if name not in REPLY_INTENTS:
             return None
 
-        self._reply_text = None
+        self.reply_text = None
         deadline = time.monotonic() + REPLY_TIMEOUT_S
-        import rclpy
-        while time.monotonic() < deadline and self._reply_text is None:
+        while time.monotonic() < deadline and self.reply_text is None:
             rclpy.spin_once(self, timeout_sec=0.1)
-        return self._reply_text
+        return self.reply_text

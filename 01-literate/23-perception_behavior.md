@@ -1,55 +1,69 @@
 ---
-version: "1.0"
-generated: "2026-05-06"
+version: "1.1"
+generated: "2026-05-07"
 ---
 
-# PerceptionBehavior
+# PerceptionBehavior — Perception Intent Handler
 
-`control/behaviors/perception_behavior.py` handles perception-domain intents via async ROS2 service calls. It holds no direct ROS2 imports at module load — `std_srvs.srv.Trigger` is imported lazily inside `call_describe_scene` to keep the module importable in no-ROS test environments.
+## Purpose
 
-## Interface
+`PerceptionBehavior` handles perception-domain intents routed from `BehaviorManagerNode`. It either calls a ROS2 service (`describe_scene`) or reads cached sensor data (`list_objects`) and publishes results to `/announcement`.
+
+## Intent Routing
+
+Three intents are handled:
 
 ```python
-PERCEPTION_INTENTS = {"describe_scene", "count_objects"}
-
-class PerceptionBehavior:
-    def __init__(self, node): ...
-    def handles(self, intent_name: str) -> bool: ...
-    def execute(self, intent: Intent, node=None) -> None: ...
+PERCEPTION_INTENTS = {"describe_scene", "count_objects", "list_objects"}
 ```
 
-`PerceptionBehavior` receives the owning `BehaviorManagerNode` at construction. It needs the node for three things: the `describe_scene_client`, the `announcement_pub`, and the logger.
-
-## Async Service Call Flow
-
-```
-execute("describe_scene")
-    → call_describe_scene()
-        → service_is_ready() check
-        → lazy import std_srvs.srv.Trigger
-        → call_async(Trigger.Request())
-        → future.add_done_callback(on_describe_scene_done)
-    on_describe_scene_done(future)
-        → future.result() → response
-        → publish_announcement(response.message)
-    publish_announcement(text)
-        → make_announcement_msg(text)
-        → announcement_pub.publish(msg)
+```python
+    def execute(self, intent: Intent, node=None) -> None:
+        if intent.name == "describe_scene":
+            self.call_describe_scene()
+        elif intent.name == "list_objects":
+            self.report_detections()
+        elif intent.name == "count_objects":
+            self.node.get_logger().warn("count_objects intent not yet implemented")
 ```
 
-The call is non-blocking. `call_async` returns immediately; the callback fires when the ROS2 executor delivers the response. Blocking service calls inside spin callbacks would deadlock the executor.
+## describe_scene: Async Service Call
 
-## Error Handling
+The `/describe_scene` service (provided by `describe_scene_stub` or a real vision node) returns a string description via `Trigger`. The call is async — the result arrives in `on_describe_scene_done`:
 
-`on_describe_scene_done` handles two failure modes:
+```python
+    def call_describe_scene(self) -> None:
+        if not self.node.describe_scene_client.service_is_ready():
+            self.node.get_logger().warn("/describe_scene service is not available")
+            return
+        from std_srvs.srv import Trigger
+        future = self.node.describe_scene_client.call_async(Trigger.Request())
+        future.add_done_callback(self.on_describe_scene_done)
+```
 
-1. **Exception from `future.result()`** (timeout, network error): logs error, returns.
-2. **`response.success == False`**: logs warning, skips announcement.
+## list_objects: Reading Cached Detections
 
-In both cases the node continues running. There is no retry or queuing.
+`BehaviorManagerNode` caches the latest `Detection2DArray` from `/oak/detections`. `report_detections` reads that cache, picks the highest-scoring hypothesis per detection, and formats a sentence:
+
+```python
+    def report_detections(self) -> None:
+        detections = getattr(self.node, "latest_detections", None)
+        if detections is None or not detections.detections:
+            self.publish_announcement("No objects detected.")
+            return
+        parts = []
+        for det in detections.detections:
+            if det.results:
+                best = max(det.results, key=lambda r: r.hypothesis.score)
+                label = best.hypothesis.class_id
+                score = round(best.hypothesis.score, 2)
+                parts.append(f"{label} {score}")
+        text = "I see: " + ", ".join(parts) if parts else "No objects detected."
+        self.publish_announcement(text)
+```
 
 ## Observations
 
-- `count_objects` logs "not yet implemented" and does nothing. The intent routes without warning.
-- `PerceptionBehavior` receives the whole node. A narrower interface (client + publisher + logger) would reduce coupling.
-- `std_srvs.srv.Trigger` has no parameters. Passing `slots` data (e.g., object_type) to the scene service would require a richer service type.
+- `getattr(self.node, "latest_detections", None)` is defensive — works whether oak is running or not.
+- `count_objects` is registered but unimplemented. Should be removed or implemented.
+- The lazy `from std_srvs.srv import Trigger` import avoids pulling rclpy at module load, keeping the class testable without ROS. A top-level import would be cleaner if the no-rclpy constraint is lifted.

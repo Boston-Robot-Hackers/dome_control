@@ -1,55 +1,92 @@
 ---
-version: "1.0"
-generated: "2026-05-04"
+version: "1.1"
+generated: "2026-05-07"
 ---
 
-# IntentApi
+# IntentApi — Publishing Intents and Awaiting Replies
 
-`intent_api.py` is the outbound side of the semantic behavior pipeline. It publishes structured intent messages to the `/intent` topic, which the `behavior_manager_node` consumes.
+## Purpose
 
-## Design
+`IntentApi` is the CLI's bridge into the ROS2 graph. It publishes structured intent messages to `/intent` and, for query-type intents, waits synchronously for the reply that arrives on `/announcement`.
+
+## Design: Fire-and-Forget vs. Synchronous Query
+
+Most intents (stop, explore, turn) are fire-and-forget — the CLI doesn't wait for a result. But query intents (`describe_scene`, `list_objects`, `get_status`, `get_help`) produce text the user expects to see printed. A clean boundary separates these two modes:
+
+```python
+REPLY_INTENTS = {"describe_scene", "list_objects", "get_status", "get_help"}
+REPLY_TIMEOUT_S = 5.0
+```
+
+## Node Lifecycle and DDS Warmup
+
+`IntentApi` extends `BaseApi` (which extends `rclpy.Node`). It is created **once at CLI startup** — not lazily per command — so DDS has time to discover the `/announcement` publisher before any command fires. Creating a fresh node per command caused the announcement to arrive before the subscription was registered.
 
 ```python
 class IntentApi(base.BaseApi):
+
     def __init__(self, config_manager: cm.ConfigManager = None):
         super().__init__("intent_api", config_manager)
         self.intent_pub = self.create_publisher(String, "/intent", 10)
+        self.reply_text: str | None = None
+        self.create_subscription(AnnouncementMsg, "/announcement", self.on_announcement, 10)
+```
 
-    def publish(self, name: str, source: str, slots: dict) -> None:
+## Announcement Callback
+
+The subscription captures the `text` field from any `Announcement` message. The field is `None` between turns so the spin loop can detect a fresh reply:
+
+```python
+    def on_announcement(self, msg) -> None:
+        self.reply_text = msg.text
+```
+
+## Publishing and Waiting
+
+For non-query intents the method returns `None` immediately. For query intents it spins the node in 100ms increments until a reply arrives or the timeout expires:
+
+```python
+    def publish(self, name: str, source: str, slots: dict) -> str | None:
         msg = String()
         msg.data = json.dumps({"name": name, "source": source, "slots": slots})
         self.intent_pub.publish(msg)
         self.log_info(f"Intent published: {msg.data}")
+
+        if name not in REPLY_INTENTS:
+            return None
+
+        self.reply_text = None
+        deadline = time.monotonic() + REPLY_TIMEOUT_S
+        while time.monotonic() < deadline and self.reply_text is None:
+            rclpy.spin_once(self, timeout_sec=0.1)
+        return self.reply_text
 ```
 
-The intent is a JSON-serialised dict over `std_msgs/String`. The three fields match the `Intent` dataclass in `behavior_manager.py`:
+The caller (`CommandDispatcher`) uses the returned text as the CLI response message, falling back to `"Intent published: {name}"` if `None`.
 
-| Field | Purpose |
-|-------|---------|
-| `name` | Action name, e.g. `"describe_scene"`, `"stop"` |
-| `source` | Who published it — `"cli"` for CLI commands, `"voice"` for voice input |
-| `slots` | Typed parameters, e.g. `{"object_type": "chair"}` |
+## Flow
 
-## Why `std_msgs/String` and not a Custom Message
+```mermaid
+sequenceDiagram
+    participant CLI
+    participant IntentApi
+    participant BehaviorManager
+    participant Behavior
+    participant SpeechOutput
 
-Using JSON over `String` means the intent topic requires no custom message type at compile time. Any ROS2 node — including Python scripts, shell tools, and the CLI — can publish or echo `/intent` without depending on this package's message definitions. The tradeoff is no compile-time type checking on the payload.
-
-## Publisher Lifecycle in RobotController
-
-`RobotController` lazily constructs `IntentApi` on first use:
-
-```python
-@property
-def intent(self) -> IntentApi:
-    if self._intent is None:
-        self._intent = IntentApi(self.config)
-        time.sleep(0.5)   # allow DDS discovery
-    return self._intent
+    CLI->>IntentApi: publish("describe_scene", ...)
+    IntentApi->>ROS /intent: String(JSON)
+    IntentApi->>IntentApi: spin_once loop (5s max)
+    ROS /intent->>BehaviorManager: on_intent
+    BehaviorManager->>Behavior: execute()
+    Behavior->>ROS /announcement: Announcement(text)
+    ROS /announcement->>IntentApi: on_announcement -> reply_text
+    ROS /announcement->>SpeechOutput: speak text
+    IntentApi->>CLI: return reply_text
 ```
-
-The `time.sleep(0.5)` after construction gives DDS time to discover the subscriber before the first publish. Without this delay, the first intent message may be dropped if the `behavior_manager_node` subscriber hasn't yet registered with the local DDS participant.
 
 ## Observations
 
-- The `source` field is hardcoded to `"cli"` in all `RobotController` publish methods. If multiple interfaces (REST, TUI) are added later, passing the source as a parameter would be more correct.
-- There is no acknowledgement mechanism. The CLI receives a `CommandResponse(True, ...)` immediately after publishing, regardless of whether the behavior manager received or handled the intent.
+- The 5-second timeout is arbitrary. A tunable constant would be cleaner.
+- `reply_text` is public state shared between callback and spin loop. In a multi-threaded executor this would be a race. Safe here because `spin_once` is called from the same thread.
+- If two query commands are issued before the first reply arrives, `reply_text` from the first could be consumed by the second's wait loop. Not a practical concern in a REPL but worth noting.
