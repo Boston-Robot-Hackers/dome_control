@@ -13,7 +13,7 @@ def beep(frequency: int = 880, duration: float = 0.15, device_index: int = 0) ->
     sample_rate = 16000
     n = int(sample_rate * duration)
     samples = bytearray(n * 2)
-    amplitude = 0.7
+    amplitude = 0.2
     for i in range(n):
         s = int(math.sin(2 * math.pi * frequency * i / sample_rate) * 32767 * amplitude)
         struct.pack_into("<h", samples, i * 2, max(-32768, min(32767, s)))
