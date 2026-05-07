@@ -10,7 +10,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 
-from control.announcement_contract import AnnouncementMsg
+from control.announcement_contract import AnnouncementMsg, make_announcement_msg, PRIORITY_QUERY_REPLY
 from control.commands.intent_parser import IntentParser
 from control.behaviors.motion_behavior import MotionBehavior
 from control.behaviors.perception_behavior import PerceptionBehavior
@@ -44,6 +44,15 @@ class BehaviorManagerNode(Node):
             intent = self.parser.parse_intent(msg.data)
         except ValueError as exc:
             self.get_logger().warn(str(exc))
+            return
+
+        if intent.name == "get_help":
+            msg = make_announcement_msg(
+                "commands are stop, explore, describe, right, left, status and help",
+                priority=PRIORITY_QUERY_REPLY,
+                source="behavior_manager",
+            )
+            self.announcement_pub.publish(msg)
             return
 
         for handler in self.handlers:
