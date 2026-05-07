@@ -469,13 +469,16 @@ def wait_for_wake(
     time_fn: Callable[[], float] = time.monotonic,
     cooldown_s: float = 0.0,
 ) -> dict[str, Any]:
-    # Drain buffered pipe audio before scoring — prevents stale chunks from
-    # immediately re-triggering the wake word after a turn completes.
+    # Flush pipe AND model sliding window before scoring — prevents both stale
+    # buffered audio and residual OWW activations from the previous "alexa" from
+    # immediately re-triggering after a turn completes.
     if cooldown_s > 0:
         drain_end = time_fn() + cooldown_s
         while ok_fn() and time_fn() < drain_end:
-            if read_mono_chunk(stream, CHUNK, live_filter) is None:
+            chunk = read_mono_chunk(stream, CHUNK, live_filter)
+            if chunk is None:
                 break
+            wake_model.predict(chunk)
 
     noise_window: collections.deque[float] = collections.deque(maxlen=50)
     scores: list[float] = []

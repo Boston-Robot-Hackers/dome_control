@@ -1,52 +1,27 @@
 #!/usr/bin/env python3
-"""Simple audio feedback tones and speech for voice state transitions."""
+"""Simple audio feedback tones for voice state transitions."""
 
 import math
 import os
-
-_pa = None
-
-
-def _get_pa():
-    global _pa
-    if _pa is None:
-        # Suppress ALSA/JACK stderr spam during device enumeration
-        devnull = os.open(os.devnull, os.O_WRONLY)
-        saved = os.dup(2)
-        os.dup2(devnull, 2)
-        os.close(devnull)
-        try:
-            import pyaudio
-            _pa = pyaudio.PyAudio()
-        finally:
-            os.dup2(saved, 2)
-            os.close(saved)
-    return _pa
+import struct
+import subprocess
 
 
 def beep(frequency: int = 880, duration: float = 0.15, device_index: int = 0) -> None:
-    """Play a short sine-wave tone through the output device."""
-    try:
-        import numpy as np
-    except ImportError:
-        return
+    """Play a short sine-wave tone via aplay on the configured ALSA output device."""
+    alsa_device = os.environ.get("SPEECH_ALSA_DEVICE", "")
+    sample_rate = 16000
+    n = int(sample_rate * duration)
+    samples = bytearray(n * 2)
+    amplitude = 0.7
+    for i in range(n):
+        s = int(math.sin(2 * math.pi * frequency * i / sample_rate) * 32767 * amplitude)
+        struct.pack_into("<h", samples, i * 2, max(-32768, min(32767, s)))
 
+    cmd = ["aplay", "-q", "-f", "S16_LE", "-r", str(sample_rate), "-c", "1"]
+    if alsa_device:
+        cmd.extend(["-D", alsa_device])
     try:
-        import pyaudio
-        pa = _get_pa()
-        sample_rate = 16000
-        n = int(sample_rate * duration)
-        t = np.arange(n) / sample_rate
-        samples = (np.sin(2 * math.pi * frequency * t) * 32767 * 0.05).astype(np.int16)
-
-        stream = pa.open(
-            format=pyaudio.paInt16, channels=1, rate=sample_rate,
-            output=True, output_device_index=device_index,
-        )
-        try:
-            stream.write(samples.tobytes())
-        finally:
-            stream.stop_stream()
-            stream.close()
+        subprocess.run(cmd, input=bytes(samples), check=False, capture_output=True)
     except Exception:
         pass
