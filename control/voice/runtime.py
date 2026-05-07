@@ -22,11 +22,13 @@ WAKE_SKIP_CHUNKS = 1
 FLOOR_MAX_DBFS = -25.0
 
 DEFAULT_GRAMMAR = (
-    "go forward",
-    "go backward",
-    "turn left",
-    "turn right",
     "stop",
+    "right",
+    "left",
+    "explore",
+    "describe",
+    "status",
+    "help",
 )
 
 # Paste the latest winning values from ~/tune here.
