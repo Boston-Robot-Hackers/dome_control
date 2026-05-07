@@ -5,8 +5,11 @@
 """Handles motion-domain intents. No ROS2 dependency."""
 
 from control.commands.intent_parser import Intent
+from control.announcement_contract import make_announcement_msg, PRIORITY_QUERY_REPLY
 
-MOTION_INTENTS = {"stop", "explore", "drive_square"}
+MOTION_INTENTS = {"stop", "explore", "drive_square", "turn_right", "turn_left", "get_status"}
+
+TURN_DEGREES = 90
 
 
 class MotionBehavior:
@@ -26,3 +29,17 @@ class MotionBehavior:
             self.rc.script_square(meters)
         elif intent.name == "explore":
             pass  # not yet implemented
+        elif intent.name == "turn_right":
+            self.rc.turn_clockwise(TURN_DEGREES)
+        elif intent.name == "turn_left":
+            self.rc.turn_counterclockwise(TURN_DEGREES)
+        elif intent.name == "get_status" and node is not None:
+            result = self.rc.get_robot_status()
+            status = result.data.get("status", {}) if result.data else {}
+            speeds = status.get("speeds", {})
+            text = (
+                f"linear speed {speeds.get('linear', 'unknown')}, "
+                f"angular speed {speeds.get('angular', 'unknown')}"
+            )
+            msg = make_announcement_msg(text, priority=PRIORITY_QUERY_REPLY, source="motion_behavior")
+            node.announcement_pub.publish(msg)
