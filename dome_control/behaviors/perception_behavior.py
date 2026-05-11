@@ -56,10 +56,15 @@ class PerceptionBehavior:
             self.publish_announcement("No objects detected.")
             return
         parts = []
+        label_map = getattr(self.node, "label_map", {})
+        profiles = getattr(self.node, "profiles", {})
         for det in detections.detections:
             if det.results:
                 best = max(det.results, key=lambda r: r.hypothesis.score)
-                label = best.hypothesis.class_id
+                raw_label = best.hypothesis.class_id
+                canonical = label_map.get(raw_label, raw_label)
+                profile = profiles.get(canonical)
+                label = (profile.display_name or canonical) if profile else canonical
                 score = round(best.hypothesis.score, 2)
                 parts.append(f"{label} {score}")
         text = "I see: " + ", ".join(parts) if parts else "No objects detected."

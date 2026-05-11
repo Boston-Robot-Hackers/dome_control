@@ -18,7 +18,8 @@ from dome_control.behaviors.perception_behavior import PerceptionBehavior
 from dome_control.commands.config_manager import ConfigManager
 from dome_control.commands.robot_controller import RobotController
 
-DEFAULT_CONFIG = os.path.expanduser("~/ros2_ws/src/control/config/control-config.yaml")
+DEFAULT_CONFIG = os.path.expanduser("~/ros2_ws/src/dome_control/config/control-config.yaml")
+DEFAULT_VISION_CONFIG = os.path.expanduser("~/ros2_ws/src/dome_vision/dome_vision_ros/config/roboflow_oak.yaml")
 
 
 class BehaviorManagerNode(Node):
@@ -31,6 +32,17 @@ class BehaviorManagerNode(Node):
             MotionBehavior(rc),
             PerceptionBehavior(self),
         ]
+
+        self.declare_parameter("class_profiles_path", DEFAULT_VISION_CONFIG)
+        vision_config_path = self.get_parameter("class_profiles_path").get_parameter_value().string_value
+        self.profiles: dict = {}
+        self.label_map: dict = {}
+        try:
+            from dome_vision.class_profiles import build_label_map, load_class_profiles
+            self.profiles = load_class_profiles(vision_config_path)
+            self.label_map = build_label_map(self.profiles)
+        except Exception as exc:
+            self.get_logger().warn(f"Could not load class profiles from {vision_config_path}: {exc}")
 
         self.intent_sub = self.create_subscription(
             String, "/intent", self.on_intent, 10
