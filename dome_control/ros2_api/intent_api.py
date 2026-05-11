@@ -9,7 +9,7 @@ import time
 import rclpy
 from std_msgs.msg import String
 
-from control.announcement_contract import AnnouncementMsg
+from dome_control.announcement_contract import AnnouncementMsg
 import control.commands.config_manager as cm
 import control.ros2_api.base_api as base
 

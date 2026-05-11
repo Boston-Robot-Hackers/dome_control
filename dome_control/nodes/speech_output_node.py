@@ -10,7 +10,7 @@ import wave
 import rclpy
 from rclpy.node import Node
 
-from control.announcement_contract import Announcement, AnnouncementMsg
+from dome_control.announcement_contract import Announcement, AnnouncementMsg
 
 
 def synthesize_to_wav(

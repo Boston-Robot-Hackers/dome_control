@@ -245,7 +245,7 @@ class CommandDispatcher:
     def publish_intent(self, name: str, slots: dict) -> str | None:
         if self.intent_publisher is not None:
             return self.intent_publisher.publish(name, "cli", slots)
-        from control.commands.intent_publisher import IntentPublisher
+        from dome_control.commands.intent_publisher import IntentPublisher
         return IntentPublisher().publish(name, "cli", slots)
 
     def list_commands(self, group: str | None = None) -> list[str]:

@@ -7,7 +7,7 @@
 import json
 from dataclasses import dataclass
 
-from control.announcement_contract import (
+from dome_control.announcement_contract import (
     make_announcement_msg,
     make_announcement_payload,
 )

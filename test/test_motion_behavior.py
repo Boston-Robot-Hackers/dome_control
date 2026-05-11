@@ -4,8 +4,8 @@
 # Open Source Under MIT license
 from unittest.mock import Mock
 
-from control.commands.intent_parser import Intent
-from control.behaviors.motion_behavior import MotionBehavior
+from dome_control.commands.intent_parser import Intent
+from dome_control.behaviors.motion_behavior import MotionBehavior
 
 
 def make_intent(name, slots=None):

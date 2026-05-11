@@ -8,8 +8,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from control.commands.intent_parser import IntentParser
-from control.nodes.behavior_manager_node import BehaviorManagerNode
+from dome_control.commands.intent_parser import IntentParser
+from dome_control.nodes.behavior_manager_node import BehaviorManagerNode
 
 
 def make_string_msg(data: str):

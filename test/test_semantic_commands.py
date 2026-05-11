@@ -10,8 +10,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from control.commands.command_dispatcher import CommandDispatcher
-from control.commands.robot_controller import CommandResponse
+from dome_control.commands.command_dispatcher import CommandDispatcher
+from dome_control.commands.robot_controller import CommandResponse
 
 
 class TestSceneCommandsViaDispatchText:
@@ -20,7 +20,7 @@ class TestSceneCommandsViaDispatchText:
     def setup(self):
         rc = Mock()
         published = []
-        from control.commands.intent_publisher import IntentPublisher
+        from dome_control.commands.intent_publisher import IntentPublisher
         pub = IntentPublisher(publish_fn=published.append)
         dispatcher = CommandDispatcher(rc, intent_publisher=pub)
         return dispatcher, published

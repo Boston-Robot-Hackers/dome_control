@@ -3,13 +3,13 @@ import json
 import wave
 from unittest.mock import MagicMock, patch
 
-from control.announcement_contract import (
+from dome_control.announcement_contract import (
     Announcement,
     PRIORITY_CHITCHAT,
     PRIORITY_QUERY_REPLY,
     make_announcement_msg,
 )
-from control.nodes.speech_output_node import (
+from dome_control.nodes.speech_output_node import (
     apply_wav_gain,
     parse_length_scale,
     parse_speech_gain,
@@ -20,7 +20,7 @@ from control.nodes.speech_output_node import (
 
 def _make_node():
     with patch("rclpy.node.Node.__init__", return_value=None):
-        from control.nodes.speech_output_node import SpeechOutputNode
+        from dome_control.nodes.speech_output_node import SpeechOutputNode
 
         node = SpeechOutputNode.__new__(SpeechOutputNode)
         node.get_logger = MagicMock(return_value=MagicMock())
@@ -169,7 +169,7 @@ def test_apply_wav_gain_reduces_sample_amplitude(tmp_path):
 @patch("control.nodes.speech_output_node.apply_wav_gain")
 @patch("control.nodes.speech_output_node.synthesize_to_wav")
 def test_speak_text_applies_gain_when_configured(mock_synth, mock_gain, mock_play):
-    from control.nodes.speech_output_node import SpeechOutputNode
+    from dome_control.nodes.speech_output_node import SpeechOutputNode
 
     node = SpeechOutputNode.__new__(SpeechOutputNode)
     node.piper_bin = "piper"

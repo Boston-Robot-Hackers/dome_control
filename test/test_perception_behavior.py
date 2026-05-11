@@ -6,8 +6,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from control.commands.intent_parser import Intent
-from control.behaviors.perception_behavior import PerceptionBehavior
+from dome_control.commands.intent_parser import Intent
+from dome_control.behaviors.perception_behavior import PerceptionBehavior
 
 
 def make_intent(name, slots=None):

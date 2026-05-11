@@ -4,9 +4,9 @@
 # Open Source Under MIT license
 from better_launch import BetterLaunch, launch_this
 
-PIPER_BIN = "/home/pitosalas/ros2_ws/src/control/bin/piper/piper"
+PIPER_BIN = "/home/pitosalas/ros2_ws/src/dome_control/bin/piper/piper"
 PIPER_MODEL_PATH = (
-    "/home/pitosalas/ros2_ws/src/control/piper_model/en_US-lessac-medium.onnx"
+    "/home/pitosalas/ros2_ws/src/dome_control/piper_model/en_US-lessac-medium.onnx"
 )
 
 
@@ -15,7 +15,7 @@ def robot_launch():
     bl = BetterLaunch()
 
     bl.node(
-        "control",
+        "dome_control",
         "speech_output",
         "speech_output",
         env={
@@ -28,7 +28,7 @@ def robot_launch():
     )
 
     bl.node(
-        "control",
+        "dome_control",
         "behavior_manager",
         "behavior_manager",
     )

@@ -8,12 +8,12 @@ Open Source Under MIT license
 import time
 from dataclasses import dataclass
 
-from control.commands.config_manager import ConfigManager
-from control.ros2_api.calibration_api import CalibrationApi
-from control.ros2_api.intent_api import IntentApi
-from control.ros2_api.movement_api import MovementApi
-from control.ros2_api.process_api import CommandConfig, ProcessApi
-from control.ros2_api.speech_api import SpeechApi
+from dome_control.commands.config_manager import ConfigManager
+from dome_control.ros2_api.calibration_api import CalibrationApi
+from dome_control.ros2_api.intent_api import IntentApi
+from dome_control.ros2_api.movement_api import MovementApi
+from dome_control.ros2_api.process_api import CommandConfig, ProcessApi
+from dome_control.ros2_api.speech_api import SpeechApi
 
 
 @dataclass

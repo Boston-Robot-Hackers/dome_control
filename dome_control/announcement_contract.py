@@ -21,7 +21,7 @@ PRIORITY_DISCOVERY = 4
 PRIORITY_CHITCHAT = 5
 
 try:
-    from control.msg import Announcement as AnnouncementMsg
+    from dome_control.msg import Announcement as AnnouncementMsg
 except ImportError:
     class AnnouncementMsg:
         PRIORITY_SAFETY = PRIORITY_SAFETY

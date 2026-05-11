@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json
 
-from control.announcement_contract import (
+from dome_control.announcement_contract import (
     Announcement,
     AnnouncementMsg,
     PRIORITY_DISCOVERY,

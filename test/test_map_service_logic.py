@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, '/home/pitosalas/ros2_ws/src/control')
 
-from control.commands.robot_controller import CommandResponse
+from dome_control.commands.robot_controller import CommandResponse
 
 
 class TestMapServiceLogic:

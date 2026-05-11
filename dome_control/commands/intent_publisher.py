@@ -30,6 +30,6 @@ class IntentPublisher:
 
     def get_api(self):
         if self.api is None:
-            from control.ros2_api.intent_api import IntentApi
+            from dome_control.ros2_api.intent_api import IntentApi
             self.api = IntentApi()
         return self.api

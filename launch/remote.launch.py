@@ -11,7 +11,7 @@ def remote_launch(behavior: bool = False):
 
     if behavior:
         bl.node(
-            "control",
+            "dome_control",
             "behavior_manager",
             "behavior_manager",
         )

@@ -6,12 +6,12 @@ import json
 
 import pytest
 
-from control.commands.intent_parser import (
+from dome_control.commands.intent_parser import (
     IntentParser,
     make_announcement_msg,
     make_announcement_payload,
 )
-from control.announcement_contract import PRIORITY_QUERY_REPLY
+from dome_control.announcement_contract import PRIORITY_QUERY_REPLY
 
 
 class TestIntentParser:

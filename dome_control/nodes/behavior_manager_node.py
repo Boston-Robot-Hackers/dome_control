@@ -11,12 +11,12 @@ from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from vision_msgs.msg import Detection2DArray
 
-from control.announcement_contract import AnnouncementMsg, make_announcement_msg, PRIORITY_QUERY_REPLY
-from control.commands.intent_parser import IntentParser
-from control.behaviors.motion_behavior import MotionBehavior
-from control.behaviors.perception_behavior import PerceptionBehavior
-from control.commands.config_manager import ConfigManager
-from control.commands.robot_controller import RobotController
+from dome_control.announcement_contract import AnnouncementMsg, make_announcement_msg, PRIORITY_QUERY_REPLY
+from dome_control.commands.intent_parser import IntentParser
+from dome_control.behaviors.motion_behavior import MotionBehavior
+from dome_control.behaviors.perception_behavior import PerceptionBehavior
+from dome_control.commands.config_manager import ConfigManager
+from dome_control.commands.robot_controller import RobotController
 
 DEFAULT_CONFIG = os.path.expanduser("~/ros2_ws/src/control/config/control-config.yaml")
 

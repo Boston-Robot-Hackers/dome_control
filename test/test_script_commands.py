@@ -5,9 +5,9 @@
 
 import pytest
 from unittest.mock import Mock, patch
-from control.commands.command_dispatcher import CommandDispatcher
-from control.commands.robot_controller import CommandResponse, RobotController
-from control.commands.config_manager import ConfigManager
+from dome_control.commands.command_dispatcher import CommandDispatcher
+from dome_control.commands.robot_controller import CommandResponse, RobotController
+from dome_control.commands.config_manager import ConfigManager
 
 CONFIG_FILE = "/home/pitosalas/.control/config.yaml"
 

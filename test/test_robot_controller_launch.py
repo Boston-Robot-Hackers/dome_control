@@ -4,8 +4,8 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-from control.commands.config_manager import ConfigManager
-from control.commands.robot_controller import RobotController
+from dome_control.commands.config_manager import ConfigManager
+from dome_control.commands.robot_controller import RobotController
 
 CONFIG_FILE = os.environ.get("CONTROL_CONFIG", os.path.expanduser("~/.control/config.yaml"))
 

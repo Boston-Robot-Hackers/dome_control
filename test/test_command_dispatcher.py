@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import pytest
 from unittest.mock import Mock, MagicMock
-from control.commands.command_dispatcher import CommandDispatcher
-from control.commands.parameter_def import ParameterDef
-from control.commands.command_def import CommandDef
-from control.commands.robot_controller import CommandResponse
+from dome_control.commands.command_dispatcher import CommandDispatcher
+from dome_control.commands.parameter_def import ParameterDef
+from dome_control.commands.command_def import CommandDef
+from dome_control.commands.robot_controller import CommandResponse
 
 
 class TestCommandDispatcher:

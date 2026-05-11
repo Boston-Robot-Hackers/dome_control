@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import unittest
 from unittest.mock import MagicMock, patch
-from control.commands.command_dispatcher import CommandDispatcher
-from control.commands.robot_controller import RobotController, CommandResponse
-from control.commands.config_manager import ConfigManager
+from dome_control.commands.command_dispatcher import CommandDispatcher
+from dome_control.commands.robot_controller import RobotController, CommandResponse
+from dome_control.commands.config_manager import ConfigManager
 
 CONFIG_FILE = "/home/pitosalas/.control/config.yaml"
 

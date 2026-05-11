@@ -54,7 +54,7 @@ Each check raises with a descriptive message. The caller (the ROS2 node) can log
 Two helpers are re-exported from this module:
 
 ```python
-from control.announcement_contract import (
+from dome_control.announcement_contract import (
     make_announcement_msg,
     make_announcement_payload,
 )

@@ -4,8 +4,8 @@
 # Open Source Under MIT license
 """Handles motion-domain intents. No ROS2 dependency."""
 
-from control.commands.intent_parser import Intent
-from control.announcement_contract import make_announcement_msg, PRIORITY_QUERY_REPLY
+from dome_control.commands.intent_parser import Intent
+from dome_control.announcement_contract import make_announcement_msg, PRIORITY_QUERY_REPLY
 
 MOTION_INTENTS = {"stop", "explore", "drive_square", "turn_right", "turn_left", "get_status"}
 

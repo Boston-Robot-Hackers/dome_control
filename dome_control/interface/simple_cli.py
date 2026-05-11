@@ -16,8 +16,8 @@ from prompt_toolkit.history import FileHistory
 import control.commands.command_dispatcher as cd
 import control.commands.config_manager as cm
 import control.commands.robot_controller as rc
-from control.commands.command_dispatcher import resolve_keyword
-from control.commands.intent_publisher import IntentPublisher
+from dome_control.commands.command_dispatcher import resolve_keyword
+from dome_control.commands.intent_publisher import IntentPublisher
 
 
 class SimpleCLI:

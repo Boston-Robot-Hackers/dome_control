@@ -5,8 +5,8 @@
 
 import pytest
 from unittest.mock import Mock, patch
-from control.commands.command_dispatcher import CommandDispatcher
-from control.commands.robot_controller import CommandResponse
+from dome_control.commands.command_dispatcher import CommandDispatcher
+from dome_control.commands.robot_controller import CommandResponse
 
 
 class TestNegativeNumbers:

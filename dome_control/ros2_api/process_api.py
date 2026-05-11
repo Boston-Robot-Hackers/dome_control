@@ -15,8 +15,8 @@ class CommandConfig:
     log_name: Optional[str]
     timeout: float
 
-from control.commands.config_manager import ConfigManager
-from control.ros2_api.base_api import BaseApi
+from dome_control.commands.config_manager import ConfigManager
+from dome_control.ros2_api.base_api import BaseApi
 
 
 @dataclass
@@ -428,7 +428,7 @@ class ProcessApi(BaseApi):
         return info.pid if info else "unknown"
 
     def kill_ros_process(self, pid: int) -> "CommandResponse":
-        from control.commands.robot_controller import CommandResponse
+        from dome_control.commands.robot_controller import CommandResponse
         try:
             ps_result = subprocess.run(
                 ["ps", "-o", "pid,pgid", "-p", str(pid)],
@@ -459,7 +459,7 @@ class ProcessApi(BaseApi):
             return CommandResponse(False, f"Error killing process: {e}")
 
     def list_ros_processes(self) -> "CommandResponse":
-        from control.commands.robot_controller import CommandResponse
+        from dome_control.commands.robot_controller import CommandResponse
         try:
             result = subprocess.run(
                 ["ps", "aux"], check=False, capture_output=True, text=True, timeout=5
@@ -494,7 +494,7 @@ class ProcessApi(BaseApi):
             return CommandResponse(False, f"Error listing processes: {e}")
 
     def list_launch_processes(self) -> "CommandResponse":
-        from control.commands.robot_controller import CommandResponse
+        from dome_control.commands.robot_controller import CommandResponse
         try:
             result = subprocess.run(
                 ["ps", "axo", "pid,pgid,ppid,user,%cpu,%mem,command"],

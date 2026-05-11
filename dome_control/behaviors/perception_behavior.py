@@ -4,8 +4,8 @@
 # Open Source Under MIT license
 """Handles perception-domain intents via async ROS2 service calls. No rclpy import."""
 
-from control.commands.intent_parser import Intent
-from control.commands.intent_parser import make_announcement_msg
+from dome_control.commands.intent_parser import Intent
+from dome_control.commands.intent_parser import make_announcement_msg
 
 PERCEPTION_INTENTS = {"describe_scene", "count_objects", "list_objects"}
 

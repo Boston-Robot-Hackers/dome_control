@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(control)
+project(dome_control)
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
@@ -11,7 +11,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES builtin_interfaces
 )
 
-install(DIRECTORY control
+install(DIRECTORY dome_control
   DESTINATION ${PYTHON_INSTALL_DIR}
   FILES_MATCHING PATTERN "*.py"
 )

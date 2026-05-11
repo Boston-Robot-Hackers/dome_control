@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
-package_name = 'control'
+package_name = 'dome_control'
 
 setup(
     name=package_name,
@@ -29,10 +29,10 @@ setup(
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            'run = control.main:main',
-            'behavior_manager = control.nodes.behavior_manager_node:main',
-            'describe_scene_stub = control.nodes.describe_scene_stub_node:main',
-            'speech_output = control.nodes.speech_output_node:main',
+            'run = dome_control.main:main',
+            'behavior_manager = dome_control.nodes.behavior_manager_node:main',
+            'describe_scene_stub = dome_control.nodes.describe_scene_stub_node:main',
+            'speech_output = dome_control.nodes.speech_output_node:main',
         ],
     },
 )

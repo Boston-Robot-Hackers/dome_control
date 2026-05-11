@@ -5,14 +5,14 @@
 
 import control.commands.config_manager as cm
 import control.ros2_api.base_api as base
-from control.announcement_contract import Announcement, PRIORITY_CHITCHAT
+from dome_control.announcement_contract import Announcement, PRIORITY_CHITCHAT
 
 
 class SpeechApi(base.BaseApi):
 
     def __init__(self, config_manager: cm.ConfigManager = None):
         super().__init__("speech_api", config_manager)
-        from control.announcement_contract import AnnouncementMsg
+        from dome_control.announcement_contract import AnnouncementMsg
         self.announcement_pub = self.create_publisher(AnnouncementMsg, "/announcement", 10)
 
     def speak(self, text: str, priority: int = PRIORITY_CHITCHAT) -> None:

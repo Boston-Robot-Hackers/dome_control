@@ -15,7 +15,7 @@ class TestT02ConfigPath:
         config_file = tmp_path / "test_config.yaml"
         config_file.write_text("dry_run: true\n")
         with patch.dict(os.environ, {"CONTROL_CONFIG": str(config_file)}):
-            from control.commands.config_manager import ConfigManager
+            from dome_control.commands.config_manager import ConfigManager
             path_used = os.environ.get("CONTROL_CONFIG", str(Path.home() / ".control" / "config.yaml"))
             assert path_used == str(config_file)
 
@@ -33,7 +33,7 @@ class TestT02ConfigPath:
         (tmp_path / "maps").mkdir()
         (tmp_path / "logs").mkdir()
         with patch.dict(os.environ, {"CONTROL_CONFIG": str(config_file)}):
-            from control.interface import simple_cli
+            from dome_control.interface import simple_cli
             import importlib
             importlib.reload(simple_cli)
             # Verify the env var path is used by checking SimpleCLI instantiation logic
