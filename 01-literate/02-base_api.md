@@ -1,6 +1,6 @@
 ---
-version: "1.0"
-generated: "2026-05-04"
+version: "1.1"
+generated: "2026-05-12"
 ---
 
 # BaseApi
@@ -13,12 +13,12 @@ generated: "2026-05-04"
 class BaseApi(Node, ABC):
     def __init__(self, node_name: str, config_manager: cm.ConfigManager = None):
         super().__init__(node_name)
-        self.config = config_manager or cm.ConfigManager()
+        self.config = config_manager
 ```
 
 `BaseApi` inherits from both `Node` (ROS2) and `ABC` (Python abstract base class). The `ABC` inheritance isn't strictly necessary here — there are no `@abstractmethod` declarations — but it signals that `BaseApi` is not meant to be instantiated directly.
 
-The `config_manager` parameter defaults to a freshly constructed `ConfigManager()` if none is provided. This is a convenience for ad-hoc use, but in production all API nodes receive the same `ConfigManager` instance from `RobotController`, which is important for shared state (e.g., `dry_run` flag, speed variables).
+`config_manager` may be `None`. Callers that need config pass it explicitly. In production all API nodes receive the same `ConfigManager` instance from `RobotController`, which is important for shared state (e.g., `dry_run` flag, speed variables).
 
 ## Logging Conventions
 
@@ -58,5 +58,5 @@ This helper is used by `MovementApi.check_velocity_limits` before every velocity
 
 ## Observations
 
-- The fallback `ConfigManager()` in `__init__` calls `ConfigManager(config_file)` with no argument, which will raise `TypeError`. The default is never exercised in practice (all callsites pass a config), but it's misleading as written.
+- `config_manager` is stored as-is (may be `None`). Subclasses that access `self.config` without checking for `None` will crash if called without a config. Callers that don't need config (e.g. `IntentApi`) pass `None` safely as long as they don't call config-dependent methods.
 - `ABC` is imported but not used for its primary purpose. Future API classes that must implement specific methods could use `@abstractmethod` here.

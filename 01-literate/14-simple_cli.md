@@ -1,6 +1,6 @@
 ---
-version: "2.0"
-generated: "2026-05-06"
+version: "2.1"
+generated: "2026-05-12"
 ---
 
 # SimpleCLI
@@ -16,10 +16,14 @@ class SimpleCLI:
         config_path = os.environ.get("CONTROL_CONFIG", default_cfg)
         self.config_manager = cm.ConfigManager.create(config_path)
         self.robot_controller = rc.RobotController(self.config_manager)
-        self.dispatcher = cd.CommandDispatcher(self.robot_controller)
+        self.intent_publisher = IntentPublisher()
+        self.intent_publisher.get_api()  # warm up ROS2 node + DDS discovery at startup
+        self.dispatcher = cd.CommandDispatcher(self.robot_controller, self.intent_publisher)
 ```
 
-Construction order: `ConfigManager` → `RobotController` → `CommandDispatcher`. `CONTROL_CONFIG` env var overrides the default config path.
+Construction order: `ConfigManager` → `RobotController` → `IntentPublisher` (warmed up) → `CommandDispatcher`. `CONTROL_CONFIG` env var overrides the default config path.
+
+`IntentPublisher` is constructed and its `IntentApi` ROS2 node is created eagerly at startup (the `.get_api()` call). This ensures DDS publisher-subscriber discovery happens before the first intent is published, avoiding the race condition where early commands are dropped.
 
 `SimpleCommandParser` was removed in F15/T05. All text parsing now goes through `CommandDispatcher.dispatch_text`.
 

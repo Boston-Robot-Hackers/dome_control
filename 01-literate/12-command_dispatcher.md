@@ -1,6 +1,6 @@
 ---
-version: "2.0"
-generated: "2026-05-06"
+version: "2.1"
+generated: "2026-05-12"
 ---
 
 # CommandDispatcher: Command Registry and Execution
@@ -46,8 +46,9 @@ def dispatch_text(self, text: str) -> rc.CommandResponse:
     ...
     intent_name = BEHAVIOR_COMMANDS.get(command_name)
     if intent_name is not None:
-        self.publish_intent(intent_name, slots)
-        return rc.CommandResponse(True, f"Intent published: {intent_name}")
+        reply = self.publish_intent(intent_name, slots)
+        msg = reply if reply is not None else f"Intent published: {intent_name}"
+        return rc.CommandResponse(True, msg)
     ...
     return self.execute(command_name, params)
 ```
@@ -67,12 +68,14 @@ BEHAVIOR_COMMANDS: dict[str, str] = {
     "intent.explore":        "explore",
     "intent.describe_scene": "describe_scene",
     "intent.count_objects":  "count_objects",
+    "intent.list_objects":   "list_objects",
     "scene.describe":        "describe_scene",
     "scene.count":           "count_objects",
+    "scene.objects":         "list_objects",
 }
 ```
 
-The `scene.*` forms are the preferred interactive vocabulary; `intent.*` forms are kept for completeness and scripting.
+`scene.*` forms are preferred interactive vocabulary; `intent.*` forms kept for scripting. `publish_intent` returns `str | None` — if `IntentApi` waited for a reply (query intents), the reply text comes back and replaces the default "Intent published" message in the `CommandResponse`.
 
 ## Abbreviation Resolution
 

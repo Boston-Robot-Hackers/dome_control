@@ -1,6 +1,6 @@
 ---
-version: "1.1"
-generated: "2026-05-04"
+version: "1.2"
+generated: "2026-05-12"
 ---
 
 # RobotController: Orchestrating Robot Operations
@@ -33,7 +33,7 @@ def movement(self) -> MovementApi:
     return self.movement_node
 ```
 
-The backing variables (`movement_node`, `calibration_node`, `process_node`, `intent_node`) start as `None`. When `get_robot_status` inspects them, it checks for `None` directly — a non-`None` node means it was constructed and is therefore "available".
+The backing variables (`movement_node`, `calibration_node`, `process_node`, `intent_node`, `speech_node`) start as `None`. When `get_robot_status` inspects them, it checks for `None` directly — a non-`None` node means it was constructed and is therefore "available".
 
 ```python
 nodes_status = {
@@ -100,6 +100,25 @@ def run_map_command(self, config: CommandConfig, success_msg: str, error_prefix:
 ```
 
 `map_path` is extracted because both `map_save` and `map_serialize` need the same three values: name, directory, and full path. Without the helper, that logic would be duplicated.
+
+## Speech Output
+
+`speak_text` publishes text to `/announcement` via `SpeechApi`, which `SpeechOutputNode` picks up and converts to audio. The `speech` property follows the same lazy init pattern as other APIs:
+
+```python
+@property
+def speech(self) -> SpeechApi:
+    if self.speech_node is None:
+        self.speech_node = SpeechApi(self.config)
+        time.sleep(0.5)
+    return self.speech_node
+
+def speak_text(self, text: str) -> CommandResponse:
+    self.speech.speak(text)
+    return CommandResponse(True, f"Speaking: {text!r}")
+```
+
+The 0.5s sleep on first construction serves the same DDS discovery purpose as the sleep on `intent` — allows the publisher to be seen by subscribers before the first message.
 
 ## Intent Publishing
 

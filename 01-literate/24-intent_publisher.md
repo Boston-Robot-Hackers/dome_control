@@ -1,6 +1,6 @@
 ---
-version: "1.0"
-generated: "2026-05-06"
+version: "1.1"
+generated: "2026-05-12"
 ---
 
 # IntentPublisher
@@ -12,22 +12,25 @@ generated: "2026-05-06"
 ```python
 class IntentPublisher:
     def __init__(self, publish_fn: Callable[[str], None] | None = None): ...
-    def publish(self, name: str, source: str = "cli", slots: dict | None = None) -> None: ...
+    def publish(self, name: str, source: str = "cli", slots: dict | None = None) -> str | None: ...
     def get_api(self): ...
 ```
 
 ## Publish Path
 
 ```python
-def publish(self, name: str, source: str = "cli", slots: dict | None = None) -> None:
+def publish(self, name: str, source: str = "cli", slots: dict | None = None) -> str | None:
     payload = json.dumps({"name": name, "source": source, "slots": slots or {}})
     if self.publish_fn is not None:
         self.publish_fn(payload)
-    else:
-        self.get_api().publish(name, source, slots or {})
+        return None
+    return self.get_api().publish(name, source, slots or {})
 ```
 
-When `publish_fn` is injected, the JSON payload string is passed to it directly. This is the test path — callers capture the list and assert on parsed JSON. When `publish_fn` is `None`, `get_api()` creates an `IntentApi` instance on first call (lazy init avoids importing `rclpy` at module load).
+Two paths:
+
+- **Test path** (`publish_fn` injected): JSON payload is passed to the injected function (e.g. `list.append`). Returns `None` — tests assert on the captured JSON, not the return value.
+- **Production path** (`publish_fn=None`): delegates to `IntentApi.publish`, which may wait for a `/announcement` reply for query intents and return the reply text. `get_api()` creates `IntentApi` lazily — avoids importing `rclpy` at module load.
 
 ## Testing Pattern
 

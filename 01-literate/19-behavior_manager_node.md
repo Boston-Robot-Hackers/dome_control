@@ -1,13 +1,42 @@
 ---
-version: "1.1"
-generated: "2026-05-07"
+version: "1.2"
+generated: "2026-05-12"
 ---
 
 # BehaviorManagerNode — Intent Router
 
 ## Purpose
 
-`BehaviorManagerNode` is the central ROS2 node that receives structured intents from `/intent` and dispatches them to domain-specific behavior handlers. It also caches sensor data from `/oak/detections` for use by `PerceptionBehavior`.
+`BehaviorManagerNode` is the central ROS2 node that receives structured intents from `/intent` and dispatches them to domain-specific behavior handlers. It also caches sensor data from `/oak/detections` and loads vision class profiles for label resolution.
+
+## Initialization: Handlers and Vision Config
+
+At startup the node wires two behavior handlers and optionally loads class profiles from `dome_vision`:
+
+```python
+rc = RobotController(ConfigManager.create(DEFAULT_CONFIG))
+self.handlers = [
+    MotionBehavior(rc),
+    PerceptionBehavior(self),
+]
+```
+
+Class profiles are loaded from a YAML file whose path is settable via a ROS2 parameter, defaulting to the `dome_vision` config location:
+
+```python
+self.declare_parameter("class_profiles_path", DEFAULT_VISION_CONFIG)
+vision_config_path = self.get_parameter("class_profiles_path").get_parameter_value().string_value
+self.profiles: dict = {}
+self.label_map: dict = {}
+try:
+    from dome_vision.class_profiles import build_label_map, load_class_profiles
+    self.profiles = load_class_profiles(vision_config_path)
+    self.label_map = build_label_map(self.profiles)
+except Exception as exc:
+    self.get_logger().warn(f"Could not load class profiles from {vision_config_path}: {exc}")
+```
+
+The `try/except` means the node runs without `dome_vision` installed — perception commands degrade to raw class IDs rather than failing entirely.
 
 ## Subscriptions and Publishers
 
@@ -60,18 +89,22 @@ Intents are parsed from JSON, matched against handlers, and executed. `get_help`
         self.get_logger().warn(f"Unhandled intent: {intent.name}")
 ```
 
-## Handler Registration
-
-```python
-self.handlers = [
-    MotionBehavior(rc),
-    PerceptionBehavior(self),
-]
+```mermaid
+flowchart TD
+    A[/intent topic] --> B[parse_intent]
+    B -- ValueError --> C[log warn]
+    B -- Intent --> D{get_help?}
+    D -- yes --> E[announce command list]
+    D -- no --> F[MotionBehavior.handles?]
+    F -- yes --> G[MotionBehavior.execute]
+    F -- no --> H[PerceptionBehavior.handles?]
+    H -- yes --> I[PerceptionBehavior.execute]
+    H -- no --> J[log unhandled]
 ```
-
-Handlers are checked in order. Adding new domains means appending to this list.
 
 ## Observations
 
 - `get_help` handled inline is a mild violation of the handler pattern. A `HelpBehavior` would be consistent.
 - `latest_detections` is mutable shared state updated by a ROS2 callback and read by a behavior. In a multi-threaded executor this is a race; the default single-threaded executor makes it safe.
+- `profiles` and `label_map` are set on the node so `PerceptionBehavior` can access them via `self.node`. This is a form of implicit coupling — `PerceptionBehavior` must know the node has these attributes. An explicit dependency injection would be cleaner.
+- The `dome_vision` import is inside a `try/except` at init time, not deferred. If `dome_vision` is importable but the YAML is malformed, the node still starts with empty profiles rather than crashing.
