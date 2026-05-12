@@ -10,8 +10,8 @@ import rclpy
 from std_msgs.msg import String
 
 from dome_control.announcement_contract import AnnouncementMsg
-import control.commands.config_manager as cm
-import control.ros2_api.base_api as base
+import dome_control.commands.config_manager as cm
+import dome_control.ros2_api.base_api as base
 
 REPLY_INTENTS = {"describe_scene", "list_objects", "get_status", "get_help"}
 REPLY_TIMEOUT_S = 5.0

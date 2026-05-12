@@ -6,8 +6,8 @@ import rclpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 
-import control.commands.config_manager as cm
-import control.ros2_api.base_api as base
+import dome_control.commands.config_manager as cm
+import dome_control.ros2_api.base_api as base
 
 
 class MovementApi(base.BaseApi):

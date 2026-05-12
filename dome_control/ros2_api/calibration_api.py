@@ -10,9 +10,9 @@ import time
 
 import rclpy
 
-import control.commands.config_manager as cm
-import control.ros2_api.base_api as base
-import control.ros2_api.movement_api as movement
+import dome_control.commands.config_manager as cm
+import dome_control.ros2_api.base_api as base
+import dome_control.ros2_api.movement_api as movement
 
 
 class CalibrationApi(base.BaseApi):

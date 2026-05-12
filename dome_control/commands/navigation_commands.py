@@ -4,8 +4,8 @@ Navigation Commands - Map management command definitions
 Author: Pito Salas and Claude Code
 Open Source Under MIT license
 """
-import control.commands.command_def as cd
-import control.commands.parameter_def as pd
+import dome_control.commands.command_def as cd
+import dome_control.commands.parameter_def as pd
 
 
 def build_navigation_commands() -> dict[str, cd.CommandDef]:

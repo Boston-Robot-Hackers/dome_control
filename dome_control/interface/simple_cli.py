@@ -13,11 +13,53 @@ from pathlib import Path
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
 
-import control.commands.command_dispatcher as cd
-import control.commands.config_manager as cm
-import control.commands.robot_controller as rc
+import dome_control.commands.command_dispatcher as cd
+import dome_control.commands.config_manager as cm
+import dome_control.commands.robot_controller as rc
 from dome_control.commands.command_dispatcher import resolve_keyword
 from dome_control.commands.intent_publisher import IntentPublisher
+
+
+def format_table(rows: list[dict], columns: list[tuple[str, str]]) -> str:
+    """Format a list of dicts as a simple fixed-width table."""
+    if not rows:
+        return ""
+
+    widths = {}
+    for key, heading in columns:
+        values = [_format_cell(row.get(key)) for row in rows]
+        widths[key] = max(len(heading), *(len(value) for value in values))
+
+    header = _format_table_row(
+        {key: heading for key, heading in columns}, columns, widths
+    )
+    separator = _format_table_row(
+        {key: "-" * widths[key] for key, _ in columns}, columns, widths
+    )
+    body = [
+        _format_table_row(row, columns, widths)
+        for row in rows
+    ]
+    return "\n".join([header, separator, *body])
+
+
+def _format_table_row(
+    row: dict, columns: list[tuple[str, str]], widths: dict[str, int]
+) -> str:
+    cells = []
+    last_index = len(columns) - 1
+    for index, (key, _) in enumerate(columns):
+        cell = _format_cell(row.get(key))
+        cells.append(cell if index == last_index else cell.ljust(widths[key]))
+    return "  ".join(cells)
+
+
+def _format_cell(value) -> str:
+    if value is None:
+        return "-"
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    return str(value)
 
 
 class SimpleCLI:
@@ -168,6 +210,13 @@ class SimpleCLI:
 
     def print_data(self, data) -> None:
         if isinstance(data, dict):
+            if "variables" in data and isinstance(data["variables"], dict):
+                self.print_variables(data["variables"])
+                return
+            if "status" in data and isinstance(data["status"], dict):
+                self.print_status(data["status"])
+                return
+
             for key, value in data.items():
                 if isinstance(value, dict):
                     print(f"{key}:")
@@ -179,6 +228,60 @@ class SimpleCLI:
                     print(f"{key}: {value}")
         else:
             print(data)
+
+    def print_variables(self, variables: dict) -> None:
+        rows = [
+            {"name": name, "value": value}
+            for name, value in sorted(variables.items())
+        ]
+        table = format_table(rows, [("name", "NAME"), ("value", "VALUE")])
+        if table:
+            print(table)
+
+    def print_status(self, status: dict) -> None:
+        speeds = status.get("speeds", {})
+        if speeds:
+            print("configured speeds:")
+            rows = [
+                {"name": name, "value": value}
+                for name, value in sorted(speeds.items())
+            ]
+            print(format_table(rows, [("name", "NAME"), ("value", "VALUE")]))
+
+        processes = status.get("processes", {})
+        if processes:
+            if speeds:
+                print()
+            print("launch processes:")
+            rows = [
+                {
+                    "name": name,
+                    "running": details.get("running"),
+                    "pid": details.get("pid"),
+                    "process_id": details.get("process_id"),
+                }
+                for name, details in sorted(processes.items())
+            ]
+            print(format_table(
+                rows,
+                [
+                    ("name", "NAME"),
+                    ("running", "RUNNING"),
+                    ("pid", "PID"),
+                    ("process_id", "PROCESS ID"),
+                ],
+            ))
+
+        nodes = status.get("nodes", {})
+        if nodes:
+            if speeds or processes:
+                print()
+            print("api nodes:")
+            rows = [
+                {"name": name, "state": state}
+                for name, state in sorted(nodes.items())
+            ]
+            print(format_table(rows, [("name", "NAME"), ("state", "STATE")]))
 
     def log_command(self, command: str) -> None:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")

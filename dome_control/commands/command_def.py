@@ -7,7 +7,7 @@ Open Source Under MIT license
 
 from dataclasses import dataclass
 
-import control.commands.parameter_def as pd
+import dome_control.commands.parameter_def as pd
 
 
 @dataclass

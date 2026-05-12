@@ -7,14 +7,14 @@ Open Source Under MIT license
 import shlex
 from typing import Any
 
-import control.commands.command_def as cd
-import control.commands.control_commands as ctrl_cmd
-import control.commands.launch_commands as lch_cmd
-import control.commands.movement_commands as mov_cmd
-import control.commands.navigation_commands as nav_cmd
-import control.commands.parameter_def as paramdef_mod
-import control.commands.robot_controller as rc
-import control.commands.system_commands as sys_cmd
+import dome_control.commands.command_def as cd
+import dome_control.commands.control_commands as ctrl_cmd
+import dome_control.commands.launch_commands as lch_cmd
+import dome_control.commands.movement_commands as mov_cmd
+import dome_control.commands.navigation_commands as nav_cmd
+import dome_control.commands.parameter_def as paramdef_mod
+import dome_control.commands.robot_controller as rc
+import dome_control.commands.system_commands as sys_cmd
 
 
 ABBREV_TO_FULL = {

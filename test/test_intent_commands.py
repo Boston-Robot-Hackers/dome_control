@@ -14,14 +14,14 @@ import pytest
 class TestIntentApi:
 
     def _make_intent_api(self):
-        import control.ros2_api.intent_api as ia
+        import dome_control.ros2_api.intent_api as ia
         api = ia.IntentApi.__new__(ia.IntentApi)
         api.intent_pub = MagicMock()
         api.log_info = MagicMock()
         return api
 
     def test_publish_serializes_json(self):
-        import control.ros2_api.intent_api as ia
+        import dome_control.ros2_api.intent_api as ia
         api = self._make_intent_api()
         ia.IntentApi.publish(api, "stop", "cli", {})
 
@@ -33,7 +33,7 @@ class TestIntentApi:
         assert data["slots"] == {}
 
     def test_publish_includes_slots(self):
-        import control.ros2_api.intent_api as ia
+        import dome_control.ros2_api.intent_api as ia
         api = self._make_intent_api()
         ia.IntentApi.publish(api, "count_objects", "cli", {"object_type": "chair"})
 

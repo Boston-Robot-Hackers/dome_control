@@ -5,8 +5,8 @@ System command definitions for configuration, processes, and scripts.
 Author: Pito Salas and Claude Code
 Open Source Under MIT license
 """
-import control.commands.command_def as cd
-import control.commands.parameter_def as pd
+import dome_control.commands.command_def as cd
+import dome_control.commands.parameter_def as pd
 
 
 def build_system_commands() -> dict[str, cd.CommandDef]:

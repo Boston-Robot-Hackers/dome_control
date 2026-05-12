@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
-import control.interface.simple_cli as cli
+import dome_control.interface.simple_cli as cli
 
 
 def main():

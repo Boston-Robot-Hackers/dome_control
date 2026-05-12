@@ -3,8 +3,8 @@
 # Author: Pito Salas and Claude Code
 # Open Source Under MIT license
 
-import control.commands.config_manager as cm
-import control.ros2_api.base_api as base
+import dome_control.commands.config_manager as cm
+import dome_control.ros2_api.base_api as base
 from dome_control.announcement_contract import Announcement, PRIORITY_CHITCHAT
 
 
