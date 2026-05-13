@@ -10,7 +10,7 @@
 When oak is not running, reports "no detections available".
 
 ## How to Demo
-**Setup**: Robot running with `bl control robot.launch.py oak:=true behavior:=true voice:=true`
+**Setup**: Robot running with `bl dome_control robot.launch.py oak:=true behavior:=true voice:=true`
 
 **Steps**:
 1. CLI: type `scene objects`

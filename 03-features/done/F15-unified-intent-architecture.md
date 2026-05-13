@@ -99,29 +99,29 @@ into `CommandDispatcher.dispatch_text()`)
 ## New Files
 
 ```
-control/behaviors/__init__.py
-control/behaviors/motion_behavior.py       # MotionBehavior
-control/behaviors/perception_behavior.py   # PerceptionBehavior
-control/commands/intent_publisher.py       # IntentPublisher (injectable for tests)
-control/nodes/__init__.py
+dome_control/behaviors/__init__.py
+dome_control/behaviors/motion_behavior.py       # MotionBehavior
+dome_control/behaviors/perception_behavior.py   # PerceptionBehavior
+dome_control/commands/intent_publisher.py       # IntentPublisher (injectable for tests)
+dome_control/nodes/__init__.py
 ```
 
 ## Modified Files
 
-- `control/commands/intent_parser.py` — renamed from `behavior_manager.py`;
+- `dome_control/commands/intent_parser.py` — renamed from `behavior_manager.py`;
   class `BehaviorManager` → `IntentParser`; file moved to `commands/`
-- `control/nodes/behavior_manager_node.py` — moved from root; added
+- `dome_control/nodes/behavior_manager_node.py` — moved from root; added
   `RobotController`, routes to handler list, removed inline `describe_scene` logic
-- `control/commands/command_dispatcher.py` — absorbed text-parsing from
+- `dome_control/commands/command_dispatcher.py` — absorbed text-parsing from
   `simple_parser`; behavior commands publish to `/intent` via `IntentPublisher`;
   behavior commands added to registry so they appear in `help commands`
-- `control/interface/simple_cli.py` — calls `dispatcher.dispatch_text()` directly
+- `dome_control/interface/simple_cli.py` — calls `dispatcher.dispatch_text()` directly
 
 ## Deleted Files
 
-- `control/interface/simple_parser.py` — logic merged into `CommandDispatcher`
-- `control/commands/intent_commands.py` — replaced by `BEHAVIOR_COMMANDS` routing
-- `control/commands/semantic_commands.py` — replaced by `BEHAVIOR_COMMANDS` routing
+- `dome_control/interface/simple_parser.py` — logic merged into `CommandDispatcher`
+- `dome_control/commands/intent_commands.py` — replaced by `BEHAVIOR_COMMANDS` routing
+- `dome_control/commands/semantic_commands.py` — replaced by `BEHAVIOR_COMMANDS` routing
 
 ## Behavior Handler Interface
 
@@ -178,7 +178,7 @@ Adding a new behavior:
 3. Add handler method to `RobotController` if needed
 
 Adding a new behavior domain:
-1. Create `control/behaviors/<domain>_behavior.py`
+1. Create `dome_control/behaviors/<domain>_behavior.py`
 2. Append to `self.handlers` in `BehaviorManagerNode.__init__()`
 
 Promoting a primitive to intent-driven (when speech needs e.g. `move_forward`):

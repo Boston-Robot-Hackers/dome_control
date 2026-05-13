@@ -33,15 +33,15 @@ management, map operations, configuration, scripts, and intent publishing.
   If service not ready, publishes user-facing "Oak Camera not connected" message.
 - `IntentParser`: pure Python JSON→Intent parser.
 - `describe_scene_stub` node for smoke testing without vision hardware.
-- Voice pipeline in sibling package `robot_voice`. `voice_input_node.py` lives there.
+- Voice pipeline in sibling package `dome_voice`. `voice_input_node.py` lives there.
 - Voice intent mapping: 8 single-word commands — stop, right, left, explore, describe, objects, status, help.
 - Wake word: "alexa". Threshold 0.7, wake_hits 3, cooldown 1.5s.
-- `audio_feedback.py` (in robot_voice): beep via aplay, 20% amplitude.
+- `audio_feedback.py` (in dome_voice): beep via aplay, 20% amplitude.
 - Launch files — each package owns its own robot/remote launches:
-  - `control/launch/robot.launch.py` — speech_output + behavior_manager (no args)
-  - `control/launch/remote.launch.py` — optional behavior_manager
-  - `robot_voice/launch/robot.launch.py` — voice_input (Seeed board assumed)
-  - `oak_roboflow_ros/launch/robot.launch.py` — oak camera + semantic_map + optional spin_survey
+  - `dome_control/launch/robot.launch.py` — speech_output + behavior_manager (no args)
+  - `dome_control/launch/remote.launch.py` — optional behavior_manager
+  - `dome_voice/launch/robot.launch.py` — voice_input (Seeed board assumed)
+  - `dome_vision_ros/launch/robot.launch.py` — oak camera + semantic_map + optional spin_survey
 - Feature files:
   - `F01`–`F03`, `F13`–`F16`: done
 
@@ -64,14 +64,14 @@ management, map operations, configuration, scripts, and intent publishing.
 python3 -m pytest test/ -v
 
 # CLI (dev machine)
-ros2 run control run
+ros2 run dome_control run
 
 # On robot — three separate terminals:
-bl control robot.launch.py
-bl robot_voice robot.launch.py
-bl oak_roboflow_ros robot.launch.py
+bl dome_control robot.launch.py
+bl dome_voice robot.launch.py
+bl dome_vision_ros robot.launch.py
 
 # Stub mode (no oak hardware):
-bl control robot.launch.py
-# manually: ros2 run control describe_scene_stub
+bl dome_control robot.launch.py
+# manually: ros2 run dome_control describe_scene_stub
 ```

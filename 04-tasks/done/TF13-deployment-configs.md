@@ -20,22 +20,22 @@ Use `better_launch` for the launch file.
 **Status**: done
 **Description**: Add `install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME})`
 to `CMakeLists.txt` so launch files are installed and discoverable by
-`bl control <launch-file>`.
+`bl dome_control <launch-file>`.
 
 ## T04 — Smoke test config A (everything onboard)
 **Status**: done
-**Description**: On robot, run `bl control robot.launch.py --voice True`.
+**Description**: On robot, run `bl dome_control robot.launch.py --voice True`.
 Confirm all four nodes start: `speech_output`, `describe_scene_stub`,
 `behavior_manager`, `voice_input`. Say wake word, confirm intent flows end to end.
 
 ## T05 — Smoke test config B (mic offboard)
 **Status**: done
-**Description**: Robot runs `bl control robot.launch.py`. Offboard
-machine runs `bl control remote.launch.py`. Say wake word into offboard
+**Description**: Robot runs `bl dome_control robot.launch.py`. Offboard
+machine runs `bl dome_control remote.launch.py`. Say wake word into offboard
 mic. Confirm intent published offboard, speech plays on robot speaker.
 
 ## T06 — Smoke test config D (CLI offboard)
 **Status**: done
-**Description**: Robot runs `bl control robot.launch.py`. Offboard
-machine runs `ros2 run control run`. Issue a CLI command. Confirm intent reaches
+**Description**: Robot runs `bl dome_control robot.launch.py`. Offboard
+machine runs `ros2 run dome_control run`. Issue a CLI command. Confirm intent reaches
 robot and behavior_manager responds.

@@ -36,9 +36,9 @@ launch_templates:
     description: Foxglove driver
   robot:
     name: control_robot
-    command: bl control robot.launch.py
+    command: bl dome_control robot.launch.py
     description: Control robot-side nodes
   remote:
     name: control_remote
-    command: bl control remote.launch.py
+    command: bl dome_control remote.launch.py
     description: Control remote-side nodes

@@ -19,7 +19,7 @@ venv, `vosk-model-small-en-us` downloaded, `VOSK_MODEL_PATH` set, ROS2 environme
 sourced, `behavior_manager_node` running.
 
 **Steps**:
-1. `ros2 run control voice_input`
+1. `ros2 run dome_control voice_input`
 2. Say "Jarvis"
 3. Say a recognized command, e.g. "what do you see?"
 4. `ros2 topic echo /intent`

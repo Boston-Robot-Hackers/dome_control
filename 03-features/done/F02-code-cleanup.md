@@ -16,7 +16,7 @@ instead of by the caller.
 **Setup**: no ROS2 required; tests are self-contained.
 
 **Steps**:
-1. `cd /home/pitosalas/ros2_ws/src/control`
+1. `cd /home/pitosalas/ros2_ws/src/dome_control`
 2. `python3 -m pytest test/ -v --ignore=test/__init__.py`
 
 **Expected output**: all 67 tests pass, zero failures.

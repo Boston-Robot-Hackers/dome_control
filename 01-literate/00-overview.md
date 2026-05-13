@@ -7,7 +7,7 @@ generated: "2026-05-12"
 
 ## What This Is
 
-`dome_control` is a ROS2 package that gives a mobile robot a voice-driven command interface. A user speaks a command; a sibling package (`robot_voice`) transcribes and maps the intent, then publishes it to `/intent`. This package receives that intent, routes it to a domain behavior handler, and executes motion or perception actions — all over ROS2 topics and services. There is also a CLI for scripted or remote control.
+`dome_control` is a ROS2 package that gives a mobile robot a voice-driven command interface. A user speaks a command; a sibling package (`dome_voice`) transcribes and maps the intent, then publishes it to `/intent`. This package receives that intent, routes it to a domain behavior handler, and executes motion or perception actions — all over ROS2 topics and services. There is also a CLI for scripted or remote control.
 
 ## Architecture in Layers
 
@@ -39,10 +39,10 @@ Robot Hardware
 
 ## Intent Flow
 
-Voice input lives in the sibling package `robot_voice`. Its pipeline produces JSON intent strings on `/intent`. This package consumes them:
+Voice input lives in the sibling package `dome_voice`. Its pipeline produces JSON intent strings on `/intent`. This package consumes them:
 
 ```
-robot_voice package
+dome_voice package
     VoiceInputNode
         │ (JSON intent string)
         ▼
@@ -108,8 +108,8 @@ Each package owns its own launch files:
 |---------|--------|----------------|
 | `dome_control` | `robot.launch.py` | `speech_output`, `behavior_manager` |
 | `dome_control` | `remote.launch.py` | optional `behavior_manager` |
-| `robot_voice` | `robot.launch.py` | `voice_input` |
-| `oak_roboflow_ros` | `robot.launch.py` | oak camera, semantic_map |
+| `dome_voice` | `robot.launch.py` | `voice_input` |
+| `dome_vision_ros` | `robot.launch.py` | oak camera, semantic_map |
 
 ## Reading Order
 
@@ -126,7 +126,7 @@ Each package owns its own launch files:
 | 14 | simple_cli | CLI entry point, REPL and non-interactive modes |
 | 18 | behavior_manager (IntentParser) | Pure JSON→Intent parsing |
 | 19 | behavior_manager_node | ROS2 intent router, vision profile loading |
-| 20 | voice_input_node | (orphaned — source moved to robot_voice) |
+| 20 | voice_input_node | (orphaned — source moved to dome_voice) |
 | 21 | speech_output_node | Piper TTS, /announcement consumer |
 | 22 | motion_behavior | Motion intent execution via RobotController |
 | 23 | perception_behavior | describe_scene service call, list_objects from cache |

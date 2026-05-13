@@ -55,19 +55,19 @@ Args:
 
 ```bash
 # Config A — everything onboard, mic on robot
-bl control robot.launch.py --voice True
+bl dome_control robot.launch.py --voice True
 
 # Config B — mic offboard, everything else onboard
-# robot:    bl control robot.launch.py
-# offboard: bl control remote.launch.py
+# robot:    bl dome_control robot.launch.py
+# offboard: bl dome_control remote.launch.py
 
 # Config D — CLI offboard, no voice
-# robot:    bl control robot.launch.py
-# offboard: ros2 run control run   (interactive, not a launch file)
+# robot:    bl dome_control robot.launch.py
+# offboard: ros2 run dome_control run   (interactive, not a launch file)
 
 # Config E — behavior_manager offboard
-# robot:    bl control robot.launch.py --behavior False
-# offboard: bl control remote.launch.py --behavior True --voice False
+# robot:    bl dome_control robot.launch.py --behavior False
+# offboard: bl dome_control remote.launch.py --behavior True --voice False
 ```
 
 ## Known Wart
@@ -101,8 +101,8 @@ setup. Fix later by routing through `/announcement` if robot-side feedback neede
 **Setup**: Two machines, same network, same `ROS_DOMAIN_ID`. ROS2 sourced on both.
 
 **Steps** (config B — mic offboard, speaker on robot):
-1. Robot: `bl control robot.launch.py`
-2. Offboard: `bl control remote.launch.py`
+1. Robot: `bl dome_control robot.launch.py`
+2. Offboard: `bl dome_control remote.launch.py`
 3. Speak wake word and command into offboard mic.
 
 **Expected output**: intent published from offboard, behavior_manager on robot

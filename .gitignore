@@ -10,4 +10,6 @@ __pycache__/
 bin/
 piper_model/
 .DS_Store
+._*
+__MACOSX/
 *.egg-info/

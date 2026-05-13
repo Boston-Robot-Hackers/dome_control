@@ -5,7 +5,7 @@ generated: "2026-05-06"
 
 # MotionBehavior
 
-`control/behaviors/motion_behavior.py` handles motion-domain intents. It has no ROS2 dependency — all execution goes through `RobotController`, except for `get_status` which needs to publish an announcement via the node.
+`dome_control/behaviors/motion_behavior.py` handles motion-domain intents. It has no ROS2 dependency — all execution goes through `RobotController`, except for `get_status` which needs to publish an announcement via the node.
 
 ## Interface
 

@@ -14,13 +14,13 @@ This keeps voice, REST, and button input deferred while proving the shared
 intent-to-behavior contract.
 
 ## How to Demo
-**Setup**: ROS2 environment sourced. `oak_roboflow_ros` may be running for live
+**Setup**: ROS2 environment sourced. `dome_vision_ros` may be running for live
 target data later; the current demo uses the included stub describe-scene service.
 
 **Steps**:
 1. Terminal 1: run the behavior manager node.
 2. Terminal 2: run a describe-scene service provider.
-3. Terminal 3: `ros2 run control run`
+3. Terminal 3: `ros2 run dome_control run`
 4. In REPL: type `scene describe`
 5. Optional: type `scene count can`
 

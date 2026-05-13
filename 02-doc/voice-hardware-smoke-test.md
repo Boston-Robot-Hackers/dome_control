@@ -134,10 +134,10 @@ Then set `input_device_index` to the index of `seeed2micvoicec`.
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-select control
+colcon build --packages-select dome_control
 source install/setup.bash
 export VOSK_MODEL_PATH=/home/pitosalas/models/vosk-model-small-en-us-0.15
-ros2 run control voice_input 2>/dev/null
+ros2 run dome_control voice_input 2>/dev/null
 ```
 
 In a second terminal, monitor intents:
@@ -177,5 +177,5 @@ Minimum successful demo:
 1. `aplay -l` and `arecord -l` show `seeed2micvoicec`.
 2. A recorded WAV plays back through the robot speaker.
 3. Wake word test script detects "Hey Jarvis".
-4. `ros2 run control voice_input` publishes a structured intent on `/intent`
+4. `ros2 run dome_control voice_input` publishes a structured intent on `/intent`
    when wake word + command are spoken.

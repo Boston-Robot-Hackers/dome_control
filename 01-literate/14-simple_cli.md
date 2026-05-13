@@ -38,7 +38,7 @@ def main():
         cli.repl()
 ```
 
-Non-interactive: `ros2 run control run move forward 1.0` — executes one command and exits. Interactive REPL: `prompt_toolkit` with persistent history in `~/.control/prompt_history.txt`. Commands are also timestamped to `~/.control/command_history.txt`.
+Non-interactive: `ros2 run dome_control run move forward 1.0` — executes one command and exits. Interactive REPL: `prompt_toolkit` with persistent history in `~/.control/prompt_history.txt`. Commands are also timestamped to `~/.control/command_history.txt`.
 
 ## execute_command
 

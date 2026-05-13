@@ -2,7 +2,7 @@ ROS2 Topics - Publishers and Subscribers
 ============================================================
 
 TOPIC: /announcement
-  Type:        control/msg/Announcement
+  Type:        dome_control/msg/Announcement
   Publishers:  behavior_manager, speech_api (CLI/remote)
   Subscribers: speech_output
   Fields:      text, priority (0-5), source, dedup_key, stamp

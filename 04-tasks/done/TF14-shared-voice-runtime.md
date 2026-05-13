@@ -30,7 +30,7 @@ synthetic chunks and fake wake and STT models.
 
 ## T04 — Refactor voice_input_node into ROS adapter
 **Status**: done
-**Description**: Make `control/voice_input_node.py` call the shared runtime for
+**Description**: Make `dome_voice/voice_input_node.py` call the shared runtime for
 voice turns, map transcripts with `IntentMapper`, publish `/voice/state`, publish
 mapped JSON intents on `/intent`, and publish an `/announcement` failure message
 when mapping fails. Test with a fake runtime result.

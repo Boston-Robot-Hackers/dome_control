@@ -6,13 +6,13 @@ COMMANDS
 
 SMOKE TEST
   Terminal 1:
-    ros2 run control behavior_manager
+    ros2 run dome_control behavior_manager
 
   Terminal 2:
-    ros2 run control describe_scene_stub
+    ros2 run dome_control describe_scene_stub
 
   Terminal 3:
-    ros2 run control run
+    ros2 run dome_control run
 
   In REPL, type:
     scene describe
@@ -23,6 +23,6 @@ EXPECTED FLOW
 
 NOTES
   The current MVP uses std_msgs/String JSON for /intent.
-  Announcement output uses control/msg/Announcement on /announcement.
+  Announcement output uses dome_control/msg/Announcement on /announcement.
   The temporary /describe_scene service type is std_srvs/Trigger.
   Custom Intent.msg and query services are deferred until the vocabulary stabilizes.

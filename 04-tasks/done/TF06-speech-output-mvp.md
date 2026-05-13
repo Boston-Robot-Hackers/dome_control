@@ -29,8 +29,8 @@ invocation behavior.
 Current useful settings for ReSpeaker/Seeed HAT testing:
 
 ```bash
-export PIPER_BIN=/home/pitosalas/ros2_ws/src/control/bin/piper/piper
-export PIPER_MODEL_PATH=/home/pitosalas/ros2_ws/src/control/piper_model/en_US-lessac-medium.onnx
+export PIPER_BIN=/home/pitosalas/ros2_ws/src/dome_control/bin/piper/piper
+export PIPER_MODEL_PATH=/home/pitosalas/ros2_ws/src/dome_control/piper_model/en_US-lessac-medium.onnx
 export SPEECH_ALSA_DEVICE=plughw:0,0
 export SPEECH_TMP_DIR=/dev/shm
 export SPEECH_GAIN=0.18

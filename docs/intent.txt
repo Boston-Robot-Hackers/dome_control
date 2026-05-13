@@ -13,7 +13,7 @@ SMOKE TEST
     ros2 topic echo /intent std_msgs/msg/String
 
   Terminal 2 (run REPL):
-    ros2 run control run
+    ros2 run dome_control run
 
   In REPL, type:
     intent stop

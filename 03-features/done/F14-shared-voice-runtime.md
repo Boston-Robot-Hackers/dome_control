@@ -6,7 +6,7 @@
 **Tests Written:** yes
 **Test Passing:** yes
 **Description**: Replace the current ROS-heavy voice input implementation with a
-small shared runtime in `control/voice` that owns the Raspberry Pi audio loop:
+small shared runtime in `dome_voice` that owns the Raspberry Pi audio loop:
 microphone capture, live filtering, wake-word detection, command capture, and
 Vosk transcription. The runtime must be usable without ROS so audio tuning and
 hardware validation can happen directly on the Pi. The ROS node should become a
@@ -16,7 +16,7 @@ and publishes `/intent`, `/voice/state`, and `/announcement`.
 ## Background
 
 The tuned `tune` harness and `demo_listen.py` now have better runtime behavior
-than `control.voice_input_node`:
+than `dome_voice.voice_input_node`:
 
 - wake word: `alexa`
 - wake threshold: `0.3`
@@ -45,7 +45,7 @@ the robot. It should produce recognized command text and metadata. ROS-dependent
 code should translate that into topics.
 
 ```
-control.voice.runtime          # no ROS imports
+dome_voice.runtime             # no ROS imports
   arecord / audio input
   live filter
   openWakeWord
@@ -53,7 +53,7 @@ control.voice.runtime          # no ROS imports
   Vosk grammar transcription
   -> VoiceTurn(text, raw_text, timings, scores)
 
-control.voice_input_node       # ROS adapter only
+dome_voice.voice_input_node         # ROS adapter only
   runtime.next_turn()
   IntentMapper.map_intent(text)
   publish /voice/state
@@ -63,7 +63,7 @@ control.voice_input_node       # ROS adapter only
 
 ## Non-ROS Runtime Requirements
 
-Add a pure-Python module, likely `control/voice/runtime.py`, with no `rclpy`
+Add a pure-Python module, likely `dome_voice/runtime.py`, with no `rclpy`
 imports. It should be able to run on the Pi from a plain Python script or test
 command.
 
@@ -87,7 +87,7 @@ grammar, live filter, highpass, lowpass, and model paths.
 
 ## ROS Wrapper Requirements
 
-Refactor `control/voice_input_node.py` so it is mostly ROS glue:
+Refactor `dome_voice/voice_input_node.py` so it is mostly ROS glue:
 
 1. Publish `IDLE`, `LISTENING`, `PROCESSING`, and `SPEAKING` states.
 2. Call the shared runtime for each voice turn.

@@ -5,7 +5,7 @@ generated: "2026-05-12"
 
 # IntentPublisher
 
-`control/commands/intent_publisher.py` is the thin layer between `CommandDispatcher` and the `/intent` ROS2 topic. It accepts an injected `publish_fn` so unit tests stay No-ROS, while production uses `IntentApi` lazily.
+`dome_control/commands/intent_publisher.py` is the thin layer between `CommandDispatcher` and the `/intent` ROS2 topic. It accepts an injected `publish_fn` so unit tests stay No-ROS, while production uses `IntentApi` lazily.
 
 ## Interface
 

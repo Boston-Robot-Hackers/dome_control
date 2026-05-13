@@ -23,8 +23,8 @@ Prefer no-ROS tests. Use mock/stub ROS nodes for ROS2 tests.
 ## T02 — Create behaviors package with MotionBehavior
 **Status**: done
 **Test tier**: No-ROS (mock RobotController)
-**Description**: Created `control/behaviors/__init__.py`,
-`control/behaviors/motion_behavior.py`, stub `perception_behavior.py`.
+**Description**: Created `dome_control/behaviors/__init__.py`,
+`dome_control/behaviors/motion_behavior.py`, stub `perception_behavior.py`.
 `MotionBehavior` with `handles()` and `execute(intent, node)`. Wired to
 `RobotController`: `stop` → `stop_robot()`, `drive_square` → `script_square(meters)`,
 `explore` → no-op (not yet implemented).
@@ -36,7 +36,7 @@ Prefer no-ROS tests. Use mock/stub ROS nodes for ROS2 tests.
 ## T03 — Create PerceptionBehavior
 **Status**: done
 **Test tier**: No-ROS (mock node + fake std_srvs module injected via sys.modules)
-**Description**: Implemented `control/behaviors/perception_behavior.py`. Moved
+**Description**: Implemented `dome_control/behaviors/perception_behavior.py`. Moved
 `call_describe_scene`, `on_describe_scene_done`, `publish_announcement` logic
 from `behavior_manager_node.py` into `PerceptionBehavior`. Uses lazy import for
 `std_srvs.srv.Trigger` to avoid rclpy at module load. Handles `describe_scene`
@@ -72,7 +72,7 @@ and `count_objects` (count_objects logs unimplemented).
 **Test tier**: No-ROS
 **Description**: Add `CommandDispatcher.dispatch_text(text: str) ->
 CommandResponse`: tokenize input, extract command name and params, call
-`execute()`. Delete `control/interface/simple_parser.py`. Update `simple_cli.py`
+`execute()`. Delete `dome_control/interface/simple_parser.py`. Update `simple_cli.py`
 to call `dispatcher.dispatch_text()`.
 
 **Test**: `python3 -m pytest test/test_command_dispatcher_text.py -v` — 14 passed.

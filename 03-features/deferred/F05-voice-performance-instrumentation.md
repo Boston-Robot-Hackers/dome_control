@@ -16,7 +16,7 @@ part of the pipeline is slow before optimizing.
 instrumentation flag/config turned on.
 
 **Steps**:
-1. Start `ros2 run control voice_input` with instrumentation enabled
+1. Start `ros2 run dome_control voice_input` with instrumentation enabled
 2. Trigger wake word and run a sequence of recognized and unrecognized commands
 3. Collect timing logs/metrics output for each interaction
 4. Review per-stage latency and aggregated summary stats

@@ -19,13 +19,13 @@ Write unit test with mock detections.
 Direct path — calls `RobotController` method that reads latest detections via a
 ROS topic subscription or service. Announce result. Write unit test.
 
-## T04 — Add voice command to robot_voice
+## T04 — Add voice command to dome_voice
 **Status**: not done
-**Description**: In `robot_voice/intent_mapper.py` add `(("objects",), "list_objects")` to
+**Description**: In `dome_voice/intent_mapper.py` add `(("objects",), "list_objects")` to
 `PHRASE_INTENTS`. In `runtime.py` add `"objects"` to `DEFAULT_GRAMMAR` and
 `TUNED_VOICE_PARAMETERS["stream_settings"]["grammar"]`.
 
 ## T05 — Update robot.launch.py oak dependency
 **Status**: not done
-**Description**: Add `<depend>oak_roboflow_ros</depend>` to `control/package.xml`
+**Description**: Add `<depend>dome_vision_ros</depend>` to `dome_control/package.xml`
 so colcon resolves build order correctly when `oak:=true`.

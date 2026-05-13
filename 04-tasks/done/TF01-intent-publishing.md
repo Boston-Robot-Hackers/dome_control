@@ -2,13 +2,13 @@
 
 ## T01 — Implement IntentApi
 **Status**: done
-**Description**: Create `control/ros2_api/intent_api.py`. Class `IntentApi(BaseApi)`
+**Description**: Create `dome_control/ros2_api/intent_api.py`. Class `IntentApi(BaseApi)`
 with one method: `publish(name, source, slots)`. Serializes to JSON string, publishes
 on `/intent` as `std_msgs/String`. Node name: `intent_api`.
 
 ## T02 — Implement intent_commands module
 **Status**: done
-**Description**: Create `control/commands/intent_commands.py`. Command defs for
+**Description**: Create `dome_control/commands/intent_commands.py`. Command defs for
 `intent.stop`, `intent.explore`, `intent.describe_scene`, `intent.count_objects`
 (last one has required `object_type` string param). All map to `publish_intent`
 method on `RobotController`. Group: `intent`.
