@@ -7,7 +7,8 @@ attention.
 
 ## Snapshot
 
-**Branch:** `main`
+**Branch:** `main`  
+**Last checkpoint:** 2026-05-13 — 136 tests passing
 
 This repo is the ROS2 control package and CLI for robot movement, launch/process
 management, map operations, configuration, scripts, and intent publishing.
