@@ -6,6 +6,7 @@
 
 import os
 import rclpy
+from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
 from rclpy.node import Node
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
@@ -18,8 +19,24 @@ from dome_control.behaviors.perception_behavior import PerceptionBehavior
 from dome_control.commands.config_manager import ConfigManager
 from dome_control.commands.robot_controller import RobotController
 
-DEFAULT_CONFIG = os.path.expanduser("~/ros2_ws/src/dome_control/config/control-config.yaml")
-DEFAULT_VISION_CONFIG = os.path.expanduser("~/ros2_ws/src/dome_vision/dome_vision_ros/config/roboflow_oak.yaml")
+DEFAULT_CONFIG = os.environ.get(
+    "CONTROL_CONFIG",
+    os.path.expanduser("~/.control/config.yaml"),
+)
+
+
+def default_vision_config() -> str:
+    env_path = os.environ.get("DOME_VISION_CONFIG")
+    if env_path:
+        return os.path.expanduser(env_path)
+    try:
+        return os.path.join(
+            get_package_share_directory("dome_vision_ros"),
+            "config",
+            "roboflow_oak.yaml",
+        )
+    except PackageNotFoundError:
+        return ""
 
 
 class BehaviorManagerNode(Node):
@@ -33,7 +50,7 @@ class BehaviorManagerNode(Node):
             PerceptionBehavior(self),
         ]
 
-        self.declare_parameter("class_profiles_path", DEFAULT_VISION_CONFIG)
+        self.declare_parameter("class_profiles_path", default_vision_config())
         vision_config_path = self.get_parameter("class_profiles_path").get_parameter_value().string_value
         self.profiles: dict = {}
         self.label_map: dict = {}

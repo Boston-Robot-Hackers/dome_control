@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 from dome_control.commands.command_dispatcher import CommandDispatcher
 from dome_control.commands.robot_controller import RobotController, CommandResponse
 from dome_control.commands.config_manager import ConfigManager
 
-CONFIG_FILE = "/home/pitosalas/.control/config.yaml"
+CONFIG_FILE = str(Path.home() / ".control" / "config.yaml")
 
 
 class TestLaunchCommands(unittest.TestCase):
     """Test cases for launch command definitions"""
 
-    @patch("control.commands.robot_controller.ProcessApi")
-    @patch("control.commands.robot_controller.MovementApi")
-    @patch("control.commands.robot_controller.CalibrationApi")
+    @patch("dome_control.commands.robot_controller.ProcessApi")
+    @patch("dome_control.commands.robot_controller.MovementApi")
+    @patch("dome_control.commands.robot_controller.CalibrationApi")
     def setUp(self, mock_calib, mock_move, mock_proc):
         """Set up test fixtures"""
         self.config_manager = ConfigManager.create(CONFIG_FILE)

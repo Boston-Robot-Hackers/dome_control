@@ -162,7 +162,7 @@ Required tests:
 Hardware smoke test:
 
 ```bash
-python3 -m control.voice.runtime --trials 5
+python3 -m dome_voice.runtime --trials 5
 ```
 
 Expected Pi-only output should show wake hit count, empty count, match count if a

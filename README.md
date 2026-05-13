@@ -18,7 +18,7 @@ pip install prompt_toolkit click --break-system-packages
 
 ### Build Package
 ```bash
-cd /home/pitosalas/ros2_ws
+cd ~/ros2_ws
 colcon build --packages-select dome_control
 source install/setup.bash
 ```
@@ -27,8 +27,7 @@ source install/setup.bash
 
 ### Start the Interactive CLI
 ```bash
-cd /home/pitosalas/ros2_ws/src/dome_control
-python dome_control/main.py
+ros2 run dome_control run
 ```
 
 ### 3-Letter Abbreviations

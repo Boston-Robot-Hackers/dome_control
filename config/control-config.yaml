@@ -8,7 +8,7 @@ angular_max: 2.0
 log_dir: logs
 map_name: exp1
 dry_run: false
-control_dir: /home/pitosalas/.control
+control_dir: ~/.control
 launch_templates:
   nav_lino:
     name: nav2_bringup
@@ -18,7 +18,7 @@ launch_templates:
       sim: 'false'
       map: basement.yaml
       rviz: 'false'
-      config: /home/pitosalas/ros2_ws/src/config/navigation.yaml
+      config: navigation.yaml
   slam_lino:
     name: slam_toolbox
     command: ros2 launch linorobot2_navigation slam.launch.py

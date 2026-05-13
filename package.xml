@@ -13,6 +13,7 @@
 
   <depend>builtin_interfaces</depend>
   <depend>rclpy</depend>
+  <depend>ament_index_python</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>sensor_msgs</depend>

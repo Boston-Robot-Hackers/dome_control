@@ -16,9 +16,9 @@ class TestRobotControllerLaunch(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         self.config_manager = ConfigManager.create(CONFIG_FILE)
-        with patch("control.commands.robot_controller.ProcessApi"), \
-             patch("control.commands.robot_controller.MovementApi"), \
-             patch("control.commands.robot_controller.CalibrationApi"):
+        with patch("dome_control.commands.robot_controller.ProcessApi"), \
+             patch("dome_control.commands.robot_controller.MovementApi"), \
+             patch("dome_control.commands.robot_controller.CalibrationApi"):
             self.controller = RobotController(self.config_manager)
 
         self.controller.process_node = MagicMock()

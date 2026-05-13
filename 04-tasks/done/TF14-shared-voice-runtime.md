@@ -13,7 +13,7 @@ and verify the parameters currently compiled into `control`.
 
 ## T02 — Build ROS-free runtime shell
 **Status**: done
-**Description**: Create `control.voice.runtime` with no `rclpy` imports. The
+**Description**: Create `dome_voice.runtime` with no `rclpy` imports. The
 runtime should expose a typed turn/result object and a simple smoke-test entry
 point, but it should not publish ROS topics or move the robot. Test that the
 module imports without ROS installed.
@@ -45,6 +45,6 @@ phrase.
 ## T06 — Run Pi hardware smoke test
 **Status**: done
 **Description**: On the Pi with the ReSpeaker HAT and installed voice models,
-run `python3 -m control.voice.runtime --trials 5`. Confirm wake hits,
+run `python3 -m dome_voice.runtime --trials 5`. Confirm wake hits,
 transcripts, empty count, and latency are plausible with the pasted
 `TUNED_VOICE_PARAMETERS`. This is a manual hardware check.

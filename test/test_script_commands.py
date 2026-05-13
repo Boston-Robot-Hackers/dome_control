@@ -4,12 +4,13 @@
 # Open Source Under MIT license
 
 import pytest
+from pathlib import Path
 from unittest.mock import Mock, patch
 from dome_control.commands.command_dispatcher import CommandDispatcher
 from dome_control.commands.robot_controller import CommandResponse, RobotController
 from dome_control.commands.config_manager import ConfigManager
 
-CONFIG_FILE = "/home/pitosalas/.control/config.yaml"
+CONFIG_FILE = str(Path.home() / ".control" / "config.yaml")
 
 
 class TestScriptCommands:
@@ -117,9 +118,9 @@ class TestScriptCommands:
         assert result.success is True
         mock_robot_controller.script_square.assert_called_once_with(meters=1.5)
 
-    @patch("control.commands.robot_controller.CalibrationApi")
-    @patch("control.commands.robot_controller.MovementApi")
-    @patch("control.commands.robot_controller.ProcessApi")
+    @patch("dome_control.commands.robot_controller.CalibrationApi")
+    @patch("dome_control.commands.robot_controller.MovementApi")
+    @patch("dome_control.commands.robot_controller.ProcessApi")
     def test_robot_controller_script_square(self, mock_process, mock_movement, mock_calibration):
         """Test RobotController.script_square method."""
         config = ConfigManager.create(CONFIG_FILE)
@@ -134,9 +135,9 @@ class TestScriptCommands:
         assert "2.5m sides" in result.message
         mock_calibration_instance.run_square_pattern.assert_called_once_with(2.5)
 
-    @patch("control.commands.robot_controller.CalibrationApi")
-    @patch("control.commands.robot_controller.MovementApi")
-    @patch("control.commands.robot_controller.ProcessApi")
+    @patch("dome_control.commands.robot_controller.CalibrationApi")
+    @patch("dome_control.commands.robot_controller.MovementApi")
+    @patch("dome_control.commands.robot_controller.ProcessApi")
     def test_robot_controller_script_rotate_stress(self, mock_process, mock_movement, mock_calibration):
         """Test RobotController.script_rotate_stress method."""
         config = ConfigManager.create(CONFIG_FILE)
