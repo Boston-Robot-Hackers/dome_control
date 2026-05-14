@@ -1,6 +1,6 @@
 ---
-version: "2.1"
-generated: "2026-05-12"
+version: "2.2"
+generated: "2026-05-14"
 ---
 
 # CommandDispatcher: Command Registry and Execution
@@ -19,10 +19,11 @@ def _build_command_registry(self) -> dict[str, cd.CommandDef]:
     commands.update(nav_cmd.build_navigation_commands())
     commands.update(lch_cmd.build_launch_commands())
     commands.update(sys_cmd.build_system_commands())
+    commands.update(surv_cmd.build_survey_commands())
     return commands
 ```
 
-Each `build_*` function returns a dict of `"group.command" → CommandDef`. Intent commands and semantic commands were in this registry prior to F15/T07; they are now handled entirely by `dispatch_text` routing. The flat merge means duplicate names from different modules would silently shadow each other.
+Each `build_*` function returns a dict of `"group.command" → CommandDef`. Intent commands and semantic commands were in this registry prior to F15/T07; they are now handled entirely by `dispatch_text` routing. The flat merge means duplicate names from different modules would silently shadow each other. Survey commands were added 2026-05-14 when `SpinSurvey` moved from `dome_vision` to `dome_control`.
 
 ## The Execute Path
 

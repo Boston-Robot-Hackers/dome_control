@@ -8,7 +8,7 @@ attention.
 ## Snapshot
 
 **Branch:** `main`  
-**Last checkpoint:** 2026-05-13 — 136 tests passing
+**Last checkpoint:** 2026-05-14 — SpinSurvey moved from dome_vision; survey start CLI added
 
 This repo is the ROS2 control package and CLI for robot movement, launch/process
 management, map operations, configuration, scripts, and intent publishing.
@@ -22,7 +22,9 @@ management, map operations, configuration, scripts, and intent publishing.
     `/announcement` and print the result in the CLI.
   - **Direct path**: all other commands call `RobotController` methods synchronously.
 - `RobotController` orchestration layer.
-- ROS2 API wrappers: movement, calibration, process, intent publishing.
+- ROS2 API wrappers: movement, calibration, process, intent publishing, survey.
+- `SpinSurvey` + `SpinSurveyNode`: 360° spin behavior moved from `dome_vision`. `SpinSurveyNode` is a regular ROS2 node triggered by `/survey/start` Trigger service.
+- `survey start` CLI command via `SurveyApi` → `/survey/start` → `SpinSurveyNode`.
 - Launch management through configured templates.
 - Map save/list/serialize commands.
 - `BehaviorManagerNode`: subscribes to `/intent` and `/oak/detections`, routes to domain handlers.

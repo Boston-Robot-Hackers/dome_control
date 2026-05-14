@@ -1,6 +1,6 @@
 ---
-version: "1.2"
-generated: "2026-05-12"
+version: "1.3"
+generated: "2026-05-14"
 ---
 
 # RobotController: Orchestrating Robot Operations
@@ -145,6 +145,24 @@ def kill_ros_process(self, pid: int) -> CommandResponse:
 ```
 
 This keeps `RobotController` free of subprocess and `ps` parsing logic.
+
+## Survey Start
+
+`start_survey` uses `SurveyApi` to call the `/survey/start` Trigger service on `SpinSurveyNode`. The `survey` property follows the same lazy init pattern as other APIs:
+
+```python
+@property
+def survey(self) -> SurveyApi:
+    if self.survey_node is None:
+        self.survey_node = SurveyApi()
+    return self.survey_node
+
+def start_survey(self) -> CommandResponse:
+    ok, msg = self.survey.start()
+    return CommandResponse(ok, msg)
+```
+
+No DDS discovery sleep is needed here because `SurveyApi.start()` calls `wait_for_service()` internally before sending the request.
 
 ## Observations
 

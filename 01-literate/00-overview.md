@@ -1,6 +1,6 @@
 ---
-version: "1.1"
-generated: "2026-05-12"
+version: "1.2"
+generated: "2026-05-14"
 ---
 
 # dome_control Package: Theory of Operation
@@ -31,10 +31,11 @@ generated: "2026-05-12"
 └──┬──────┬──────┘    └──────────────┘  └───────────────────┘
    │      │
    ▼      ▼
-MovementApi  ProcessApi  CalibrationApi  IntentApi
-   │
-   ▼  (ROS2 topics / services)
-Robot Hardware
+MovementApi  ProcessApi  CalibrationApi  IntentApi  SurveyApi
+   │                                               │
+   ▼  (ROS2 topics / services)                    ▼
+Robot Hardware                              /survey/start
+                                           SpinSurveyNode
 ```
 
 ## Intent Flow
@@ -131,8 +132,12 @@ Each package owns its own launch files:
 | 22 | motion_behavior | Motion intent execution via RobotController |
 | 23 | perception_behavior | describe_scene service call, list_objects from cache |
 | 24 | intent_publisher | JSON intent publishing with query reply wait |
+| 25 | spin_survey | 360° spin state machine, no ROS2 |
+| 26 | spin_survey_node | SpinSurveyNode: service-triggered tick driver |
+| X11 | survey_api | SurveyApi: /survey/start client |
+| X12 | survey_commands | survey.start CLI command definition |
 
-Appendices (X01–X09) cover parameter definitions, command schemas, and stub modules.
+Appendices (X01–X12) cover parameter definitions, command schemas, stub modules, and survey API.
 
 ## Key Design Decisions
 
