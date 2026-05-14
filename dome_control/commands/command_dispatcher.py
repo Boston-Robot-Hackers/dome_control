@@ -14,6 +14,7 @@ import dome_control.commands.movement_commands as mov_cmd
 import dome_control.commands.navigation_commands as nav_cmd
 import dome_control.commands.parameter_def as paramdef_mod
 import dome_control.commands.robot_controller as rc
+import dome_control.commands.survey_commands as surv_cmd
 import dome_control.commands.system_commands as sys_cmd
 
 
@@ -97,6 +98,7 @@ class CommandDispatcher:
         commands.update(nav_cmd.build_navigation_commands())
         commands.update(lch_cmd.build_launch_commands())
         commands.update(sys_cmd.build_system_commands())
+        commands.update(surv_cmd.build_survey_commands())
         for name, (description, group) in BEHAVIOR_COMMAND_DESCRIPTIONS.items():
             commands[name] = cd.CommandDef("", [], description, group)
         return commands

@@ -14,6 +14,7 @@ from dome_control.ros2_api.intent_api import IntentApi
 from dome_control.ros2_api.movement_api import MovementApi
 from dome_control.ros2_api.process_api import CommandConfig, ProcessApi
 from dome_control.ros2_api.speech_api import SpeechApi
+from dome_control.ros2_api.survey_api import SurveyApi
 
 
 @dataclass
@@ -36,6 +37,7 @@ class RobotController:
         self.process_node = None
         self.intent_node = None
         self.speech_node = None
+        self.survey_node = None
         self.launch_process_ids = dict.fromkeys(self.config.get_launch_templates().keys())
 
     @property
@@ -63,6 +65,12 @@ class RobotController:
             # allow DDS publisher-subscriber discovery before first publish
             time.sleep(0.5)
         return self.intent_node
+
+    @property
+    def survey(self) -> SurveyApi:
+        if self.survey_node is None:
+            self.survey_node = SurveyApi()
+        return self.survey_node
 
     @property
     def speech(self) -> SpeechApi:
@@ -364,3 +372,7 @@ class RobotController:
 
     def publish_intent_count_objects(self, object_type: str) -> CommandResponse:
         return self.publish_intent("count_objects", {"object_type": object_type})
+
+    def start_survey(self) -> CommandResponse:
+        success, message = self.survey.start()
+        return CommandResponse(success, message)

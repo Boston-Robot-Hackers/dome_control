@@ -32,6 +32,7 @@ setup(
             'run = dome_control.main:main',
             'behavior_manager = dome_control.nodes.behavior_manager_node:main',
             'describe_scene_stub = dome_control.nodes.describe_scene_stub_node:main',
+            'spin_survey_node = dome_control.nodes.spin_survey_node:main',
         ],
     },
 )
