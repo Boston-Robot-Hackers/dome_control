@@ -13,3 +13,18 @@ def robot_launch():
         "behavior_manager",
         "behavior_manager",
     )
+
+    bl.node(
+        "dome_control",
+        "spin_survey_node",
+        "spin_survey",
+        params={
+            "angular_velocity": 0.3,
+            "total_angle": 6.2832,
+            "step_angle_rad": 0.5,
+            "pause_s": 1.0,
+            "pass_count": 2,
+            "pass_offset_rad": 0.5,
+        },
+        ros_waittime=10.0,
+    )

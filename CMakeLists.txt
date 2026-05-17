@@ -26,6 +26,7 @@ install(PROGRAMS
   scripts/run
   scripts/speech_output
   scripts/voice_input
+  scripts/spin_survey_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
