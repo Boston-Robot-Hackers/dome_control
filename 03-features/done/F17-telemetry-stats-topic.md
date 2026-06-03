@@ -2,13 +2,13 @@
 
 ## F17 — combined robot telemetry topic for Foxglove graphing
 **Priority**: Medium
-**Done:** no
+**Done:** yes
 **Tasks File Created:** yes
 **Tests Written:** yes
 **Test Passing:** yes
-**Note:** All tasks coded; unit tests pass (177 suite green). `Done` stays `no` until
-the manual hardware Foxglove demo (real INA219 + OAK) is run — no robot on the dev
-machine. Move to `done/` after that demo passes.
+**Note:** Unit suite green (193 tests). Verified live on hardware — `/telemetry`
+echo showed populated UPS + OAK + host fields with vision and telemetry running
+together (no USB conflict).
 
 **Description**: Publish a single combined runtime-telemetry message on one ROS2
 topic (`/telemetry`) so values can be plotted over time in a Foxglove Plot panel.

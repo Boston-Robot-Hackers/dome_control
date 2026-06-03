@@ -54,7 +54,7 @@ management, map operations, configuration, scripts, and intent publishing.
   `log_interval_s` (default 10), keeping `max_log_files` (default 25) daily files.
   Included in `robot.launch.py`.
 - Feature files:
-  - `F01`–`F03`, `F13`–`F17`: done
+  - `F01`–`F03`, `F13`–`F15`, `F17`: done
 
 ## Known Issues / Pending
 
