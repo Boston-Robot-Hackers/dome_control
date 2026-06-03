@@ -16,6 +16,12 @@ def robot_launch():
 
     bl.node(
         "dome_control",
+        "telemetry_node",
+        "telemetry",
+    )
+
+    bl.node(
+        "dome_control",
         "spin_survey_node",
         "spin_survey",
         params={

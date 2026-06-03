@@ -8,7 +8,7 @@ attention.
 ## Snapshot
 
 **Branch:** `main`  
-**Last checkpoint:** 2026-05-14 — SpinSurvey moved from dome_vision; survey start CLI added
+**Last checkpoint:** 2026-06-03 — F17 telemetry: combined `/telemetry` topic + collector node
 
 This repo is the ROS2 control package and CLI for robot movement, launch/process
 management, map operations, configuration, scripts, and intent publishing.
@@ -44,8 +44,17 @@ management, map operations, configuration, scripts, and intent publishing.
   - `dome_control/launch/remote.launch.py` — optional behavior_manager
   - `dome_voice/launch/robot.launch.py` — voice_input (Seeed board assumed)
   - `dome_vision_ros/launch/robot.launch.py` — oak camera + semantic_map + optional spin_survey
+- `TelemetryNode` (F17): publishes combined `/telemetry` (`dome_control/msg/Telemetry`,
+  flat typed fields) at `publish_rate_hz` (config/telemetry.yaml, default 1). Reads
+  UPS (INA219) directly; gets OAK by subscribing to `/telemetry/oak`
+  (`dome_telemetry_msgs/OakStats`) so it runs alongside the vision stack (no USB
+  conflict) and gains fps + perf timings. Host stats (`pi_*` incl. `pi_uptime_s`)
+  from `/proc`+`/sys`. Fail-soft per source. Foxglove plots `/telemetry.<field>` with
+  no JSON. Also logs each row to `~/.dome/telemetry/telemetryDDMMYY.csv` every
+  `log_interval_s` (default 10), keeping `max_log_files` (default 25) daily files.
+  Included in `robot.launch.py`.
 - Feature files:
-  - `F01`–`F03`, `F13`–`F16`: done
+  - `F01`–`F03`, `F13`–`F17`: done
 
 ## Known Issues / Pending
 

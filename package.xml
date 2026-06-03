@@ -18,6 +18,7 @@
   <depend>std_srvs</depend>
   <depend>sensor_msgs</depend>
   <depend>dome_vision_ros</depend>
+  <depend>dome_telemetry_msgs</depend>
 
   <exec_depend>rosidl_default_runtime</exec_depend>
   <exec_depend>better_launch</exec_depend>

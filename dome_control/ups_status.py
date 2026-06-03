@@ -1,5 +1,6 @@
 import smbus
 import time
+from dataclasses import dataclass
 
 # INA219 current/power monitor driver over I2C.
 # Assumes 0.1Ω shunt resistor and 3S LiPo battery pack (9V dead, 12.6V full).
@@ -193,21 +194,52 @@ class INA219:
             value -= 65535
         return value * self._power_lsb
         
+@dataclass
+class UpsStats:
+    """One snapshot of UPS power readings. Plain data, no device handle."""
+    bus_voltage_v: float
+    current_a: float
+    power_w: float
+    percent: float
+
+
+def battery_percent(bus_voltage_v):
+    """3S LiPo charge estimate. Linear 9V=0%, 12.6V=100%, clamped 0–100.
+
+    Accuracy ±20% — LiPo discharge curve is nonlinear and voltage sags under load.
+    Wrong chemistry (lead-acid, LiFePO4) = wrong numbers entirely.
+    """
+    p = (bus_voltage_v - 9) / 3.6 * 100
+    return max(0.0, min(100.0, p))
+
+
+def read_ups_stats(ina):
+    """Read a UpsStats snapshot from an existing INA219 handle.
+
+    Returns data, never prints, opens no device. Current sign: negative=charging,
+    positive=discharging (per INA219.getCurrent_mA).
+    """
+    bus_voltage_v = ina.getBusVoltage_V()        # V- (load side)
+    current_a = ina.getCurrent_mA() / 1000.0     # mA -> A
+    power_w = ina.getPower_W()                    # W
+    return UpsStats(
+        bus_voltage_v=bus_voltage_v,
+        current_a=current_a,
+        power_w=power_w,
+        percent=battery_percent(bus_voltage_v),
+    )
+
+
 if __name__=='__main__':
 
     # Create an INA219 instance.
     ina219 = INA219(addr=0x41)
     while True:
-        bus_voltage = ina219.getBusVoltage_V()             # voltage on V- (load side)
-        shunt_voltage = ina219.getShuntVoltage_mV() / 1000 # voltage between V+ and V- across the shunt
-        current = ina219.getCurrent_mA()                   # current in mA
-        power = ina219.getPower_W()                        # power in W
-        # Linear approximation: 9V=0%, 12.6V=100% (3S LiPo: 3.0V–4.2V/cell).
-        # Accuracy ±20% — LiPo discharge curve is nonlinear and voltage sags under load.
-        # Wrong chemistry (lead-acid, LiFePO4) = wrong numbers entirely.
-        p = (bus_voltage - 9)/3.6*100
-        if(p > 100):p = 100
-        if(p < 0):p = 0
+        stats = read_ups_stats(ina219)
+        bus_voltage = stats.bus_voltage_v
+        current = stats.current_a * 1000           # back to mA for the legacy print
+        power = stats.power_w
+        p = stats.percent
 
         # INA219 measures bus voltage on load side. PSU voltage = bus_voltage + shunt_voltage.
         #print("PSU Voltage:   {:6.3f} V".format(bus_voltage + shunt_voltage))

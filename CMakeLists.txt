@@ -4,11 +4,13 @@ project(dome_control)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(builtin_interfaces REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Announcement.msg"
-  DEPENDENCIES builtin_interfaces
+  "msg/Telemetry.msg"
+  DEPENDENCIES builtin_interfaces std_msgs
 )
 
 install(DIRECTORY dome_control
@@ -20,6 +22,10 @@ install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
+)
+
 install(PROGRAMS
   scripts/behavior_manager
   scripts/describe_scene_stub
@@ -27,6 +33,7 @@ install(PROGRAMS
   scripts/speech_output
   scripts/voice_input
   scripts/spin_survey_node
+  scripts/telemetry_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

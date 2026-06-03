@@ -1,0 +1,8 @@
+# Telemetry collector node config (feature F17).
+# publish_rate_hz: how many /telemetry messages to publish per second. Default 1.
+# log_interval_s:  how often to append a row to the CSV log, seconds. Default 10.
+# max_log_files:   keep at most this many daily csv files, oldest pruned. Default 25.
+telemetry:
+  publish_rate_hz: 1
+  log_interval_s: 10
+  max_log_files: 25
