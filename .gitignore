@@ -13,3 +13,4 @@ piper_model/
 ._*
 __MACOSX/
 *.egg-info/
+.claude/settings.local.json
