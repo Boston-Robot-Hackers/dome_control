@@ -203,17 +203,37 @@ class UpsStats:
     percent: float
 
 
-def battery_percent(bus_voltage_v):
-    """3S LiPo charge estimate. Linear 9V=0%, 12.6V=100%, clamped 0–100.
+V_EMPTY_DEFAULT = 9.0
+V_FULL_DEFAULT = 12.18   # peak observed in telemetry; updated each session
+R_INT_DEFAULT = 0.0      # internal resistance (Ω); set >0 to correct for load sag
 
-    Accuracy ±20% — LiPo discharge curve is nonlinear and voltage sags under load.
-    Wrong chemistry (lead-acid, LiFePO4) = wrong numbers entirely.
+
+class SocEstimator:
+    """Voltage-based battery State of Charge estimator.
+
+    Tracks session-peak voltage as V_FULL — more accurate than a fixed constant
+    because battery voltage rises ~1–2 hours after charging stops.
+    current is negative while discharging (INA219 convention).
     """
-    p = (bus_voltage_v - 9) / 3.6 * 100
-    return max(0.0, min(100.0, p))
+
+    def __init__(self, v_empty: float = V_EMPTY_DEFAULT,
+                 v_full_initial: float = V_FULL_DEFAULT,
+                 r_int: float = R_INT_DEFAULT):
+        self.v_empty = v_empty
+        self.v_full = v_full_initial
+        self.r_int = r_int
+
+    def estimate(self, voltage: float, current: float = 0.0) -> float:
+        """Return SoC (0–100%) clamped. Updates session V_FULL from peak voltage."""
+        self.v_full = max(self.v_full, voltage)
+        # INA219 convention: positive current = discharging.
+        # Add I*R back to recover open-circuit voltage from the resistive sag.
+        v_corrected = voltage + current * self.r_int
+        soc = (v_corrected - self.v_empty) / (self.v_full - self.v_empty) * 100
+        return max(0.0, min(100.0, round(soc, 1)))
 
 
-def read_ups_stats(ina):
+def read_ups_stats(ina, estimator: SocEstimator) -> UpsStats:
     """Read a UpsStats snapshot from an existing INA219 handle.
 
     Returns data, never prints, opens no device. Current sign: negative=charging,
@@ -226,7 +246,7 @@ def read_ups_stats(ina):
         bus_voltage_v=bus_voltage_v,
         current_a=current_a,
         power_w=power_w,
-        percent=battery_percent(bus_voltage_v),
+        percent=estimator.estimate(bus_voltage_v, current_a),
     )
 
 

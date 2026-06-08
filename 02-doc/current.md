@@ -8,7 +8,7 @@ attention.
 ## Snapshot
 
 **Branch:** `main`  
-**Last checkpoint:** 2026-06-03 — F17 telemetry: combined `/telemetry` topic + collector node
+**Last checkpoint:** 2026-06-08 — Battery SoC: replaced linear `battery_percent` with session-peak `SocEstimator`
 
 This repo is the ROS2 control package and CLI for robot movement, launch/process
 management, map operations, configuration, scripts, and intent publishing.
@@ -53,6 +53,10 @@ management, map operations, configuration, scripts, and intent publishing.
   no JSON. Also logs each row to `~/.dome/telemetry/telemetryDDMMYY.csv` every
   `log_interval_s` (default 10), keeping `max_log_files` (default 25) daily files.
   Included in `robot.launch.py`.
+- `SocEstimator` (in `ups_status.py`): replaced linear `battery_percent`. Tracks
+  session-peak voltage as `v_full` proxy (batteries rise for ~1–2 h after charge).
+  `v_empty=9.0V`, `v_full_initial=12.18V`, `r_int=0.0Ω` (wired, disabled). INA219
+  current convention: positive=discharging, so sag correction is `voltage + I*R`.
 - Feature files:
   - `F01`–`F03`, `F13`–`F15`, `F17`: done
 

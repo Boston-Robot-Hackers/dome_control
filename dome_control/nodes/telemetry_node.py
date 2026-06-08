@@ -28,7 +28,7 @@ from dome_control.msg import Telemetry
 from dome_control.telemetry.config import load_telemetry_config
 from dome_control.telemetry.csv_logger import TelemetryCsvLogger
 from dome_control.telemetry.host_stats import HostStatsReader
-from dome_control.ups_status import read_ups_stats
+from dome_control.ups_status import SocEstimator, read_ups_stats
 
 
 def default_config_path():
@@ -43,6 +43,7 @@ class UpsReader:
     def __init__(self, logger, addr=0x41):
         self.logger = logger
         self.ina = None
+        self.estimator = SocEstimator()
         try:
             from dome_control.ups_status import INA219
             self.ina = INA219(addr=addr)
@@ -54,7 +55,7 @@ class UpsReader:
         if self.ina is None:
             return None
         try:
-            return read_ups_stats(self.ina)
+            return read_ups_stats(self.ina, self.estimator)
         except Exception as exc:  # noqa: BLE001
             self.logger.warn(f"UPS read failed: {exc}")
             return None
