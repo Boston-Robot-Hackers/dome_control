@@ -28,4 +28,16 @@ def build_navigation_commands() -> dict[str, cd.CommandDef]:
             description="Save current map in SLAM Toolbox serialized format (uses map_name variable)",
             group="map"
         ),
+        "nav.go": cd.CommandDef(
+            method_name="publish_intent_go_to_object",
+            parameters=[pd.ParameterDef("label", str, True, None, "Object label to navigate to")],
+            description="Navigate to nearest confirmed object with given label",
+            group="nav"
+        ),
+        "nav.cancel": cd.CommandDef(
+            method_name="publish_intent_cancel_navigation",
+            parameters=[],
+            description="Cancel current navigation goal",
+            group="nav"
+        ),
     }

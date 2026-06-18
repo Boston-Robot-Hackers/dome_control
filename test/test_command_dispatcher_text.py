@@ -142,6 +142,21 @@ class TestDispatchTextBehaviorIntents:
         rc.stop_robot.assert_called_once()
 
 
+class TestNavCommands:
+
+    def test_nav_go_calls_go_to_object(self, dispatcher, rc):
+        rc.publish_intent_go_to_object.return_value = CommandResponse(True, "Intent published: go_to_object")
+        result = dispatcher.dispatch_text("nav go chair")
+        assert result.success is True
+        rc.publish_intent_go_to_object.assert_called_once_with(label="chair")
+
+    def test_nav_cancel_calls_cancel_navigation(self, dispatcher, rc):
+        rc.publish_intent_cancel_navigation.return_value = CommandResponse(True, "Intent published: cancel_navigation")
+        result = dispatcher.dispatch_text("nav cancel")
+        assert result.success is True
+        rc.publish_intent_cancel_navigation.assert_called_once()
+
+
 class TestDispatchTextValueParsing:
 
     def test_integer_arg_parsed(self, dispatcher, rc):

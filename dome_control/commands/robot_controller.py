@@ -373,6 +373,12 @@ class RobotController:
     def publish_intent_count_objects(self, object_type: str) -> CommandResponse:
         return self.publish_intent("count_objects", {"object_type": object_type})
 
+    def publish_intent_go_to_object(self, label: str) -> CommandResponse:
+        return self.publish_intent("go_to_object", {"label": label})
+
+    def publish_intent_cancel_navigation(self) -> CommandResponse:
+        return self.publish_intent("cancel_navigation", {})
+
     def start_survey(self) -> CommandResponse:
         success, message = self.survey.start()
         return CommandResponse(success, message)
