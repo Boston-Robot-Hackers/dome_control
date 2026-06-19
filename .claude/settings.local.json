@@ -25,7 +25,10 @@
       "Bash(ros2 topic *)",
       "Bash(cd /home/pitosalas/ros2_ws/src/dome_control/.claude/projects)",
       "Bash(ls ~/.claude/projects/-home-pitosalas-ros2-ws-src-dome-control/memory/MEMORY.md)",
-      "Bash(awk 'length>88{print FILENAME\":\"NR\": \"length\" chars\"}' dome_control/telemetry/config.py dome_control/telemetry/host_stats.py dome_control/telemetry/csv_logger.py dome_control/nodes/telemetry_node.py test/test_telemetry_*.py)"
+      "Bash(awk 'length>88{print FILENAME\":\"NR\": \"length\" chars\"}' dome_control/telemetry/config.py dome_control/telemetry/host_stats.py dome_control/telemetry/csv_logger.py dome_control/nodes/telemetry_node.py test/test_telemetry_*.py)",
+      "Bash(python -m pytest test/ -v)",
+      "Bash(pip install *)",
+      "Bash(sort -t F -k2 -n)"
     ]
   }
 }

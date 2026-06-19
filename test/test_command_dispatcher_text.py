@@ -144,17 +144,29 @@ class TestDispatchTextBehaviorIntents:
 
 class TestNavCommands:
 
-    def test_nav_go_calls_go_to_object(self, dispatcher, rc):
-        rc.publish_intent_go_to_object.return_value = CommandResponse(True, "Intent published: go_to_object")
+    def test_nav_go_calls_navigation_go(self, dispatcher, rc):
+        rc.publish_intent_navigation_go.return_value = CommandResponse(True, "Intent published: navigation_go")
         result = dispatcher.dispatch_text("nav go chair")
         assert result.success is True
-        rc.publish_intent_go_to_object.assert_called_once_with(label="chair")
+        rc.publish_intent_navigation_go.assert_called_once_with(label="chair")
 
-    def test_nav_cancel_calls_cancel_navigation(self, dispatcher, rc):
-        rc.publish_intent_cancel_navigation.return_value = CommandResponse(True, "Intent published: cancel_navigation")
+    def test_nav_cancel_calls_navigation_cancel(self, dispatcher, rc):
+        rc.publish_intent_navigation_cancel.return_value = CommandResponse(True, "Intent published: navigation_cancel")
         result = dispatcher.dispatch_text("nav cancel")
         assert result.success is True
-        rc.publish_intent_cancel_navigation.assert_called_once()
+        rc.publish_intent_navigation_cancel.assert_called_once()
+
+    def test_nav_explore_calls_exploration_start(self, dispatcher, rc):
+        rc.publish_intent_exploration_start.return_value = CommandResponse(True, "Intent published: exploration_start")
+        result = dispatcher.dispatch_text("nav explore")
+        assert result.success is True
+        rc.publish_intent_exploration_start.assert_called_once()
+
+    def test_nav_explore_stop_calls_exploration_stop(self, dispatcher, rc):
+        rc.publish_intent_exploration_stop.return_value = CommandResponse(True, "Intent published: exploration_stop")
+        result = dispatcher.dispatch_text("nav explore stop")
+        assert result.success is True
+        rc.publish_intent_exploration_stop.assert_called_once()
 
 
 class TestDispatchTextValueParsing:
