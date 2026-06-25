@@ -1,6 +1,6 @@
 ---
-version: "1.3"
-generated: "2026-05-14"
+version: "1.4"
+generated: "2026-06-24"
 ---
 
 # RobotController: Orchestrating Robot Operations
@@ -132,6 +132,58 @@ def publish_intent(self, name: str, slots: dict) -> CommandResponse:
 
 The `intent` property has a 0.5-second sleep after first construction to allow DDS publisher-subscriber discovery before the first publish. This is a known ROS2 startup race condition.
 
+Concrete intent helpers cover the full range of robot behaviors:
+
+```python
+def publish_intent_stop(self) -> CommandResponse:
+    return self.publish_intent("stop", {})
+
+def publish_intent_explore(self) -> CommandResponse:
+    return self.publish_intent("explore", {})
+
+def publish_intent_exploration_start(self) -> CommandResponse:
+    return self.publish_intent("exploration_start", {})
+
+def publish_intent_exploration_stop(self) -> CommandResponse:
+    return self.publish_intent("exploration_stop", {})
+
+def publish_intent_navigation_go(self, label: str) -> CommandResponse:
+    return self.publish_intent("navigation_go", {"label": label})
+```
+
+Each of these publishes an intent and returns immediately. They make no assertion about what the behavior manager does with the intent — that is the behavior manager's concern.
+
+## Reading Exploration State Without Publishing
+
+Sometimes the operator needs to know what the explorer is currently doing without triggering any state change. `publish_intent_explore` is wrong for this because publishing an intent is a directive, not a query.
+
+The solution is `explore_status`, which reads the `/explore/status` topic out-of-band using the `ros2 topic echo --once` CLI tool via `subprocess`:
+
+```python
+def explore_status(self) -> CommandResponse:
+    try:
+        result = subprocess.run(
+            ["ros2", "topic", "echo", "--once", "/explore/status"],
+            capture_output=True, text=True, timeout=3.0
+        )
+        value = result.stdout.strip().replace("data: ", "").strip("'\"")
+        if value:
+            return CommandResponse(True, f"explore status: {value}")
+        return CommandResponse(False, "No status received from /explore/status (explore_manager_node running?)")
+    except subprocess.TimeoutExpired:
+        return CommandResponse(False, "Timeout reading /explore/status — explore_manager_node not running")
+```
+
+There are several deliberate choices here worth noting:
+
+**Why `subprocess` instead of a ROS2 subscriber?** Creating a ROS2 subscriber node just to read one message would require spinning a node, waiting for the message, then destroying the node — a heavyweight operation for what amounts to a status poll. `subprocess.run` with `ros2 topic echo --once` is lighter: it reuses the existing `ros2` CLI, blocks until exactly one message arrives, and exits. The 3-second timeout ensures the call never hangs indefinitely.
+
+**Why not `IntentApi`?** `IntentApi` is write-only — it publishes intents. Reading a topic that `explore_manager_node` writes requires a different path entirely.
+
+**Why strip `data: ` from the output?** `ros2 topic echo` formats `std_msgs/msg/String` messages as `data: 'value'`. The strip removes both the key prefix and the surrounding quotes, leaving just the bare status string (e.g., `idle`, `exploring`, `stopped`).
+
+**Timeout semantics.** A `subprocess.TimeoutExpired` exception means no message arrived within 3 seconds, which is the clearest signal that `explore_manager_node` is not running. The error message says so explicitly, guiding the operator to the root cause.
+
 ## Delegating to ProcessApi
 
 Process management methods delegate entirely to `ProcessApi`:
@@ -169,3 +221,4 @@ No DDS discovery sleep is needed here because `SurveyApi.start()` calls `wait_fo
 - **`turn_degrees` breaks the pattern.** It returns `self.movement.turn_degrees(degrees)` directly instead of a `CommandResponse`. `MovementApi.turn_degrees` returns `None`, so callers get `None` back — a latent bug.
 - **No error handling on movement calls.** Methods like `move_distance` call `self.movement.move_dist` without try/except. A ROS2 exception (e.g., node not initialized) would propagate unhandled to the CLI.
 - **`list_maps` complexity.** The file-grouping logic (stem → extensions) is 20 lines that could be a helper. It also conflates map files and any other file in the directory.
+- **`explore_status` uses `subprocess` while other status checks use ROS2 nodes.** This is a pragmatic inconsistency: the explorer publishes a string topic that is cheap to read with `ros2 topic echo`, whereas movement and process status require richer structured access. If the pattern proliferates, a thin `TopicReaderApi` wrapping `subprocess.run` would centralize the timeout and stripping logic.

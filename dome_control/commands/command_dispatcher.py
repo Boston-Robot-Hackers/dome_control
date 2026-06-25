@@ -205,14 +205,31 @@ class CommandDispatcher:
             args = []
         else:
             second = resolve_keyword(tokens[1])
-            candidate = f"{command}.{second}"
-            in_registry = candidate in self.commands or candidate in BEHAVIOR_COMMANDS
-            if second in FULL_NAMES or second != tokens[1] or in_registry:
-                command_name = candidate
-                args = [parse_value(t) for t in tokens[2:]]
+            candidate2 = f"{command}.{second}"
+
+            # Try 3-token candidate first so "nav explore stop" hits nav.explore.stop
+            if len(tokens) >= 3:
+                third = resolve_keyword(tokens[2])
+                candidate3 = f"{command}.{second}.{third}"
+                if candidate3 in self.commands or candidate3 in BEHAVIOR_COMMANDS:
+                    command_name = candidate3
+                    args = [parse_value(t) for t in tokens[3:]]
+                else:
+                    in_registry2 = candidate2 in self.commands or candidate2 in BEHAVIOR_COMMANDS
+                    if second in FULL_NAMES or second != tokens[1] or in_registry2:
+                        command_name = candidate2
+                        args = [parse_value(t) for t in tokens[2:]]
+                    else:
+                        command_name = command
+                        args = [parse_value(t) for t in tokens[1:]]
             else:
-                command_name = command
-                args = [parse_value(t) for t in tokens[1:]]
+                in_registry2 = candidate2 in self.commands or candidate2 in BEHAVIOR_COMMANDS
+                if second in FULL_NAMES or second != tokens[1] or in_registry2:
+                    command_name = candidate2
+                    args = [parse_value(t) for t in tokens[2:]]
+                else:
+                    command_name = command
+                    args = [parse_value(t) for t in tokens[1:]]
 
         intent_name = BEHAVIOR_COMMANDS.get(command_name)
         if intent_name is not None:

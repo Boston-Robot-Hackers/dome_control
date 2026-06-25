@@ -168,6 +168,17 @@ class TestNavCommands:
         assert result.success is True
         rc.publish_intent_exploration_stop.assert_called_once()
 
+    def test_nav_explore_status_calls_explore_status(self, dispatcher, rc):
+        rc.explore_status.return_value = CommandResponse(True, "explore status: exploring")
+        result = dispatcher.dispatch_text("nav explore status")
+        assert result.success is True
+        rc.explore_status.assert_called_once()
+
+    def test_nav_explore_status_does_not_publish_intent(self, dispatcher, rc):
+        rc.explore_status.return_value = CommandResponse(True, "explore status: idle")
+        dispatcher.dispatch_text("nav explore status")
+        rc.publish_intent_exploration_start.assert_not_called()
+
 
 class TestDispatchTextValueParsing:
 

@@ -5,6 +5,7 @@ Author: Pito Salas and Claude Code
 Open Source Under MIT license
 """
 
+import subprocess
 import time
 from dataclasses import dataclass
 
@@ -384,6 +385,19 @@ class RobotController:
 
     def publish_intent_exploration_stop(self) -> CommandResponse:
         return self.publish_intent("exploration_stop", {})
+
+    def explore_status(self) -> CommandResponse:
+        try:
+            result = subprocess.run(
+                ["ros2", "topic", "echo", "--once", "/explore/status"],
+                capture_output=True, text=True, timeout=3.0
+            )
+            value = result.stdout.strip().replace("data: ", "").strip("'\"")
+            if value:
+                return CommandResponse(True, f"explore status: {value}")
+            return CommandResponse(False, "No status received from /explore/status (explore_manager_node running?)")
+        except subprocess.TimeoutExpired:
+            return CommandResponse(False, "Timeout reading /explore/status — explore_manager_node not running")
 
     def start_survey(self) -> CommandResponse:
         success, message = self.survey.start()

@@ -52,4 +52,10 @@ def build_navigation_commands() -> dict[str, cd.CommandDef]:
             description="Stop autonomous frontier exploration",
             group="nav"
         ),
+        "nav.explore.status": cd.CommandDef(
+            method_name="explore_status",
+            parameters=[],
+            description="Read current /explore/status topic value",
+            group="nav"
+        ),
     }
