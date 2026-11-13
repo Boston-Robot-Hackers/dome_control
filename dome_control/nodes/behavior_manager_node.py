@@ -6,11 +6,13 @@
 
 import os
 import rclpy
-from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
+from ament_index_python.packages import get_package_share_directory
 from rclpy.node import Node
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from vision_msgs.msg import Detection2DArray
+
+from dome_semantic.class_profiles import build_label_map, load_class_profiles
 
 from dome_control.announcement_contract import AnnouncementMsg, make_announcement_msg, PRIORITY_QUERY_REPLY
 from dome_control.commands.intent_parser import IntentParser
@@ -22,18 +24,10 @@ from dome_control.commands.robot_controller import RobotController
 DEFAULT_CONFIG = os.path.expanduser("~/.dome/config/control.yaml")
 
 
-def default_vision_config() -> str:
-    env_path = os.environ.get("DOME_VISION_CONFIG")
-    if env_path:
-        return os.path.expanduser(env_path)
-    try:
-        return os.path.join(
-            get_package_share_directory("dome_vision_ros"),
-            "config",
-            "roboflow_oak.yaml",
-        )
-    except PackageNotFoundError:
-        return ""
+def default_class_profiles_path() -> str:
+    return os.path.join(
+        get_package_share_directory("dome_semantic"), "config", "class_profiles.yaml"
+    )
 
 
 class BehaviorManagerNode(Node):
@@ -47,16 +41,10 @@ class BehaviorManagerNode(Node):
             PerceptionBehavior(self),
         ]
 
-        self.declare_parameter("class_profiles_path", default_vision_config())
-        vision_config_path = self.get_parameter("class_profiles_path").get_parameter_value().string_value
-        self.profiles: dict = {}
-        self.label_map: dict = {}
-        try:
-            from dome_vision.class_profiles import build_label_map, load_class_profiles
-            self.profiles = load_class_profiles(vision_config_path)
-            self.label_map = build_label_map(self.profiles)
-        except Exception as exc:
-            self.get_logger().warn(f"Could not load class profiles from {vision_config_path}: {exc}")
+        self.declare_parameter("class_profiles_path", default_class_profiles_path())
+        profiles_path = self.get_parameter("class_profiles_path").get_parameter_value().string_value
+        self.profiles = load_class_profiles(profiles_path)
+        self.label_map = build_label_map(self.profiles)
 
         self.intent_sub = self.create_subscription(
             String, "/intent", self.on_intent, 10
