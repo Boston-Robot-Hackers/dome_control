@@ -1,0 +1,11 @@
+# spin_survey.yaml — params for dome_control's spin_survey node
+# Values from robot.launch.py as of 2026-11-17. Fields not set here fall back to
+# the defaults in SpinSurveyConfig (dome_control/spin_survey.py).
+spin_survey:
+  ros__parameters:
+    angular_velocity: 0.3     # rad/s while spinning
+    total_angle: 6.2832       # rad, one full turn
+    step_angle_rad: 0.5       # rad per step; 0 = continuous spin
+    pause_s: 1.0              # s held still between steps, for sharp frames
+    pass_count: 2             # number of full turns
+    pass_offset_rad: 0.5      # rad offset between turns
