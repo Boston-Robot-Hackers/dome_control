@@ -55,3 +55,8 @@ Each entry is one line, flipped to `[x]` when applied. Still gets a test.
       both with a short pointer to `02-doc/cli-reference.md` (the
       registry-verified reference) rather than hand-maintained prose that will
       drift again. No test — documentation only.
+- [x] Delete `config/mapper_params_online_async.yaml` and
+      `config/mapper_params_online_async_default_from_pacakge.yaml`. Nothing
+      loads either (searched every repo in `src/`, 2026-11-17); they predate
+      dome_nav owning SLAM, and dome_nav's own params are being redone under
+      its I13. No test — the files had no users.
