@@ -5,6 +5,7 @@
 
 import rclpy
 from geometry_msgs.msg import Twist
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
@@ -80,10 +81,13 @@ class SpinSurveyNode(Node):
 def main(args=None) -> None:
     rclpy.init(args=args)
     node = SpinSurveyNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    if rclpy.ok():
-        rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass  # Ctrl-C or the launcher's SIGTERM: a normal stop
+    finally:
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == "__main__":

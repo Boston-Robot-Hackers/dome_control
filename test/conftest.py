@@ -33,6 +33,11 @@ def _inject_fake_ros2():
     fake_node_mod = ModuleType("rclpy.node")
     fake_node_mod.Node = fake_node_class
 
+    fake_executors_mod = ModuleType("rclpy.executors")
+    fake_executors_mod.ExternalShutdownException = type(
+        "ExternalShutdownException", (Exception,), {}
+    )
+
     fake_qos_mod = ModuleType("rclpy.qos")
     fake_qos_mod.QoSProfile = Mock()
     fake_qos_mod.QoSDurabilityPolicy = Mock(TRANSIENT_LOCAL=Mock())
@@ -46,6 +51,7 @@ def _inject_fake_ros2():
     fake_std_msgs = ModuleType("std_msgs")
     fake_std_msgs_msg = ModuleType("std_msgs.msg")
     fake_std_msgs_msg.String = Mock()
+    fake_std_msgs_msg.Bool = Mock()
 
     fake_geometry_msgs = ModuleType("geometry_msgs")
     fake_geometry_msgs_msg = ModuleType("geometry_msgs.msg")
@@ -58,6 +64,7 @@ def _inject_fake_ros2():
     sys.modules.setdefault("rclpy", fake_rclpy)
     sys.modules.setdefault("rclpy.node", fake_node_mod)
     sys.modules.setdefault("rclpy.qos", fake_qos_mod)
+    sys.modules.setdefault("rclpy.executors", fake_executors_mod)
     sys.modules.setdefault("std_srvs", fake_std_srvs)
     sys.modules.setdefault("std_srvs.srv", fake_std_srvs_srv)
     sys.modules.setdefault("std_msgs", fake_std_msgs)

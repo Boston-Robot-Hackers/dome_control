@@ -24,6 +24,7 @@ from datetime import datetime
 
 import rclpy
 from ament_index_python.packages import get_package_share_directory
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 
 from dome_control.msg import Telemetry
@@ -126,10 +127,13 @@ class TelemetryNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = TelemetryNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    if rclpy.ok():
-        rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass  # Ctrl-C or the launcher's SIGTERM: a normal stop
+    finally:
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == "__main__":
