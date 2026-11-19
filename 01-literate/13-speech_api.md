@@ -24,10 +24,11 @@ def speech(self) -> SpeechApi:
 The publisher is created in `__init__` but `AnnouncementMsg` is imported lazily inside `__init__` to avoid pulling in ROS2 message types at module load:
 
 ```python
-    def __init__(self, config_manager: cm.ConfigManager = None):
-        super().__init__("speech_api", config_manager)
-        from dome_control.announcement_contract import AnnouncementMsg
-        self.announcement_pub = self.create_publisher(AnnouncementMsg, "/announcement", 10)
+def __init__(self, config_manager: cm.ConfigManager = None):
+    super().__init__("speech_api", config_manager)
+    from dome_control.announcement_contract import AnnouncementMsg
+
+    self.announcement_pub = self.create_publisher(AnnouncementMsg, "/announcement", 10)
 ```
 
 ## The speak() Method

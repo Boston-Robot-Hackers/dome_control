@@ -60,3 +60,4 @@ Each entry is one line, flipped to `[x]` when applied. Still gets a test.
       loads either (searched every repo in `src/`, 2026-11-17); they predate
       dome_nav owning SLAM, and dome_nav's own params are being redone under
       its I13. No test — the files had no users.
+- [x] Make `ruff check` / `ruff format --check` pass: add `ruff.toml` (same as dome_mission), autofix + reformat, narrow `except Exception` in `process_api.py` to the real errors, split `_capture_output` so its log file uses `with`, drop `list_topics`' redundant catch-all, `noqa` the two real boundaries (dispatcher, describe_scene future).

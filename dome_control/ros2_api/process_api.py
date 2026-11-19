@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-import os
 import signal
 import subprocess
 import threading
 import time
 import uuid
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING
 
 
 @dataclass
 class CommandConfig:
     command: str
-    log_name: Optional[str]
+    log_name: str | None
     timeout: float
+
 
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
@@ -22,9 +22,18 @@ from std_msgs.msg import String
 from dome_control.commands.config_manager import ConfigManager
 from dome_control.ros2_api.base_api import BaseApi
 
+if TYPE_CHECKING:
+    from dome_control.commands.robot_controller import CommandResponse
+
 SUBSYSTEM_KEYWORDS = {
     "gendrv": ["micro_ros_agent"],
-    "nav": ["slam_manager_node", "explorer_manager_node", "slam_toolbox", "bt_navigator", "amcl"],
+    "nav": [
+        "slam_manager_node",
+        "explorer_manager_node",
+        "slam_toolbox",
+        "bt_navigator",
+        "amcl",
+    ],
     "semantic": ["semantic_map_node"],
     "control": ["behavior_manager"],
     "mission": ["mission_node"],
@@ -36,11 +45,11 @@ SUBSYSTEM_KEYWORDS = {
 class ProcessInfo:
     process: subprocess.Popen
     command: str
-    output: List[str]
+    output: list[str]
     is_running: bool
     pid: int
     start_time: float
-    log_file: Optional[str] = None
+    log_file: str | None = None
 
 
 @dataclass
@@ -48,7 +57,8 @@ class LaunchConfig:
     launch_type: str
     command_template: str
     description: str
-    default_params: Dict[str, str]
+    default_params: dict[str, str]
+
 
 class ProcessApi(BaseApi):
     """
@@ -58,7 +68,7 @@ class ProcessApi(BaseApi):
 
     def __init__(self, config_manager: ConfigManager):
         super().__init__("process_api", config_manager)
-        self.processes: Dict[str, ProcessInfo] = {}
+        self.processes: dict[str, ProcessInfo] = {}
 
         # Load launch templates from config
         self._load_launch_configs()
@@ -75,22 +85,24 @@ class ProcessApi(BaseApi):
                     launch_type=launch_type,
                     command_template=template.get("command", ""),
                     description=template.get("description", ""),
-                    default_params=template.get("default_params", {})
+                    default_params=template.get("default_params", {}),
                 )
         else:
             # No launch templates found in config
             self.launch_configs = {}
-            self.log_warn("No launch_templates found in config file. Launch commands will not be available.")
+            self.log_warn(
+                "No launch_templates found in config file. Launch commands will not be available."
+            )
 
-    def get_available_launch_types(self) -> List[str]:
+    def get_available_launch_types(self) -> list[str]:
         """Get list of available launch types"""
         return list(self.launch_configs.keys())
 
-    def get_launch_config(self, launch_type: str) -> Optional[LaunchConfig]:
+    def get_launch_config(self, launch_type: str) -> LaunchConfig | None:
         """Get launch configuration for a specific type"""
         return self.launch_configs.get(launch_type)
 
-    def _format_launch_params(self, params: Dict[str, str], format_type: str) -> str:
+    def _format_launch_params(self, params: dict[str, str], format_type: str) -> str:
         """
         Format parameters for launch command
 
@@ -177,7 +189,7 @@ class ProcessApi(BaseApi):
 
         return self.kill_process(tracked_process_id)
 
-    def get_launch_status(self, launch_type: str) -> Dict:
+    def get_launch_status(self, launch_type: str) -> dict:
         """Get status of launch processes"""
         if launch_type:
             # Return status for specific launch type (requires external tracking)
@@ -187,7 +199,7 @@ class ProcessApi(BaseApi):
             # Return status for all tracked processes
             return self.get_running_processes()
 
-    def run_command_sync(self, config: CommandConfig) -> tuple[bool, str, Optional[str]]:
+    def run_command_sync(self, config: CommandConfig) -> tuple[bool, str, str | None]:
         """
         Run a command synchronously and wait for completion.
         Returns (success, output, log_file_path) tuple.
@@ -211,9 +223,10 @@ class ProcessApi(BaseApi):
             result = subprocess.run(
                 config.command,
                 shell=True,
+                check=False,
                 capture_output=True,
                 text=True,
-                timeout=config.timeout
+                timeout=config.timeout,
             )
 
             output = result.stdout + result.stderr
@@ -221,20 +234,22 @@ class ProcessApi(BaseApi):
 
             if log_file_path:
                 try:
-                    with open(log_file_path, 'w') as f:
-                        f.write(f"=== Command Log ===\n")
+                    with open(log_file_path, "w") as f:
+                        f.write("=== Command Log ===\n")
                         f.write(f"Command: {config.command}\n")
-                        f.write(f"Started: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}\n")
+                        f.write(
+                            f"Started: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}\n"
+                        )
                         f.write(f"Return Code: {result.returncode}\n")
-                        f.write(f"==================\n\n")
+                        f.write("==================\n\n")
                         f.write(output)
-                        f.write(f"\n=== Command Completed ===\n")
+                        f.write("\n=== Command Completed ===\n")
                         f.write(f"Ended: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                except IOError as e:
+                except OSError as e:
                     self.log_warn(f"Failed to write log file {log_file_path}: {e}")
 
             if success:
-                self.log_debug(f"Command completed successfully")
+                self.log_debug("Command completed successfully")
             else:
                 self.log_error(f"Command failed with return code {result.returncode}")
 
@@ -244,12 +259,12 @@ class ProcessApi(BaseApi):
             error_msg = f"Command timed out after {config.timeout} seconds"
             self.log_error(error_msg)
             return (False, error_msg, log_file_path)
-        except Exception as e:
+        except OSError as e:
             error_msg = f"Failed to run command: {e}"
             self.log_error(error_msg)
             return (False, error_msg, log_file_path)
 
-    def launch_command(self, command: str, log_name: Optional[str]) -> str:
+    def launch_command(self, command: str, log_name: str | None) -> str:
         process_id = str(uuid.uuid4())
 
         self.log_debug(f"Launching: {command}")
@@ -285,24 +300,34 @@ class ProcessApi(BaseApi):
             )
             self.processes[process_id] = process_info
             if log_file_path:
-                self.log_debug(f"Process launched with ID: {process_id}, PID: {proc.pid}, Log: {log_file_path}")
+                self.log_debug(
+                    f"Process launched with ID: {process_id}, PID: {proc.pid}, Log: {log_file_path}"
+                )
             else:
-                self.log_debug(f"Process launched with ID: {process_id}, PID: {proc.pid}")
+                self.log_debug(
+                    f"Process launched with ID: {process_id}, PID: {proc.pid}"
+                )
 
             # Always start a thread to capture output and print to console in real time
-            output_thread = threading.Thread(target=self._capture_output, args=(process_id, process_info), daemon=True)
+            output_thread = threading.Thread(
+                target=self._capture_output,
+                args=(process_id, process_info),
+                daemon=True,
+            )
             output_thread.start()
 
             return process_id
 
-        except Exception as e:
+        except (OSError, ValueError) as e:
             self.log_error(f"Failed to launch command '{command}': {e}")
             if log_file_path:
                 try:
-                    with open(log_file_path, 'w') as f:
+                    with open(log_file_path, "w") as f:
                         f.write(f"Failed to launch command: {e}\n")
-                    self.log_debug(f"Exception info written to log file: {log_file_path}")
-                except Exception as ex:
+                    self.log_debug(
+                        f"Exception info written to log file: {log_file_path}"
+                    )
+                except OSError as ex:
                     self.log_warn(f"Failed to write exception log file: {ex}")
             raise
 
@@ -318,22 +343,24 @@ class ProcessApi(BaseApi):
             return True
 
         try:
-            self.log_debug(f"Sending SIGINT to process {process_id}: {proc_info.command}")
+            self.log_debug(
+                f"Sending SIGINT to process {process_id}: {proc_info.command}"
+            )
             proc_info.process.send_signal(signal.SIGINT)
             stdout, _ = proc_info.process.communicate()
             proc_info.is_running = False
 
             if proc_info.log_file:
                 try:
-                    with open(proc_info.log_file, 'w') as f:
+                    with open(proc_info.log_file, "w") as f:
                         f.write(stdout)
                     self.log_debug(f"Output written to log file: {proc_info.log_file}")
-                except Exception as e:
+                except OSError as e:
                     self.log_warn(f"Failed to write shutdown log file: {e}")
 
             self.log_debug(f"Process {process_id} terminated gracefully with SIGINT")
             return True
-        except Exception as e:
+        except OSError as e:
             self.log_error(f"Error stopping process {process_id}: {e}")
             return False
 
@@ -345,7 +372,7 @@ class ProcessApi(BaseApi):
                 killed_count += 1
         return killed_count
 
-    def get_running_processes(self) -> Dict[str, dict]:
+    def get_running_processes(self) -> dict[str, dict]:
         """Get status of all managed processes"""
         result = {}
         for process_id, proc_info in self.processes.items():
@@ -391,50 +418,52 @@ class ProcessApi(BaseApi):
 
     def _capture_output(self, process_id: str, process_info: ProcessInfo):
         """Continuously capture all output, log to file, and print to console until process ends."""
-        log_file_handle = None
         try:
-            # Open log file if configured
             if process_info.log_file:
-                log_file_handle = open(process_info.log_file, 'w')
-                log_file_handle.write(f"=== Process Log ===\n")
-                log_file_handle.write(f"Command: {process_info.command}\n")
-                log_file_handle.write(f"PID: {process_info.pid}\n")
-                log_file_handle.write(f"Started: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(process_info.start_time))}\n")
-                log_file_handle.write(f"==================\n\n")
-                log_file_handle.flush()
-
-            # Continuously read and log output until process ends
-            for line in iter(process_info.process.stdout.readline, ""):
-                if not line:
-                    break
-                stripped_line = line.rstrip()
-                process_info.output.append(stripped_line)
-                # Write to log file if configured
-                if log_file_handle:
-                    log_file_handle.write(line)
-                    log_file_handle.flush()
-                # Print to console
-                print(f"[PROCESS {process_id}] {stripped_line}")
-                # Check if process has ended
-                if process_info.process.poll() is not None:
-                    break
-
-        except Exception as e:
+                with open(process_info.log_file, "w") as log_file_handle:
+                    self.write_log_header(log_file_handle, process_info)
+                    try:
+                        self.stream_output(process_id, process_info, log_file_handle)
+                    finally:
+                        self.write_log_footer(log_file_handle)
+            else:
+                self.stream_output(process_id, process_info, None)
+        except (OSError, ValueError) as e:
             self.log_error(f"Error capturing output for process {process_id}: {e}")
         finally:
-            # Close log file with detachment notice
-            if log_file_handle:
-                log_file_handle.write(f"\n{'='*50}\n")
-                log_file_handle.write(f"Process output capture complete.\n")
-                log_file_handle.write(f"Ended at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                log_file_handle.write(f"{'='*50}\n")
-                log_file_handle.close()
-            # Close stdout
-            try:
-                process_info.process.stdout.close()
-            except:
-                pass
+            process_info.process.stdout.close()
             self.log_debug(f"Process {process_id} output capture finished.")
+
+    def stream_output(
+        self, process_id: str, process_info: ProcessInfo, log_file_handle
+    ) -> None:
+        """Echo each output line to the console and the log file until the process ends."""
+        for line in iter(process_info.process.stdout.readline, ""):
+            stripped_line = line.rstrip()
+            process_info.output.append(stripped_line)
+            if log_file_handle:
+                log_file_handle.write(line)
+                log_file_handle.flush()
+            print(f"[PROCESS {process_id}] {stripped_line}")
+            if process_info.process.poll() is not None:
+                break
+
+    def write_log_header(self, log_file_handle, process_info: ProcessInfo) -> None:
+        started = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(process_info.start_time)
+        )
+        log_file_handle.write("=== Process Log ===\n")
+        log_file_handle.write(f"Command: {process_info.command}\n")
+        log_file_handle.write(f"PID: {process_info.pid}\n")
+        log_file_handle.write(f"Started: {started}\n")
+        log_file_handle.write("==================\n\n")
+        log_file_handle.flush()
+
+    def write_log_footer(self, log_file_handle) -> None:
+        log_file_handle.write(f"\n{'=' * 50}\n")
+        log_file_handle.write("Process output capture complete.\n")
+        log_file_handle.write(f"Ended at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        log_file_handle.write(f"{'=' * 50}\n")
 
     def get_process_pid(self, process_id: str) -> int | str:
         info = self.processes.get(process_id)
@@ -442,10 +471,14 @@ class ProcessApi(BaseApi):
 
     def kill_ros_process(self, pid: int) -> "CommandResponse":
         from dome_control.commands.robot_controller import CommandResponse
+
         try:
             ps_result = subprocess.run(
                 ["ps", "-o", "pid,pgid", "-p", str(pid)],
-                check=False, capture_output=True, text=True, timeout=2,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=2,
             )
             is_group_leader = False
             if ps_result.returncode == 0:
@@ -459,7 +492,9 @@ class ProcessApi(BaseApi):
             label = f"process group {pid}" if is_group_leader else f"process {pid}"
             try:
                 subprocess.run(["kill", "-TERM", target], check=True, timeout=2)
-                return CommandResponse(True, f"Sent SIGTERM to {label}\nRun 'system ps' to verify stopped")
+                return CommandResponse(
+                    True, f"Sent SIGTERM to {label}\nRun 'system ps' to verify stopped"
+                )
             except subprocess.CalledProcessError:
                 subprocess.run(["kill", "-KILL", target], check=True, timeout=2)
                 return CommandResponse(True, f"Force killed {label} (SIGKILL)")
@@ -479,6 +514,7 @@ class ProcessApi(BaseApi):
 
     def list_ros_processes(self) -> "CommandResponse":
         from dome_control.commands.robot_controller import CommandResponse
+
         try:
             result = subprocess.run(
                 ["ps", "aux"], check=False, capture_output=True, text=True, timeout=5
@@ -486,7 +522,16 @@ class ProcessApi(BaseApi):
             if result.returncode != 0:
                 return CommandResponse(False, "Failed to list processes")
 
-            ros_keywords = ["ros2", "nav2", "slam", "rviz", "gazebo", "amcl", "map_server", "robot_state"]
+            ros_keywords = [
+                "ros2",
+                "nav2",
+                "slam",
+                "rviz",
+                "gazebo",
+                "amcl",
+                "map_server",
+                "robot_state",
+            ]
             process_info = []
             for line in result.stdout.split("\n")[1:]:
                 if not any(kw in line.lower() for kw in ros_keywords):
@@ -504,19 +549,27 @@ class ProcessApi(BaseApi):
 
             lines = ["#  PID     CPU  MEM  COMMAND", "-" * 120]
             for i, proc in enumerate(process_info, 1):
-                lines.append(f"{i:<2} {proc['pid']:<7} {proc['cpu']:>4} {proc['mem']:>4}  {proc['command']}")
-            lines += ["-" * 120, f"Total: {len(process_info)} ROS processes", "Use 'system kill <PID>' to kill a process"]
+                lines.append(
+                    f"{i:<2} {proc['pid']:<7} {proc['cpu']:>4} {proc['mem']:>4}  {proc['command']}"
+                )
+            lines += [
+                "-" * 120,
+                f"Total: {len(process_info)} ROS processes",
+                "Use 'system kill <PID>' to kill a process",
+            ]
             return CommandResponse(True, "\n".join(lines))
 
         except subprocess.TimeoutExpired:
             return CommandResponse(False, "Process listing timed out")
-        except Exception as e:
+        except OSError as e:
             return CommandResponse(False, f"Error listing processes: {e}")
 
     def get_subsystem_status(self) -> dict[str, dict]:
         """Report running/not-running and matching processes for each of
         SUBSYSTEM_KEYWORDS, from a single `ps aux` snapshot."""
-        status = {name: {"running": False, "processes": []} for name in SUBSYSTEM_KEYWORDS}
+        status = {
+            name: {"running": False, "processes": []} for name in SUBSYSTEM_KEYWORDS
+        }
         try:
             result = subprocess.run(
                 ["ps", "aux"], check=False, capture_output=True, text=True, timeout=5
@@ -560,10 +613,14 @@ class ProcessApi(BaseApi):
 
     def list_launch_processes(self) -> "CommandResponse":
         from dome_control.commands.robot_controller import CommandResponse
+
         try:
             result = subprocess.run(
                 ["ps", "axo", "pid,pgid,ppid,user,%cpu,%mem,command"],
-                check=False, capture_output=True, text=True, timeout=5,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.returncode != 0:
                 return CommandResponse(False, "Failed to list processes")
@@ -574,12 +631,16 @@ class ProcessApi(BaseApi):
                     parts = line.split(None, 6)
                     if len(parts) >= 7:
                         all_processes[parts[0]] = {
-                            "pid": parts[0], "pgid": parts[1], "ppid": parts[2],
-                            "cpu": parts[4], "mem": parts[5], "command": parts[6],
+                            "pid": parts[0],
+                            "pgid": parts[1],
+                            "ppid": parts[2],
+                            "cpu": parts[4],
+                            "mem": parts[5],
+                            "command": parts[6],
                         }
 
             parent_processes = []
-            for pid, proc in all_processes.items():
+            for proc in all_processes.values():
                 if proc["ppid"] in all_processes:
                     continue
                 command = proc["command"]
@@ -592,15 +653,19 @@ class ProcessApi(BaseApi):
 
             lines = ["#  PID     PGID    CPU  MEM  COMMAND", "-" * 120]
             for i, proc in enumerate(parent_processes, 1):
-                lines.append(f"{i:<2} {proc['pid']:<7} {proc['pgid']:<7} {proc['cpu']:>4} {proc['mem']:>4}  {proc['command']}")
-            lines += ["-" * 120,
-                      f"Total: {len(parent_processes)} launch processes (parent processes only)",
-                      "Use 'system kill <PID>' to kill (kills process group if leader)"]
+                lines.append(
+                    f"{i:<2} {proc['pid']:<7} {proc['pgid']:<7} {proc['cpu']:>4} {proc['mem']:>4}  {proc['command']}"
+                )
+            lines += [
+                "-" * 120,
+                f"Total: {len(parent_processes)} launch processes (parent processes only)",
+                "Use 'system kill <PID>' to kill (kills process group if leader)",
+            ]
             return CommandResponse(True, "\n".join(lines))
 
         except subprocess.TimeoutExpired:
             return CommandResponse(False, "Process listing timed out")
-        except Exception as e:
+        except OSError as e:
             return CommandResponse(False, f"Error listing processes: {e}")
 
     def destroy_node(self):

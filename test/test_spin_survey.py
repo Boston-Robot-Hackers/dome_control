@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 # test_spin_survey — unit tests for SpinSurvey
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
 import math
+
 import pytest
+
 from dome_control.spin_survey import SpinSurvey
 
 
@@ -85,9 +90,14 @@ def test_custom_total_angle():
 
 # --- step-spin mode tests ---
 
+
 def test_step_spin_spins_during_spin_phase():
-    s = SpinSurvey(angular_velocity_rad_s=0.3, total_angle_rad=2 * math.pi,
-                   step_angle_rad=0.174, pause_s=1.0)
+    s = SpinSurvey(
+        angular_velocity_rad_s=0.3,
+        total_angle_rad=2 * math.pi,
+        step_angle_rad=0.174,
+        pause_s=1.0,
+    )
     s.start()
     vel, done = s.tick(0.1)
     assert done is False
@@ -95,8 +105,12 @@ def test_step_spin_spins_during_spin_phase():
 
 
 def test_step_spin_pauses_after_step():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=2 * math.pi,
-                   step_angle_rad=0.1, pause_s=1.0)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=2 * math.pi,
+        step_angle_rad=0.1,
+        pause_s=1.0,
+    )
     s.start()
     # tick long enough to complete the step
     s.tick(0.15)
@@ -107,20 +121,27 @@ def test_step_spin_pauses_after_step():
 
 
 def test_step_spin_resumes_after_pause():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=2 * math.pi,
-                   step_angle_rad=0.1, pause_s=0.5)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=2 * math.pi,
+        step_angle_rad=0.1,
+        pause_s=0.5,
+    )
     s.start()
-    s.tick(0.15)   # complete step → enter pause
-    s.tick(0.6)    # exhaust pause
+    s.tick(0.15)  # complete step → enter pause
+    s.tick(0.6)  # exhaust pause
     vel, _ = s.tick(0.05)
     assert vel == pytest.approx(1.0)
 
 
 def test_step_spin_completes_after_full_rotation():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=math.pi,
-                   step_angle_rad=0.1, pause_s=0.01)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=math.pi,
+        step_angle_rad=0.1,
+        pause_s=0.01,
+    )
     s.start()
-    duration = math.pi  # elapsed spin time needed
     done = False
     for _ in range(500):
         _, done = s.tick(0.05)
@@ -130,7 +151,9 @@ def test_step_spin_completes_after_full_rotation():
 
 
 def test_step_spin_zero_step_is_continuous():
-    s = SpinSurvey(angular_velocity_rad_s=0.3, total_angle_rad=math.pi, step_angle_rad=0.0)
+    s = SpinSurvey(
+        angular_velocity_rad_s=0.3, total_angle_rad=math.pi, step_angle_rad=0.0
+    )
     s.start()
     vel, done = s.tick(1.0)
     assert vel == pytest.approx(0.3)
@@ -138,24 +161,33 @@ def test_step_spin_zero_step_is_continuous():
 
 
 def test_is_paused_false_during_spin_phase():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=2 * math.pi,
-                   step_angle_rad=0.5, pause_s=1.0)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=2 * math.pi,
+        step_angle_rad=0.5,
+        pause_s=1.0,
+    )
     s.start()
     s.tick(0.1)
     assert s.is_paused is False
 
 
 def test_is_paused_true_during_pause_phase():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=2 * math.pi,
-                   step_angle_rad=0.1, pause_s=1.0)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=2 * math.pi,
+        step_angle_rad=0.1,
+        pause_s=1.0,
+    )
     s.start()
     s.tick(0.15)  # complete step → enter pause
     assert s.is_paused is True
 
 
 def test_is_paused_false_in_continuous_mode():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=2 * math.pi,
-                   step_angle_rad=0.0)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0, total_angle_rad=2 * math.pi, step_angle_rad=0.0
+    )
     s.start()
     s.tick(0.1)
     assert s.is_paused is False
@@ -163,22 +195,32 @@ def test_is_paused_false_in_continuous_mode():
 
 # --- two-pass mode tests ---
 
+
 def test_two_pass_not_done_after_pass1():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=math.pi,
-                   step_angle_rad=0.5, pause_s=0.01, pass_count=2)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=math.pi,
+        step_angle_rad=0.5,
+        pause_s=0.01,
+        pass_count=2,
+    )
     s.start()
-    duration = math.pi
     for _ in range(500):
-        _, done = s.tick(0.05)
+        s.tick(0.05)
         if s.pass_num == 2:
             break
     assert s.is_done() is False
 
 
 def test_two_pass_inter_pass_is_not_paused():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=math.pi,
-                   step_angle_rad=0.5, pause_s=0.01, pass_count=2,
-                   pass_offset_rad=0.25)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=math.pi,
+        step_angle_rad=0.5,
+        pause_s=0.01,
+        pass_count=2,
+        pass_offset_rad=0.25,
+    )
     s.start()
     for _ in range(500):
         s.tick(0.05)
@@ -189,9 +231,14 @@ def test_two_pass_inter_pass_is_not_paused():
 
 
 def test_two_pass_inter_pass_velocity():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=math.pi,
-                   step_angle_rad=0.5, pause_s=0.01, pass_count=2,
-                   pass_offset_rad=0.25)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=math.pi,
+        step_angle_rad=0.5,
+        pause_s=0.01,
+        pass_count=2,
+        pass_offset_rad=0.25,
+    )
     s.start()
     for _ in range(500):
         s.tick(0.05)
@@ -202,9 +249,14 @@ def test_two_pass_inter_pass_velocity():
 
 
 def test_two_pass_done_after_pass2():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=math.pi,
-                   step_angle_rad=0.5, pause_s=0.01, pass_count=2,
-                   pass_offset_rad=0.25)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=math.pi,
+        step_angle_rad=0.5,
+        pause_s=0.01,
+        pass_count=2,
+        pass_offset_rad=0.25,
+    )
     s.start()
     done = False
     for _ in range(2000):
@@ -215,8 +267,12 @@ def test_two_pass_done_after_pass2():
 
 
 def test_pass_count_1_default_no_regression():
-    s = SpinSurvey(angular_velocity_rad_s=1.0, total_angle_rad=math.pi,
-                   step_angle_rad=0.1, pause_s=0.01)
+    s = SpinSurvey(
+        angular_velocity_rad_s=1.0,
+        total_angle_rad=math.pi,
+        step_angle_rad=0.1,
+        pause_s=0.01,
+    )
     s.start()
     done = False
     for _ in range(500):

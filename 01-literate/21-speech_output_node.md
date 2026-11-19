@@ -26,8 +26,16 @@ generated: "2026-05-04"
 
 ```python
 def synthesize_to_wav(text, wav_path, piper_bin, model_path, length_scale):
-    cmd = [piper_bin, "--model", model_path, "--output_file", wav_path,
-           "--length_scale", str(length_scale), "--quiet"]
+    cmd = [
+        piper_bin,
+        "--model",
+        model_path,
+        "--output_file",
+        wav_path,
+        "--length_scale",
+        str(length_scale),
+        "--quiet",
+    ]
     subprocess.run(cmd, input=text.encode("utf-8"), check=True, capture_output=True)
 ```
 
@@ -81,8 +89,10 @@ def speak_text(self, text: str) -> None:
     finally:
         for path in (wav_path, gained_path):
             if path:
-                try: os.remove(path)
-                except FileNotFoundError: pass
+                try:
+                    os.remove(path)
+                except FileNotFoundError:
+                    pass
 ```
 
 Both temp files (original and gained) are cleaned up in `finally`. The `FileNotFoundError` suppression handles the case where synthesis failed before the file was created.

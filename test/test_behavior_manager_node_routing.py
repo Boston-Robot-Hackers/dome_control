@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # test_behavior_manager_node_routing.py — routing tests for BehaviorManagerNode
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 # Test tier: No-ROS (fake ROS2 injected via conftest.py)
 import json
@@ -30,15 +33,18 @@ def node():
 
     motion = Mock()
     perception = Mock()
-    motion.handles.side_effect = lambda name: name in {"stop", "explore", "drive_square"}
-    perception.handles.side_effect = lambda name: name in {"describe_scene", "count_objects"}
+    motion.handles.side_effect = lambda name: (
+        name in {"stop", "explore", "drive_square"}
+    )
+    perception.handles.side_effect = lambda name: (
+        name in {"describe_scene", "count_objects"}
+    )
 
     n.handlers = [motion, perception]
     return n, motion, perception
 
 
 class TestBehaviorManagerNodeRouting:
-
     def test_stop_routes_to_motion_handler(self, node):
         n, motion, perception = node
         n.on_intent(make_string_msg(make_intent_json("stop")))

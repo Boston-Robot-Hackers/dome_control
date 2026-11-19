@@ -3,3 +3,4 @@ bin/
 piper_model/
 .Python
 __pycache__/
+.ruff_cache/

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # spin_survey — SpinSurvey: 360° in-place spin behavior, no ROS2 imports
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
 import math
@@ -74,11 +77,17 @@ class SpinSurvey:
             return self.inter_pass_tick(elapsed_s)
         if self.step_angle_rad <= 0.0:
             self.elapsed_s += elapsed_s
-            return (0.0, True) if self.is_done() else (self.angular_velocity_rad_s, False)
+            return (
+                (0.0, True) if self.is_done() else (self.angular_velocity_rad_s, False)
+            )
         return self.step_tick(elapsed_s)
 
     def inter_pass_tick(self, elapsed_s: float) -> tuple[float, bool]:
-        offset = self.pass_offset_rad if self.pass_offset_rad is not None else self.step_angle_rad / 2.0
+        offset = (
+            self.pass_offset_rad
+            if self.pass_offset_rad is not None
+            else self.step_angle_rad / 2.0
+        )
         offset_duration = offset / self.angular_velocity_rad_s
         self.inter_pass_elapsed_s += elapsed_s
         if self.inter_pass_elapsed_s >= offset_duration:

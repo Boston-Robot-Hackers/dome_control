@@ -1,4 +1,5 @@
 """Tests for host stats collection (feature F17, task TF17-T07)."""
+
 from dome_control.telemetry.host_stats import (
     HostStatsReader,
     cpu_pct_from_deltas,
@@ -21,7 +22,7 @@ def test_parse_cpu_temp():
 
 def test_parse_cpu_totals():
     idle, total = parse_cpu_totals(STAT_A)
-    assert idle == 700 + 100          # idle + iowait
+    assert idle == 700 + 100  # idle + iowait
     assert total == 100 + 0 + 100 + 700 + 100
 
 
@@ -55,16 +56,19 @@ def test_parse_uptime():
 def test_reader_first_tick_cpu_zero_then_real():
     files = {"/t": "41778\n", "/s": STAT_A, "/m": MEMINFO, "/u": "7200.0 1.0\n"}
     reader = HostStatsReader(
-        temp_path="/t", stat_path="/s", meminfo_path="/m", uptime_path="/u",
+        temp_path="/t",
+        stat_path="/s",
+        meminfo_path="/m",
+        uptime_path="/u",
         read_text=lambda p: files[p],
     )
     first = reader.read()
-    assert first.cpu_pct == 0.0           # no prior sample
+    assert first.cpu_pct == 0.0  # no prior sample
     assert first.cpu_temp_c == 41.778
     assert abs(first.mem_used_mb - 2976.0) < 1e-6
     assert first.uptime_s == 7200.0
 
-    files["/s"] = STAT_B                   # advance the cpu sample
+    files["/s"] = STAT_B  # advance the cpu sample
     second = reader.read()
     assert abs(second.cpu_pct - 50.0) < 1e-6
 

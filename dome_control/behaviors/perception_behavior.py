@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # perception_behavior.py — perception intent handler
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Handles perception-domain intents via async ROS2 service calls. No rclpy import."""
 
-from dome_control.commands.intent_parser import Intent
-from dome_control.commands.intent_parser import make_announcement_msg
+from dome_control.commands.intent_parser import Intent, make_announcement_msg
 
 PERCEPTION_INTENTS = {"describe_scene", "count_objects", "list_objects"}
 
@@ -30,15 +32,18 @@ class PerceptionBehavior:
     def call_describe_scene(self) -> None:
         client = self.node.describe_scene_client
         if not client.service_is_ready():
-            self.node.get_logger().warn("/describe_scene not ready — attempting call anyway")
+            self.node.get_logger().warn(
+                "/describe_scene not ready — attempting call anyway"
+            )
         from std_srvs.srv import Trigger  # lazy — avoids rclpy at import time
+
         future = self.node.describe_scene_client.call_async(Trigger.Request())
         future.add_done_callback(self.on_describe_scene_done)
 
     def on_describe_scene_done(self, future) -> None:
         try:
             response = future.result()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — future re-raises any service-side error
             self.node.get_logger().error(f"/describe_scene call failed: {exc}")
             return
 

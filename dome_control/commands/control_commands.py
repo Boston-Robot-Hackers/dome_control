@@ -4,6 +4,7 @@ Control Commands - Robot control command definitions
 Author: Pito Salas and Claude Code
 Open Source Under MIT license
 """
+
 import dome_control.commands.command_def as cd
 import dome_control.commands.parameter_def as pd
 
@@ -34,7 +35,7 @@ def build_control_commands() -> dict[str, cd.CommandDef]:
             method_name="get_subsystems_status",
             parameters=[],
             description="Report running/not-running status for each subsystem "
-                         "(gendrv/nav/semantic/control/mission/vision)",
+            "(gendrv/nav/semantic/control/mission/vision)",
             group="control",
         ),
     }

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # telemetry_node — ROS2 node: collect combined robot telemetry, publish /telemetry
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Feature F17 collector node.
 
@@ -19,6 +22,7 @@ Sources are optional / fail-soft: if no BatteryStats/OakStats has arrived yet
 (dome_telemetry/vision down), those fields stay zero and the node keeps
 publishing.
 """
+
 import os
 from datetime import datetime
 
@@ -91,6 +95,7 @@ class TelemetryNode(Node):
         self.latest_ups = None
         self.latest_oak = None
         from dome_telemetry_msgs.msg import BatteryStats, OakStats
+
         self.create_subscription(BatteryStats, "/telemetry/battery", self.on_ups, 10)
         self.create_subscription(OakStats, "/telemetry/oak", self.on_oak, 10)
 

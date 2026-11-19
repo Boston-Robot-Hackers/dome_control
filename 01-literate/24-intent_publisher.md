@@ -12,14 +12,18 @@ generated: "2026-05-12"
 ```python
 class IntentPublisher:
     def __init__(self, publish_fn: Callable[[str], None] | None = None): ...
-    def publish(self, name: str, source: str = "cli", slots: dict | None = None) -> str | None: ...
+    def publish(
+        self, name: str, source: str = "cli", slots: dict | None = None
+    ) -> str | None: ...
     def get_api(self): ...
 ```
 
 ## Publish Path
 
 ```python
-def publish(self, name: str, source: str = "cli", slots: dict | None = None) -> str | None:
+def publish(
+    self, name: str, source: str = "cli", slots: dict | None = None
+) -> str | None:
     payload = json.dumps({"name": name, "source": source, "slots": slots or {}})
     if self.publish_fn is not None:
         self.publish_fn(payload)

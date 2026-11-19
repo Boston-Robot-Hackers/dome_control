@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # survey_api — ROS2 client for /survey/start service
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
 import rclpy
@@ -15,7 +18,10 @@ class SurveyApi(Node):
 
     def start(self, timeout_s: float = 5.0) -> tuple[bool, str]:
         if not self._client.wait_for_service(timeout_sec=timeout_s):
-            return False, "/survey/start service not available — is spin_survey_node running?"
+            return (
+                False,
+                "/survey/start service not available — is spin_survey_node running?",
+            )
         future = self._client.call_async(Trigger.Request())
         rclpy.spin_until_future_complete(self, future, timeout_sec=timeout_s)
         if not future.done():

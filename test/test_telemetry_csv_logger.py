@@ -1,4 +1,5 @@
 """Tests for telemetry CSV logging (feature F17, task TF17-T08)."""
+
 import csv
 import os
 import tempfile
@@ -44,8 +45,8 @@ def test_writes_header_once_and_appends():
         path = os.path.join(tmp, "telemetry311225.csv")
         with open(path) as fh:
             rows = list(csv.reader(fh))
-        assert rows[0] == list(HEADER)        # header once
-        assert len(rows) == 3                 # header + 2 data rows
+        assert rows[0] == list(HEADER)  # header once
+        assert len(rows) == 3  # header + 2 data rows
         assert rows[1][HEADER.index("ups_percent")] == "70.0"
 
 
@@ -72,5 +73,7 @@ def test_prunes_to_max_files_by_mtime():
         remaining = sorted(os.listdir(tmp))
         # Only the 3 newest (days 3,4,5) survive.
         assert remaining == [
-            "telemetry031225.csv", "telemetry041225.csv", "telemetry051225.csv",
+            "telemetry031225.csv",
+            "telemetry041225.csv",
+            "telemetry051225.csv",
         ]

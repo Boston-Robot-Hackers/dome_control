@@ -1,5 +1,8 @@
 # host_stats — read host (Raspberry Pi) telemetry from /proc and /sys
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Read host (Raspberry Pi) telemetry from /proc and /sys (feature F17).
 
@@ -8,6 +11,7 @@ functions so they unit-test without touching real files. CPU usage is a delta
 between two /proc/stat samples, so a HostStatsReader instance is kept across ticks
 to hold the previous sample.
 """
+
 from dataclasses import dataclass
 
 KB_PER_MB = 1024
@@ -20,10 +24,11 @@ DEFAULT_UPTIME_PATH = "/proc/uptime"
 @dataclass
 class HostStats:
     """One snapshot of host metrics, in plot-friendly units."""
-    cpu_temp_c: float    # CPU temperature, Celsius
-    cpu_pct: float       # CPU usage since the previous sample, percent
-    mem_used_mb: float   # memory in use (MemTotal - MemAvailable), megabytes
-    uptime_s: float      # host uptime since boot, seconds
+
+    cpu_temp_c: float  # CPU temperature, Celsius
+    cpu_pct: float  # CPU usage since the previous sample, percent
+    mem_used_mb: float  # memory in use (MemTotal - MemAvailable), megabytes
+    uptime_s: float  # host uptime since boot, seconds
 
 
 def parse_cpu_temp_c(raw):
@@ -126,6 +131,8 @@ class HostStatsReader:
         uptime_s = parse_uptime_s(uptime_text) if uptime_text else 0.0
 
         return HostStats(
-            cpu_temp_c=cpu_temp_c, cpu_pct=cpu_pct, mem_used_mb=mem_used_mb,
+            cpu_temp_c=cpu_temp_c,
+            cpu_pct=cpu_pct,
+            mem_used_mb=mem_used_mb,
             uptime_s=uptime_s,
         )

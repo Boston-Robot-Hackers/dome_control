@@ -10,8 +10,16 @@ generated: "2026-05-06"
 ## Interface
 
 ```python
-MOTION_INTENTS = {"stop", "explore", "drive_square", "turn_right", "turn_left", "get_status"}
+MOTION_INTENTS = {
+    "stop",
+    "explore",
+    "drive_square",
+    "turn_right",
+    "turn_left",
+    "get_status",
+}
 TURN_DEGREES = 90
+
 
 class MotionBehavior:
     def __init__(self, robot_controller): ...

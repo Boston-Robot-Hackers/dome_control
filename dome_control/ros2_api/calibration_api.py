@@ -20,7 +20,9 @@ class CalibrationApi(base.BaseApi):
     Provides predefined movement patterns for calibration purposes.
     """
 
-    def __init__(self, movement_api: movement.MovementApi, config_manager: cm.ConfigManager):
+    def __init__(
+        self, movement_api: movement.MovementApi, config_manager: cm.ConfigManager
+    ):
         super().__init__("calibration_api", config_manager)
         self.movement = movement_api
 
@@ -63,7 +65,9 @@ class CalibrationApi(base.BaseApi):
                 cycle += 1
 
                 current_time = time.time()
-                last_print_time = self._print_elapsed_time(current_time, start_time, last_print_time)
+                last_print_time = self._print_elapsed_time(
+                    current_time, start_time, last_print_time
+                )
 
                 self.log_info(f"Starting {num_rotations} rotations...")
                 for rotation in range(num_rotations):
@@ -103,7 +107,9 @@ class CalibrationApi(base.BaseApi):
                 cycle += 1
 
                 current_time = time.time()
-                last_print_time = self._print_elapsed_time(current_time, start_time, last_print_time)
+                last_print_time = self._print_elapsed_time(
+                    current_time, start_time, last_print_time
+                )
 
                 # Calculate time for one complete circle
                 circumference = 2 * math.pi * radius

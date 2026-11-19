@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from abc import ABC
 
-import rclpy
 from rclpy.node import Node
 
 import dome_control.commands.config_manager as cm

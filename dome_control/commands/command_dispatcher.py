@@ -4,6 +4,7 @@ Command Dispatcher - Central command registry and execution dispatcher
 Author: Pito Salas and Claude Code
 Open Source Under MIT license
 """
+
 import shlex
 from typing import Any
 
@@ -19,17 +20,40 @@ import dome_control.commands.survey_commands as surv_cmd
 import dome_control.commands.system_commands as sys_cmd
 
 ABBREV_TO_FULL = {
-    "m": "move", "t": "turn", "r": "robot", "lch": "launch",
-    "c": "config", "sys": "system", "scr": "script",
-    "fwd": "forward", "bak": "backward", "dis": "distance", "tim": "time",
-    "clk": "clockwise", "ccw": "counterclockwise", "deg": "degrees", "rad": "radians",
-    "stp": "stop", "sts": "status",
-    "lst": "list", "inf": "info", "sta": "start", "kil": "kill",
-    "set": "set", "get": "get",
-    "top": "topics", "ps": "ps", "lau": "launches",
-    "sqr": "square", "rot": "rotate_stress", "cir": "circle_stress",
-    "sav": "save", "ser": "serialize",
-    "hlp": "help", "q": "exit", "x": "exit",
+    "m": "move",
+    "t": "turn",
+    "r": "robot",
+    "lch": "launch",
+    "c": "config",
+    "sys": "system",
+    "scr": "script",
+    "fwd": "forward",
+    "bak": "backward",
+    "dis": "distance",
+    "tim": "time",
+    "clk": "clockwise",
+    "ccw": "counterclockwise",
+    "deg": "degrees",
+    "rad": "radians",
+    "stp": "stop",
+    "sts": "status",
+    "lst": "list",
+    "inf": "info",
+    "sta": "start",
+    "kil": "kill",
+    "set": "set",
+    "get": "get",
+    "top": "topics",
+    "ps": "ps",
+    "lau": "launches",
+    "sqr": "square",
+    "rot": "rotate_stress",
+    "cir": "circle_stress",
+    "sav": "save",
+    "ser": "serialize",
+    "hlp": "help",
+    "q": "exit",
+    "x": "exit",
 }
 FULL_NAMES = set(ABBREV_TO_FULL.values())
 
@@ -68,13 +92,13 @@ BEHAVIOR_COMMANDS: dict[str, str] = {
 }
 
 BEHAVIOR_COMMAND_DESCRIPTIONS: dict[str, tuple[str, str]] = {
-    "intent.stop":           ("Stop the robot", "intent"),
+    "intent.stop": ("Stop the robot", "intent"),
     "intent.describe_scene": ("Describe the current scene", "intent"),
-    "intent.count_objects":  ("Count objects in scene", "intent"),
-    "intent.list_objects":   ("List currently detected objects", "intent"),
-    "scene.describe":        ("Describe the current scene", "scene"),
-    "scene.count":           ("Count objects in scene", "scene"),
-    "scene.objects":         ("List currently detected objects", "scene"),
+    "intent.count_objects": ("Count objects in scene", "intent"),
+    "intent.list_objects": ("List currently detected objects", "intent"),
+    "scene.describe": ("Describe the current scene", "scene"),
+    "scene.count": ("Count objects in scene", "scene"),
+    "scene.objects": ("List currently detected objects", "scene"),
 }
 
 
@@ -121,9 +145,7 @@ class CommandDispatcher:
         try:
             validated_params = self._validate_parameters(command_def, params)
         except ValueError as e:
-            return rc.CommandResponse(
-                success=False, message=f"Parameter error: {e!s}"
-            )
+            return rc.CommandResponse(success=False, message=f"Parameter error: {e!s}")
 
         try:
             method = getattr(self.robot_controller, command_def.method_name)
@@ -145,7 +167,7 @@ class CommandDispatcher:
                 message=str(result) if result is not None else "Command completed",
             )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — CLI boundary: report, keep the REPL alive
             return rc.CommandResponse(
                 success=False, message=f"Command execution error: {e!s}"
             )
@@ -214,7 +236,9 @@ class CommandDispatcher:
                     command_name = candidate3
                     args = [parse_value(t) for t in tokens[3:]]
                 else:
-                    in_registry2 = candidate2 in self.commands or candidate2 in BEHAVIOR_COMMANDS
+                    in_registry2 = (
+                        candidate2 in self.commands or candidate2 in BEHAVIOR_COMMANDS
+                    )
                     if second in FULL_NAMES or second != tokens[1] or in_registry2:
                         command_name = candidate2
                         args = [parse_value(t) for t in tokens[2:]]
@@ -222,7 +246,9 @@ class CommandDispatcher:
                         command_name = command
                         args = [parse_value(t) for t in tokens[1:]]
             else:
-                in_registry2 = candidate2 in self.commands or candidate2 in BEHAVIOR_COMMANDS
+                in_registry2 = (
+                    candidate2 in self.commands or candidate2 in BEHAVIOR_COMMANDS
+                )
                 if second in FULL_NAMES or second != tokens[1] or in_registry2:
                     command_name = candidate2
                     args = [parse_value(t) for t in tokens[2:]]
@@ -248,9 +274,11 @@ class CommandDispatcher:
             return self.execute(command_name, {})
 
         # If last param is str and there are extra tokens, join them into one string
-        if (cmd_def.parameters and
-                cmd_def.parameters[-1].param_type == str and
-                len(args) > len(cmd_def.parameters)):
+        if (
+            cmd_def.parameters
+            and cmd_def.parameters[-1].param_type == str
+            and len(args) > len(cmd_def.parameters)
+        ):
             last_idx = len(cmd_def.parameters) - 1
             args = list(args[:last_idx]) + [" ".join(str(a) for a in args[last_idx:])]
 
@@ -264,6 +292,7 @@ class CommandDispatcher:
         if self.intent_publisher is not None:
             return self.intent_publisher.publish(name, "cli", slots)
         from dome_control.commands.intent_publisher import IntentPublisher
+
         return IntentPublisher().publish(name, "cli", slots)
 
     def list_commands(self, group: str | None = None) -> list[str]:

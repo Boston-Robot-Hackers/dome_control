@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
-from dome_control.commands.command_def import CommandDef
 from dome_control.commands.command_dispatcher import CommandDispatcher
-from dome_control.commands.parameter_def import ParameterDef
 from dome_control.commands.robot_controller import CommandResponse
 
 
@@ -17,7 +15,9 @@ class TestCommandDispatcher:
         """Create a mock robot controller."""
         mock = Mock()
         mock.move_for_time.return_value = CommandResponse(True, "Moved for 1.0 seconds")
-        mock.get_robot_status.return_value = CommandResponse(True, "Status retrieved", {"status": {"linear": 0.3}})
+        mock.get_robot_status.return_value = CommandResponse(
+            True, "Status retrieved", {"status": {"linear": 0.3}}
+        )
         return mock
 
     @pytest.fixture
@@ -40,9 +40,13 @@ class TestCommandDispatcher:
         assert result.success is True
         mock_robot_controller.move_for_time.assert_called_once_with(seconds=1.5)
 
-    def test_execute_command_with_optional_params(self, dispatcher, mock_robot_controller):
+    def test_execute_command_with_optional_params(
+        self, dispatcher, mock_robot_controller
+    ):
         """Test executing command with optional parameters."""
-        mock_robot_controller.launch_start.return_value = CommandResponse(True, "Nav started")
+        mock_robot_controller.launch_start.return_value = CommandResponse(
+            True, "Nav started"
+        )
 
         result = dispatcher.execute("launch.start", {"launch_type": "nav"})
 
@@ -73,12 +77,18 @@ class TestCommandDispatcher:
 
     def test_boolean_parameter_conversion(self, dispatcher, mock_robot_controller):
         """Test boolean parameter conversion from strings."""
-        mock_robot_controller.launch_start.return_value = CommandResponse(True, "Nav started")
+        mock_robot_controller.launch_start.return_value = CommandResponse(
+            True, "Nav started"
+        )
 
-        result = dispatcher.execute("launch.start", {"launch_type": "nav", "use_sim_time": "true"})
+        result = dispatcher.execute(
+            "launch.start", {"launch_type": "nav", "use_sim_time": "true"}
+        )
 
         assert result.success is True
-        mock_robot_controller.launch_start.assert_called_once_with(launch_type="nav", use_sim_time=True)
+        mock_robot_controller.launch_start.assert_called_once_with(
+            launch_type="nav", use_sim_time=True
+        )
 
     def test_list_commands_by_group(self, dispatcher):
         """Test listing commands filtered by group."""
@@ -108,18 +118,25 @@ class TestCommandDispatcher:
         assert "move.distance" not in commands
         assert "turn.degrees" not in commands
 
-    def test_directional_and_radians_commands_still_work(self, dispatcher, mock_robot_controller):
+    def test_directional_and_radians_commands_still_work(
+        self, dispatcher, mock_robot_controller
+    ):
         """Confirms F21 D1 kept the directional pairs and turn.radians."""
         mock_robot_controller.move_forward.return_value = CommandResponse(True, "ok")
         mock_robot_controller.move_backward.return_value = CommandResponse(True, "ok")
         mock_robot_controller.turn_clockwise.return_value = CommandResponse(True, "ok")
-        mock_robot_controller.turn_counterclockwise.return_value = CommandResponse(True, "ok")
+        mock_robot_controller.turn_counterclockwise.return_value = CommandResponse(
+            True, "ok"
+        )
         mock_robot_controller.turn_radians.return_value = CommandResponse(True, "ok")
 
         assert dispatcher.execute("move.forward", {"meters": 1.0}).success is True
         assert dispatcher.execute("move.backward", {"meters": 1.0}).success is True
         assert dispatcher.execute("turn.clockwise", {"degrees": 90.0}).success is True
-        assert dispatcher.execute("turn.counterclockwise", {"degrees": 90.0}).success is True
+        assert (
+            dispatcher.execute("turn.counterclockwise", {"degrees": 90.0}).success
+            is True
+        )
         assert dispatcher.execute("turn.radians", {"radians": 1.0}).success is True
 
     def test_get_groups(self, dispatcher):
@@ -145,7 +162,9 @@ class TestCommandDispatcher:
         mock_robot_controller.publish_intent_exploration_stop.return_value = (
             CommandResponse(True, "ok")
         )
-        mock_robot_controller.explore_status.return_value = CommandResponse(True, "idle")
+        mock_robot_controller.explore_status.return_value = CommandResponse(
+            True, "idle"
+        )
 
         assert dispatcher.dispatch_text("mission go start kitchen").success is True
         mock_robot_controller.publish_intent_navigation_go.assert_called_once_with(
@@ -181,4 +200,3 @@ class TestCommandDispatcher:
             "mission.explore.status",
         }
         assert dispatcher.list_commands(group="nav") == []
-

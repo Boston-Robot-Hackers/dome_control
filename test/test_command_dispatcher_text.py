@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # test_command_dispatcher_text.py — tests for CommandDispatcher.dispatch_text
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 # Test tier: No-ROS
 from unittest.mock import Mock
@@ -30,7 +33,6 @@ def dispatcher(rc):
 
 
 class TestDispatchTextDirect:
-
     def test_move_forward_with_meters(self, dispatcher, rc):
         result = dispatcher.dispatch_text("move forward 1.0")
         assert result.success is True
@@ -58,7 +60,6 @@ class TestDispatchTextDirect:
 
 
 class TestDispatchTextAbbreviations:
-
     def test_abbreviation_m_fwd(self, dispatcher, rc):
         result = dispatcher.dispatch_text("m fwd 2.0")
         assert result.success is True
@@ -72,7 +73,6 @@ class TestDispatchTextAbbreviations:
 
 
 class TestDispatchTextErrors:
-
     def test_unknown_command_returns_failure(self, dispatcher):
         result = dispatcher.dispatch_text("fly to moon")
         assert result.success is False
@@ -98,10 +98,10 @@ class TestDispatchTextErrors:
 
 
 class TestDispatchTextBehaviorIntents:
-
     def _dispatcher_with_mock_publisher(self, rc):
         published = []
         from dome_control.commands.intent_publisher import IntentPublisher
+
         pub = IntentPublisher(publish_fn=published.append)
         return CommandDispatcher(rc, intent_publisher=pub), published
 
@@ -112,6 +112,7 @@ class TestDispatchTextBehaviorIntents:
         assert "describe_scene" in result.message
         assert len(published) == 1
         import json
+
         payload = json.loads(published[0])
         assert payload["name"] == "describe_scene"
         assert payload["source"] == "cli"
@@ -122,6 +123,7 @@ class TestDispatchTextBehaviorIntents:
         assert result.success is True
         assert len(published) == 1
         import json
+
         assert json.loads(published[0])["name"] == "stop"
 
     def test_intent_explore_no_longer_resolves(self, rc):
@@ -136,6 +138,7 @@ class TestDispatchTextBehaviorIntents:
         result = dispatcher.dispatch_text("scene count")
         assert result.success is True
         import json
+
         assert json.loads(published[0])["name"] == "count_objects"
 
     def test_move_forward_does_not_publish_intent(self, rc):
@@ -153,33 +156,42 @@ class TestDispatchTextBehaviorIntents:
 
 
 class TestMissionCommands:
-
     def test_mission_go_start_calls_navigation_go(self, dispatcher, rc):
-        rc.publish_intent_navigation_go.return_value = CommandResponse(True, "Intent published: navigation_go")
+        rc.publish_intent_navigation_go.return_value = CommandResponse(
+            True, "Intent published: navigation_go"
+        )
         result = dispatcher.dispatch_text("mission go start chair")
         assert result.success is True
         rc.publish_intent_navigation_go.assert_called_once_with(label="chair")
 
     def test_mission_go_stop_calls_navigation_cancel(self, dispatcher, rc):
-        rc.publish_intent_navigation_cancel.return_value = CommandResponse(True, "Intent published: navigation_cancel")
+        rc.publish_intent_navigation_cancel.return_value = CommandResponse(
+            True, "Intent published: navigation_cancel"
+        )
         result = dispatcher.dispatch_text("mission go stop")
         assert result.success is True
         rc.publish_intent_navigation_cancel.assert_called_once()
 
     def test_mission_explore_start_calls_exploration_start(self, dispatcher, rc):
-        rc.publish_intent_exploration_start.return_value = CommandResponse(True, "Intent published: exploration_start")
+        rc.publish_intent_exploration_start.return_value = CommandResponse(
+            True, "Intent published: exploration_start"
+        )
         result = dispatcher.dispatch_text("mission explore start")
         assert result.success is True
         rc.publish_intent_exploration_start.assert_called_once()
 
     def test_mission_explore_stop_calls_exploration_stop(self, dispatcher, rc):
-        rc.publish_intent_exploration_stop.return_value = CommandResponse(True, "Intent published: exploration_stop")
+        rc.publish_intent_exploration_stop.return_value = CommandResponse(
+            True, "Intent published: exploration_stop"
+        )
         result = dispatcher.dispatch_text("mission explore stop")
         assert result.success is True
         rc.publish_intent_exploration_stop.assert_called_once()
 
     def test_mission_explore_status_calls_explore_status(self, dispatcher, rc):
-        rc.explore_status.return_value = CommandResponse(True, "explore status: exploring")
+        rc.explore_status.return_value = CommandResponse(
+            True, "explore status: exploring"
+        )
         result = dispatcher.dispatch_text("mission explore status")
         assert result.success is True
         rc.explore_status.assert_called_once()
@@ -199,7 +211,6 @@ class TestMissionCommands:
 
 
 class TestDispatchTextValueParsing:
-
     def test_integer_arg_parsed(self, dispatcher, rc):
         rc.system_kill = Mock(return_value=CommandResponse(True, "Killed"))
         result = dispatcher.dispatch_text("system kill 1234")

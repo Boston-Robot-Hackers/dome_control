@@ -1,5 +1,8 @@
 # csv_logger — append telemetry rows to a daily, count-capped CSV file
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Append telemetry rows to a daily CSV file (feature F17).
 
@@ -11,6 +14,7 @@ Pure-ish: the directory and "now" are injectable so the logic unit-tests against
 temp dir without waiting for real time to pass. ``DDMMYY`` does not sort
 chronologically, so pruning is by file mtime, not by name.
 """
+
 import csv
 import glob
 import os
@@ -19,11 +23,24 @@ DEFAULT_DIR = "~/.dome/telemetry"
 
 # Column order = the flat Telemetry fields, with a leading wall-clock timestamp.
 FIELDS = (
-    "ups_bus_voltage_v", "ups_current_a", "ups_power_w", "ups_percent",
-    "oak_fps", "oak_chip_temp_c", "oak_usb_speed", "oak_cmx_mem_used_mb",
-    "oak_ddr_mem_used_mb", "oak_leon_css_cpu_pct", "oak_leon_mss_cpu_pct",
-    "oak_pipeline_get_ms", "oak_tracker_ms", "oak_iter_ms",
-    "pi_cpu_temp_c", "pi_cpu_pct", "pi_mem_used_mb", "pi_uptime_s",
+    "ups_bus_voltage_v",
+    "ups_current_a",
+    "ups_power_w",
+    "ups_percent",
+    "oak_fps",
+    "oak_chip_temp_c",
+    "oak_usb_speed",
+    "oak_cmx_mem_used_mb",
+    "oak_ddr_mem_used_mb",
+    "oak_leon_css_cpu_pct",
+    "oak_leon_mss_cpu_pct",
+    "oak_pipeline_get_ms",
+    "oak_tracker_ms",
+    "oak_iter_ms",
+    "pi_cpu_temp_c",
+    "pi_cpu_pct",
+    "pi_mem_used_mb",
+    "pi_uptime_s",
 )
 HEADER = ("timestamp",) + FIELDS
 

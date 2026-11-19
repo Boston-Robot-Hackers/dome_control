@@ -5,6 +5,7 @@ Injects minimal fake ROS2/message modules so tests can import control
 modules without a ROS2 installation. Must run before any test module
 imports that trigger rclpy/geometry_msgs/nav_msgs/std_msgs/std_srvs.
 """
+
 import sys
 from types import ModuleType
 from unittest.mock import Mock
@@ -14,14 +15,18 @@ def _inject_fake_ros2():
     if "rclpy" in sys.modules:
         return
 
-    fake_node_class = type("Node", (), {
-        "__init__": lambda self, name: None,
-        "create_subscription": lambda *a, **kw: Mock(),
-        "destroy_subscription": lambda *a, **kw: None,
-        "create_publisher": lambda *a, **kw: Mock(),
-        "create_client": lambda *a, **kw: Mock(),
-        "get_logger": lambda self: Mock(),
-    })
+    fake_node_class = type(
+        "Node",
+        (),
+        {
+            "__init__": lambda self, name: None,
+            "create_subscription": lambda *a, **kw: Mock(),
+            "destroy_subscription": lambda *a, **kw: None,
+            "create_publisher": lambda *a, **kw: Mock(),
+            "create_client": lambda *a, **kw: Mock(),
+            "get_logger": lambda self: Mock(),
+        },
+    )
 
     fake_rclpy = ModuleType("rclpy")
     fake_rclpy.init = Mock()

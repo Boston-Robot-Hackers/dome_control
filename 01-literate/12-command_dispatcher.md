@@ -1,6 +1,6 @@
 ---
-version: "2.3"
-generated: "2026-06-24"
+version: "2.4"
+generated: "2026-11-19"
 ---
 
 # CommandDispatcher: Command Registry and Execution
@@ -40,6 +40,8 @@ dispatcher.execute("move.forward", {"meters": "1.5"})
     └── method(meters=1.5) → CommandResponse
 ```
 
+The method call is the CLI's single error boundary. Any exception a `RobotController` method raises is caught there and returned as a failed `CommandResponse` ("Command execution error: ..."), so one bad command never kills the REPL. This is the one place a broad `except Exception` is deliberate, and it is marked `noqa: BLE001`. Lower layers don't wrap their own catch-alls around ROS2 calls; they let errors reach this boundary.
+
 If the command name is in `BEHAVIOR_COMMANDS`, `execute` short-circuits: it calls `publish_intent` and returns without touching `RobotController`. This means a structured API call like `dispatcher.execute("intent.explore", {})` works the same as typing `intent explore` at the CLI.
 
 ## dispatch_text: Text-to-Command Routing
@@ -73,14 +75,14 @@ Maps CLI command names to intent names:
 
 ```python
 BEHAVIOR_COMMANDS: dict[str, str] = {
-    "intent.stop":           "stop",
-    "intent.explore":        "explore",
+    "intent.stop": "stop",
+    "intent.explore": "explore",
     "intent.describe_scene": "describe_scene",
-    "intent.count_objects":  "count_objects",
-    "intent.list_objects":   "list_objects",
-    "scene.describe":        "describe_scene",
-    "scene.count":           "count_objects",
-    "scene.objects":         "list_objects",
+    "intent.count_objects": "count_objects",
+    "intent.list_objects": "list_objects",
+    "scene.describe": "describe_scene",
+    "scene.count": "count_objects",
+    "scene.objects": "list_objects",
 }
 ```
 

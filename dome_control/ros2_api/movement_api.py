@@ -15,7 +15,9 @@ class MovementApi(base.BaseApi):
     Provides safe velocity commands with automatic stopping.
     """
 
-    blocking_ok = True  # set to False in lifecycle node subclasses to guard cmd_vel_helper
+    blocking_ok = (
+        True  # set to False in lifecycle node subclasses to guard cmd_vel_helper
+    )
 
     def __init__(self, config_manager: cm.ConfigManager = None):
         super().__init__("movement_api", config_manager)
@@ -57,11 +59,16 @@ class MovementApi(base.BaseApi):
 
     def _validate_config(self):
         required_vars = [
-            "linear_speed", "angular_speed",
-            "linear_min", "linear_max",
-            "angular_min", "angular_max"
+            "linear_speed",
+            "angular_speed",
+            "linear_min",
+            "linear_max",
+            "angular_min",
+            "angular_max",
         ]
-        missing = [var for var in required_vars if self.config.get_variable(var) is None]
+        missing = [
+            var for var in required_vars if self.config.get_variable(var) is None
+        ]
 
         if missing:
             config_file = self.config.config_file if self.config else "config file"
@@ -148,6 +155,3 @@ class MovementApi(base.BaseApi):
     def odom_callback(self, msg):
         """Callback for odometry updates."""
         self.current_pose = msg.pose.pose
-
-
-

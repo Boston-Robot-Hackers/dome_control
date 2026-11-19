@@ -2,9 +2,10 @@
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 from dome_control.commands.command_dispatcher import CommandDispatcher
-from dome_control.commands.robot_controller import RobotController, CommandResponse
 from dome_control.commands.config_manager import ConfigManager
+from dome_control.commands.robot_controller import CommandResponse, RobotController
 
 CONFIG_FILE = str(Path.home() / ".dome" / "config" / "control.yaml")
 
@@ -22,21 +23,35 @@ class TestLaunchCommands(unittest.TestCase):
         self.dispatcher = CommandDispatcher(self.controller)
 
         # Mock the controller methods to avoid actual execution
-        self.controller.launch_list = MagicMock(return_value=CommandResponse(True, "Mock list"))
-        self.controller.launch_start = MagicMock(return_value=CommandResponse(True, "Mock start"))
-        self.controller.launch_stop = MagicMock(return_value=CommandResponse(True, "Mock stop"))
-        self.controller.launch_info = MagicMock(return_value=CommandResponse(True, "Mock info"))
+        self.controller.launch_list = MagicMock(
+            return_value=CommandResponse(True, "Mock list")
+        )
+        self.controller.launch_start = MagicMock(
+            return_value=CommandResponse(True, "Mock start")
+        )
+        self.controller.launch_stop = MagicMock(
+            return_value=CommandResponse(True, "Mock stop")
+        )
+        self.controller.launch_info = MagicMock(
+            return_value=CommandResponse(True, "Mock info")
+        )
 
     def test_launch_commands_registered(self):
         """Test that all launch commands are properly registered"""
         expected_commands = [
-            "launch.list", "launch.start", "launch.stop", "launch.info"
+            "launch.list",
+            "launch.start",
+            "launch.stop",
+            "launch.info",
         ]
 
         for cmd in expected_commands:
             with self.subTest(command=cmd):
-                self.assertIn(cmd, self.dispatcher.commands,
-                            f"Launch command {cmd} should be registered")
+                self.assertIn(
+                    cmd,
+                    self.dispatcher.commands,
+                    f"Launch command {cmd} should be registered",
+                )
 
     def test_launch_list_command(self):
         """Test launch.list command definition and execution"""
@@ -92,14 +107,16 @@ class TestLaunchCommands(unittest.TestCase):
 
     def test_launch_commands_group(self):
         """Test that all launch commands are in the launch group"""
-        launch_commands = [cmd for cmd in self.dispatcher.commands.keys()
-                          if cmd.startswith("launch.")]
+        launch_commands = [
+            cmd for cmd in self.dispatcher.commands if cmd.startswith("launch.")
+        ]
 
         for cmd in launch_commands:
             with self.subTest(command=cmd):
                 cmd_def = self.dispatcher.commands[cmd]
-                self.assertEqual(cmd_def.group, "launch",
-                               f"Command {cmd} should be in launch group")
+                self.assertEqual(
+                    cmd_def.group, "launch", f"Command {cmd} should be in launch group"
+                )
 
 
 if __name__ == "__main__":

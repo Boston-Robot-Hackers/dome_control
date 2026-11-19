@@ -1,6 +1,6 @@
 ---
-version: "1.5"
-generated: "2026-08-05"
+version: "1.6"
+generated: "2026-11-19"
 ---
 
 # RobotController: Orchestrating Robot Operations
@@ -68,11 +68,15 @@ launch_process_ids = {
 ```python
 def launch_start(self, launch_type: str, **kwargs) -> CommandResponse:
     if self.is_launch_running(launch_type):
-        return CommandResponse(False, f"{launch_type} is already running, stop it first")
+        return CommandResponse(
+            False, f"{launch_type} is already running, stop it first"
+        )
     try:
         process_id = self.process.launch_by_type(launch_type, **kwargs)
         self.launch_process_ids[launch_type] = process_id
-        return CommandResponse(True, f"Started {launch_type}", {"process_id": process_id})
+        return CommandResponse(
+            True, f"Started {launch_type}", {"process_id": process_id}
+        )
     except ValueError as e:
         return CommandResponse(False, str(e))
 ```
@@ -92,10 +96,15 @@ def map_path(self):
     maps_dir = self.config.get_maps_dir()
     return map_name, maps_dir, maps_dir / map_name
 
-def run_map_command(self, config: CommandConfig, success_msg: str, error_prefix: str) -> CommandResponse:
+
+def run_map_command(
+    self, config: CommandConfig, success_msg: str, error_prefix: str
+) -> CommandResponse:
     success, output, log_file = self.process.run_command_sync(config)
     if success:
-        return CommandResponse(True, success_msg + (f"\nLog: {log_file}" if log_file else ""))
+        return CommandResponse(
+            True, success_msg + (f"\nLog: {log_file}" if log_file else "")
+        )
     ...
 ```
 
@@ -112,6 +121,7 @@ def speech(self) -> SpeechApi:
         self.speech_node = SpeechApi(self.config)
         time.sleep(0.5)
     return self.speech_node
+
 
 def speak_text(self, text: str) -> CommandResponse:
     self.speech.speak(text)
@@ -138,14 +148,18 @@ Concrete intent helpers cover the full range of robot behaviors:
 def publish_intent_stop(self) -> CommandResponse:
     return self.publish_intent("stop", {})
 
+
 def publish_intent_explore(self) -> CommandResponse:
     return self.publish_intent("explore", {})
+
 
 def publish_intent_exploration_start(self) -> CommandResponse:
     return self.publish_intent("exploration_start", {})
 
+
 def publish_intent_exploration_stop(self) -> CommandResponse:
     return self.publish_intent("exploration_stop", {})
+
 
 def publish_intent_navigation_go(self, label: str) -> CommandResponse:
     return self.publish_intent("navigation_go", {"label": label})
@@ -164,14 +178,22 @@ def explore_status(self) -> CommandResponse:
     try:
         result = subprocess.run(
             ["ros2", "topic", "echo", "--once", "/explore/status"],
-            capture_output=True, text=True, timeout=3.0
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=3.0,
         )
         value = result.stdout.strip().replace("data: ", "").strip("'\"")
         if value:
             return CommandResponse(True, f"explore status: {value}")
-        return CommandResponse(False, "No status received from /explore/status (explore_manager_node running?)")
+        return CommandResponse(
+            False,
+            "No status received from /explore/status (explore_manager_node running?)",
+        )
     except subprocess.TimeoutExpired:
-        return CommandResponse(False, "Timeout reading /explore/status — explore_manager_node not running")
+        return CommandResponse(
+            False, "Timeout reading /explore/status — explore_manager_node not running"
+        )
 ```
 
 There are several deliberate choices here worth noting:
@@ -192,6 +214,7 @@ Process management methods delegate entirely to `ProcessApi`:
 def list_ros_processes(self) -> CommandResponse:
     return self.process.list_ros_processes()
 
+
 def kill_ros_process(self, pid: int) -> CommandResponse:
     return self.process.kill_ros_process(pid)
 ```
@@ -208,6 +231,7 @@ def survey(self) -> SurveyApi:
     if self.survey_node is None:
         self.survey_node = SurveyApi()
     return self.survey_node
+
 
 def start_survey(self) -> CommandResponse:
     ok, msg = self.survey.start()
@@ -232,6 +256,6 @@ This follows the same "enrich one dict in place" shape as `get_robot_status`'s c
 ## Observations
 
 - **`turn_degrees` breaks the pattern.** It returns `self.movement.turn_degrees(degrees)` directly instead of a `CommandResponse`. `MovementApi.turn_degrees` returns `None`, so callers get `None` back — a latent bug.
-- **No error handling on movement calls.** Methods like `move_distance` call `self.movement.move_dist` without try/except. A ROS2 exception (e.g., node not initialized) would propagate unhandled to the CLI.
+- **No error handling on movement calls, by design.** Methods like `move_distance` and `list_topics` call the ROS2 API without try/except. An exception propagates to `CommandDispatcher.execute_command`, the single CLI boundary, which turns it into a failed `CommandResponse` ("Command execution error: ..."). `list_topics` used to wrap its own catch-all; it was removed because it duplicated that boundary.
 - **`list_maps` complexity.** The file-grouping logic (stem → extensions) is 20 lines that could be a helper. It also conflates map files and any other file in the directory.
 - **`explore_status` uses `subprocess` while other status checks use ROS2 nodes.** This is a pragmatic inconsistency: the explorer publishes a string topic that is cheap to read with `ros2 topic echo`, whereas movement and process status require richer structured access. If the pattern proliferates, a thin `TopicReaderApi` wrapping `subprocess.run` would centralize the timeout and stripping logic.

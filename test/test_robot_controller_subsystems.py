@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for RobotController.get_subsystems_status (F22 T03)."""
+
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -13,8 +14,16 @@ FAKE_SUBSYSTEMS = {
     "gendrv": {"running": False, "processes": []},
     "nav": {"running": False, "processes": []},
     "semantic": {"running": False, "processes": []},
-    "control": {"running": True, "processes": [{"pid": "1", "cpu": "0", "mem": "0", "command": "behavior_manager"}]},
-    "mission": {"running": True, "processes": [{"pid": "2", "cpu": "0", "mem": "0", "command": "mission_node"}]},
+    "control": {
+        "running": True,
+        "processes": [
+            {"pid": "1", "cpu": "0", "mem": "0", "command": "behavior_manager"}
+        ],
+    },
+    "mission": {
+        "running": True,
+        "processes": [{"pid": "2", "cpu": "0", "mem": "0", "command": "mission_node"}],
+    },
     "vision": {"running": False, "processes": []},
 }
 
@@ -22,9 +31,11 @@ FAKE_SUBSYSTEMS = {
 class TestGetSubsystemsStatus(unittest.TestCase):
     def setUp(self):
         config_manager = ConfigManager.create(CONFIG_FILE)
-        with patch("dome_control.commands.robot_controller.ProcessApi"), \
-             patch("dome_control.commands.robot_controller.MovementApi"), \
-             patch("dome_control.commands.robot_controller.CalibrationApi"):
+        with (
+            patch("dome_control.commands.robot_controller.ProcessApi"),
+            patch("dome_control.commands.robot_controller.MovementApi"),
+            patch("dome_control.commands.robot_controller.CalibrationApi"),
+        ):
             self.controller = RobotController(config_manager)
         self.controller.process_node = MagicMock()
 

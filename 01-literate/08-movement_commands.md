@@ -20,15 +20,33 @@ This module contains *no logic*. It returns a dict of `CommandDef` objects. All 
 ```python
 def build_movement_commands() -> dict[str, cd.CommandDef]:
     return {
-        "move.distance": CommandDef("move_distance", [ParameterDef("distance", float, True, ...)], ...),
-        "move.time":     CommandDef("move_for_time",  [ParameterDef("seconds",  float, True, ...)], ...),
-        "turn.time":     CommandDef("turn_for_time",  [ParameterDef("seconds",  float, True, ...)], ...),
-        "turn.radians":  CommandDef("turn_radians",   [ParameterDef("radians",  float, True, ...)], ...),
-        "turn.degrees":  CommandDef("turn_degrees",   [ParameterDef("degrees",  float, True, ...)], ...),
-        "move.forward":  CommandDef("move_forward",   [ParameterDef("meters",   float, True, ...)], ...),
-        "move.backward": CommandDef("move_backward",  [ParameterDef("meters",   float, True, ...)], ...),
-        "turn.clockwise":        CommandDef("turn_clockwise",        [ParameterDef("degrees", float, True, ...)], ...),
-        "turn.counterclockwise": CommandDef("turn_counterclockwise", [ParameterDef("degrees", float, True, ...)], ...),
+        "move.distance": CommandDef(
+            "move_distance", [ParameterDef("distance", float, True, ...)], ...
+        ),
+        "move.time": CommandDef(
+            "move_for_time", [ParameterDef("seconds", float, True, ...)], ...
+        ),
+        "turn.time": CommandDef(
+            "turn_for_time", [ParameterDef("seconds", float, True, ...)], ...
+        ),
+        "turn.radians": CommandDef(
+            "turn_radians", [ParameterDef("radians", float, True, ...)], ...
+        ),
+        "turn.degrees": CommandDef(
+            "turn_degrees", [ParameterDef("degrees", float, True, ...)], ...
+        ),
+        "move.forward": CommandDef(
+            "move_forward", [ParameterDef("meters", float, True, ...)], ...
+        ),
+        "move.backward": CommandDef(
+            "move_backward", [ParameterDef("meters", float, True, ...)], ...
+        ),
+        "turn.clockwise": CommandDef(
+            "turn_clockwise", [ParameterDef("degrees", float, True, ...)], ...
+        ),
+        "turn.counterclockwise": CommandDef(
+            "turn_counterclockwise", [ParameterDef("degrees", float, True, ...)], ...
+        ),
     }
 ```
 

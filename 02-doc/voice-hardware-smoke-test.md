@@ -107,11 +107,19 @@ MODEL_PATH = os.path.join(oww_dir, "resources", "models", "hey_jarvis_v0.1.onnx"
 
 model = Model(wakeword_model_paths=[MODEL_PATH])
 pa = pyaudio.PyAudio()
-stream = pa.open(rate=16000, channels=1, format=pyaudio.paInt16,
-                 input=True, frames_per_buffer=1280, input_device_index=0)
+stream = pa.open(
+    rate=16000,
+    channels=1,
+    format=pyaudio.paInt16,
+    input=True,
+    frames_per_buffer=1280,
+    input_device_index=0,
+)
 print("Listening — say 'Hey Jarvis'")
 while True:
-    audio = np.frombuffer(stream.read(1280, exception_on_overflow=False), dtype=np.int16)
+    audio = np.frombuffer(
+        stream.read(1280, exception_on_overflow=False), dtype=np.int16
+    )
     score = list(model.predict(audio).values())[0]
     if score > 0.5:
         print(f"Wake word detected! score={score:.2f}")
@@ -123,9 +131,10 @@ If the wrong input device is selected, list devices first:
 
 ```python
 import pyaudio
+
 pa = pyaudio.PyAudio()
 for i in range(pa.get_device_count()):
-    print(i, pa.get_device_info_by_index(i)['name'])
+    print(i, pa.get_device_info_by_index(i)["name"])
 ```
 
 Then set `input_device_index` to the index of `seeed2micvoicec`.

@@ -10,8 +10,8 @@ attention.
 **Branch:** `main`
 
 **Last checkpoint:** 2026-11-19. dome_control's part of **dome2 F05**
-(stack-wide launch-file cleanup) is committed: TF05.2 and TF05.3. 214 tests
-passing. Completed checkpoints are in `02-doc/history.md`.
+(stack-wide launch-file cleanup) is committed: TF05.2 and TF05.3. Then a
+ruff cleanup pass brought the repo to a clean lint. 217 tests passing. Completed checkpoints are in `02-doc/history.md`.
 
 This repo is the ROS2 control package and CLI for robot movement, launch/process
 management, map operations, configuration, scripts, and intent publishing.
@@ -116,8 +116,11 @@ management, map operations, configuration, scripts, and intent publishing.
   real `CommandDef`s for `scene.*`, `config.set` treating `0`/`1` as booleans,
   and the stale README command list.
 
-- **ruff not installed** on the robot, so the checkpoint lint step can't run
-  here.
+- **Lint baseline:** `ruff check` and `ruff format --check` pass (ruff 0.17,
+  installed in `~/.local/bin`; config in `ruff.toml`, same as dome_mission).
+  Only two `except Exception` remain, both real boundaries with `noqa: BLE001`:
+  `CommandDispatcher.execute_command` and the `/describe_scene` future
+  callback. `ruff format` also formats Python blocks inside `.md` files.
 
 ## Known Issues / Pending
 

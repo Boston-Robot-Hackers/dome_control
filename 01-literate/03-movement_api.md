@@ -43,11 +43,19 @@ The six speed variables are required. `_validate_config` checks all of them at c
 
 ```python
 def _validate_config(self):
-    required_vars = ["linear_speed", "angular_speed",
-                     "linear_min", "linear_max", "angular_min", "angular_max"]
+    required_vars = [
+        "linear_speed",
+        "angular_speed",
+        "linear_min",
+        "linear_max",
+        "angular_min",
+        "angular_max",
+    ]
     missing = [v for v in required_vars if self.config.get_variable(v) is None]
     if missing:
-        raise ValueError(f"Missing required configuration variables: {', '.join(missing)}")
+        raise ValueError(
+            f"Missing required configuration variables: {', '.join(missing)}"
+        )
 ```
 
 ## The Central Primitive: cmd_vel_helper
@@ -61,7 +69,9 @@ def cmd_vel_helper(self, linear: float, angular: float, seconds: float):
     if not self.check_velocity_limits(linear, angular):
         return
     if self.config.is_dry_run():
-        self.log_info(f"DRY RUN: Would move linear={linear}, angular={angular} for {seconds}s")
+        self.log_info(
+            f"DRY RUN: Would move linear={linear}, angular={angular} for {seconds}s"
+        )
         return
 
     twist = Twist()
@@ -95,10 +105,12 @@ def move_dist(self, distance: float):
     actual_speed = self.linear if distance >= 0 else -self.linear
     self.cmd_vel_helper(actual_speed, 0.0, seconds)
 
+
 def turn_amount(self, angle: float):
     seconds = abs(angle) / self.angular
     angular_speed = self.angular if angle >= 0 else -self.angular
     self.cmd_vel_helper(0.0, angular_speed, seconds)
+
 
 def turn_degrees(self, degrees: float):
     self.turn_amount(math.radians(degrees))

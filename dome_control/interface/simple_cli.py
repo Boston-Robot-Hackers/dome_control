@@ -35,10 +35,7 @@ def format_table(rows: list[dict], columns: list[tuple[str, str]]) -> str:
     separator = _format_table_row(
         {key: "-" * widths[key] for key, _ in columns}, columns, widths
     )
-    body = [
-        _format_table_row(row, columns, widths)
-        for row in rows
-    ]
+    body = [_format_table_row(row, columns, widths) for row in rows]
     return "\n".join([header, separator, *body])
 
 
@@ -62,14 +59,15 @@ def _format_cell(value) -> str:
 
 
 class SimpleCLI:
-
     def __init__(self):
         config_path = str(Path.home() / ".dome" / "config" / "control.yaml")
         self.config_manager = cm.ConfigManager.create(config_path)
         self.robot_controller = rc.RobotController(self.config_manager)
         self.intent_publisher = IntentPublisher()
         self.intent_publisher.get_api()  # warm up ROS2 node + DDS discovery at startup
-        self.dispatcher = cd.CommandDispatcher(self.robot_controller, self.intent_publisher)
+        self.dispatcher = cd.CommandDispatcher(
+            self.robot_controller, self.intent_publisher
+        )
         self.running = True
 
         control_dir = self.config_manager.get_control_dir()
@@ -87,7 +85,8 @@ class SimpleCLI:
         self, command_name: str, header: str, footer: str | None = None
     ) -> bool:
         suggestions = [
-            cmd for cmd in self.dispatcher.commands.keys()
+            cmd
+            for cmd in self.dispatcher.commands
             if cmd.startswith(f"{command_name}.")
         ]
         if not suggestions:
@@ -136,15 +135,13 @@ class SimpleCLI:
     def show_all_commands(self) -> None:
         print("All Available Commands (alphabetical):")
         print("=" * 70)
-        for cmd_name in sorted(self.dispatcher.commands.keys()):
+        for cmd_name in sorted(self.dispatcher.commands):
             cmd_def = self.dispatcher.commands[cmd_name]
             display_name = cmd_name.replace(".", " ")
             print(f"  {display_name:<30} - {cmd_def.description}")
         print("\nFor detailed help on any command: help <command> <subcommand>")
 
-    def show_specific_help(
-        self, subcommand: str | None, arguments: list
-    ) -> None:
+    def show_specific_help(self, subcommand: str | None, arguments: list) -> None:
         if arguments:
             filename = f"{subcommand}.{arguments[0]}.txt"
         else:
@@ -161,9 +158,7 @@ class SimpleCLI:
             f"\nFor detailed help, use: help {subcommand} <subcommand>",
         )
         if not found:
-            command_str = (
-                f"{subcommand} {arguments[0]}" if arguments else subcommand
-            )
+            command_str = f"{subcommand} {arguments[0]}" if arguments else subcommand
             print(f"No help available for: {command_str}")
 
     def handle_help(self, subcommand: str | None, arguments: list) -> None:
@@ -232,8 +227,7 @@ class SimpleCLI:
 
     def print_variables(self, variables: dict) -> None:
         rows = [
-            {"name": name, "value": value}
-            for name, value in sorted(variables.items())
+            {"name": name, "value": value} for name, value in sorted(variables.items())
         ]
         table = format_table(rows, [("name", "NAME"), ("value", "VALUE")])
         if table:
@@ -244,8 +238,7 @@ class SimpleCLI:
         if speeds:
             print("configured speeds:")
             rows = [
-                {"name": name, "value": value}
-                for name, value in sorted(speeds.items())
+                {"name": name, "value": value} for name, value in sorted(speeds.items())
             ]
             print(format_table(rows, [("name", "NAME"), ("value", "VALUE")]))
 
@@ -263,15 +256,17 @@ class SimpleCLI:
                 }
                 for name, details in sorted(processes.items())
             ]
-            print(format_table(
-                rows,
-                [
-                    ("name", "NAME"),
-                    ("running", "RUNNING"),
-                    ("pid", "PID"),
-                    ("process_id", "PROCESS ID"),
-                ],
-            ))
+            print(
+                format_table(
+                    rows,
+                    [
+                        ("name", "NAME"),
+                        ("running", "RUNNING"),
+                        ("pid", "PID"),
+                        ("process_id", "PROCESS ID"),
+                    ],
+                )
+            )
 
         nodes = status.get("nodes", {})
         if nodes:
@@ -279,8 +274,7 @@ class SimpleCLI:
                 print()
             print("api nodes:")
             rows = [
-                {"name": name, "state": state}
-                for name, state in sorted(nodes.items())
+                {"name": name, "state": state} for name, state in sorted(nodes.items())
             ]
             print(format_table(rows, [("name", "NAME"), ("state", "STATE")]))
 
@@ -289,19 +283,22 @@ class SimpleCLI:
             {
                 "subsystem": name,
                 "running": entry.get("running"),
-                "detail": entry["state"] if name == "mission"
-                          else str(len(entry.get("processes", []))),
+                "detail": entry["state"]
+                if name == "mission"
+                else str(len(entry.get("processes", []))),
             }
             for name, entry in sorted(subsystems.items())
         ]
-        print(format_table(
-            rows,
-            [
-                ("subsystem", "SUBSYSTEM"),
-                ("running", "RUNNING"),
-                ("detail", "DETAIL"),
-            ],
-        ))
+        print(
+            format_table(
+                rows,
+                [
+                    ("subsystem", "SUBSYSTEM"),
+                    ("running", "RUNNING"),
+                    ("detail", "DETAIL"),
+                ],
+            )
+        )
 
     def log_command(self, command: str) -> None:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")

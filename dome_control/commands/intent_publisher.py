@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # intent_publisher.py — thin helper to publish intents to /intent topic
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Publishes intent JSON to /intent. Accepts injected publish_fn for testing."""
 
 import json
-from typing import Callable
+from collections.abc import Callable
 
 
 class IntentPublisher:
@@ -31,5 +34,6 @@ class IntentPublisher:
     def get_api(self):
         if self.api is None:
             from dome_control.ros2_api.intent_api import IntentApi
+
             self.api = IntentApi()
         return self.api

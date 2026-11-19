@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 # motion_behavior.py — motion intent handler
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Handles motion-domain intents. No ROS2 dependency."""
 
+from dome_control.announcement_contract import (
+    PRIORITY_QUERY_REPLY,
+    make_announcement_msg,
+)
 from dome_control.commands.intent_parser import Intent
-from dome_control.announcement_contract import make_announcement_msg, PRIORITY_QUERY_REPLY
 
 MOTION_INTENTS = {"stop", "drive_square", "turn_right", "turn_left", "get_status"}
 
@@ -39,5 +45,7 @@ class MotionBehavior:
                 f"linear speed {speeds.get('linear', 'unknown')}, "
                 f"angular speed {speeds.get('angular', 'unknown')}"
             )
-            msg = make_announcement_msg(text, priority=PRIORITY_QUERY_REPLY, source="motion_behavior")
+            msg = make_announcement_msg(
+                text, priority=PRIORITY_QUERY_REPLY, source="motion_behavior"
+            )
             node.announcement_pub.publish(msg)

@@ -1,10 +1,14 @@
 # config — load and validate the telemetry collector node's YAML config
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Config loading for the telemetry collector node (feature F17).
 
 Pure Python, no ROS imports — so it is unit-testable without a running graph.
 """
+
 import os
 
 import yaml
@@ -52,10 +56,6 @@ def load_telemetry_config(path=None):
         "publish_rate_hz": positive_float(
             raw, "publish_rate_hz", DEFAULT_PUBLISH_RATE_HZ
         ),
-        "log_interval_s": positive_float(
-            raw, "log_interval_s", DEFAULT_LOG_INTERVAL_S
-        ),
-        "max_log_files": positive_int(
-            raw, "max_log_files", DEFAULT_MAX_LOG_FILES
-        ),
+        "log_interval_s": positive_float(raw, "log_interval_s", DEFAULT_LOG_INTERVAL_S),
+        "max_log_files": positive_int(raw, "max_log_files", DEFAULT_MAX_LOG_FILES),
     }

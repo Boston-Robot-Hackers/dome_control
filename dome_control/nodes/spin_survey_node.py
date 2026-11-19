@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # spin_survey_node — ROS2 node: 360° spin survey, triggered via /survey/start service
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
 import rclpy
@@ -44,11 +47,18 @@ class SpinSurveyNode(Node):
             response.message = "Survey already in progress"
             return response
 
-        params = {name: self.get_parameter(name).value for name in SpinSurveyConfig.model_fields}
+        params = {
+            name: self.get_parameter(name).value
+            for name in SpinSurveyConfig.model_fields
+        }
         params["pass_offset_rad"] = params["pass_offset_rad"] or None
         self.survey = SpinSurvey(
-            params["angular_velocity"], params["total_angle"], params["step_angle_rad"], params["pause_s"],
-            pass_count=params["pass_count"], pass_offset_rad=params["pass_offset_rad"],
+            params["angular_velocity"],
+            params["total_angle"],
+            params["step_angle_rad"],
+            params["pause_s"],
+            pass_count=params["pass_count"],
+            pass_offset_rad=params["pass_offset_rad"],
         )
         self.survey.start()
         self.timer = self.create_timer(1.0 / TICK_HZ, self.tick)

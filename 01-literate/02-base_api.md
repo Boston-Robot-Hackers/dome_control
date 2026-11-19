@@ -28,11 +28,14 @@ Four logging methods wrap ROS2's logger with a twist:
 def log_debug(self, message: str):
     self.get_logger().debug(message)
 
+
 def log_info(self, message: str):
-    print(message)          # ← goes to stdout, not ROS2 log
+    print(message)  # ← goes to stdout, not ROS2 log
+
 
 def log_warn(self, message: str):
     self.get_logger().warn(message)
+
 
 def log_error(self, message: str):
     self.get_logger().error(message)

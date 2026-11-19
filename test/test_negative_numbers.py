@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 # test_negative_numbers.py - Test negative number support for movement commands
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch
+
 from dome_control.commands.command_dispatcher import CommandDispatcher
 from dome_control.commands.robot_controller import CommandResponse
 

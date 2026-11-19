@@ -2,11 +2,11 @@
 import json
 
 from dome_control.announcement_contract import (
-    Announcement,
-    AnnouncementMsg,
     PRIORITY_DISCOVERY,
     PRIORITY_QUERY_REPLY,
     PRIORITY_SAFETY,
+    Announcement,
+    AnnouncementMsg,
     make_announcement_msg,
 )
 

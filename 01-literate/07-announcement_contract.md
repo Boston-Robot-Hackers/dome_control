@@ -16,12 +16,12 @@ Multiple nodes in different files need to agree on the `/announcement` message s
 The module establishes an ordered urgency scale:
 
 ```python
-PRIORITY_SAFETY = 0        # highest — obstacle, emergency
-PRIORITY_STATUS = 1        # battery low, localization lost
-PRIORITY_QUERY_REPLY = 2   # answer to a user question
-PRIORITY_ACTION_ACK = 3    # "turning left"
-PRIORITY_DISCOVERY = 4     # "I see a chair"
-PRIORITY_CHITCHAT = 5      # lowest — greetings, idle commentary
+PRIORITY_SAFETY = 0  # highest — obstacle, emergency
+PRIORITY_STATUS = 1  # battery low, localization lost
+PRIORITY_QUERY_REPLY = 2  # answer to a user question
+PRIORITY_ACTION_ACK = 3  # "turning left"
+PRIORITY_DISCOVERY = 4  # "I see a chair"
+PRIORITY_CHITCHAT = 5  # lowest — greetings, idle commentary
 ```
 
 Lower numbers = higher priority. The scale is not yet enforced by a priority queue in the speech output node, but is the intended semantic for future queueing logic.
@@ -34,6 +34,7 @@ The module uses `try/except ImportError` in two places to allow use outside a RO
 try:
     from builtin_interfaces.msg import Time
 except ImportError:
+
     @dataclass
     class Time:
         sec: int = 0

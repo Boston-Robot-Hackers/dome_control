@@ -9,7 +9,13 @@ keyword map (mirrors the `ros_keywords` list already used in
 ```python
 SUBSYSTEM_KEYWORDS = {
     "gendrv": ["micro_ros_agent"],
-    "nav": ["slam_manager_node", "explorer_manager_node", "slam_toolbox", "bt_navigator", "amcl"],
+    "nav": [
+        "slam_manager_node",
+        "explorer_manager_node",
+        "slam_toolbox",
+        "bt_navigator",
+        "amcl",
+    ],
     "semantic": ["semantic_map_node"],
     "control": ["behavior_manager"],
     "mission": ["mission_node"],

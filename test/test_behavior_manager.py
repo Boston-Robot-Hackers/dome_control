@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 # test_behavior_manager.py — tests for IntentParser
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 import json
 
 import pytest
 
+from dome_control.announcement_contract import PRIORITY_QUERY_REPLY
 from dome_control.commands.intent_parser import (
     IntentParser,
     make_announcement_msg,
     make_announcement_payload,
 )
-from dome_control.announcement_contract import PRIORITY_QUERY_REPLY
 
 
 class TestIntentParser:
-
     def test_parse_intent_json(self):
         manager = IntentParser()
 

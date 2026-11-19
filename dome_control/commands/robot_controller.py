@@ -39,7 +39,9 @@ class RobotController:
         self.intent_node = None
         self.speech_node = None
         self.survey_node = None
-        self.launch_process_ids = dict.fromkeys(self.config.get_launch_templates().keys())
+        self.launch_process_ids = dict.fromkeys(
+            self.config.get_launch_templates().keys()
+        )
 
     @property
     def movement(self) -> MovementApi:
@@ -116,11 +118,15 @@ class RobotController:
 
     def launch_start(self, launch_type: str, **kwargs) -> CommandResponse:
         if self.is_launch_running(launch_type):
-            return CommandResponse(False, f"{launch_type} is already running, stop it first")
+            return CommandResponse(
+                False, f"{launch_type} is already running, stop it first"
+            )
         try:
             process_id = self.process.launch_by_type(launch_type, **kwargs)
             self.launch_process_ids[launch_type] = process_id
-            return CommandResponse(True, f"Started {launch_type}", {"process_id": process_id})
+            return CommandResponse(
+                True, f"Started {launch_type}", {"process_id": process_id}
+            )
         except ValueError as e:
             return CommandResponse(False, str(e))
 
@@ -234,7 +240,9 @@ class RobotController:
         maps_dir = self.config.get_maps_dir()
         return map_name, maps_dir, maps_dir / map_name
 
-    def run_map_command(self, config: CommandConfig, success_msg: str, error_prefix: str) -> CommandResponse:
+    def run_map_command(
+        self, config: CommandConfig, success_msg: str, error_prefix: str
+    ) -> CommandResponse:
         success, output, log_file = self.process.run_command_sync(config)
 
         if success:
@@ -245,7 +253,9 @@ class RobotController:
             error_msg = f"{error_prefix} timeout after 15 seconds"
         else:
             error_lines = [line for line in output.split("\n") if line.strip()]
-            error_msg = f"{error_prefix}: {error_lines[-1]}" if error_lines else error_prefix
+            error_msg = (
+                f"{error_prefix}: {error_lines[-1]}" if error_lines else error_prefix
+            )
 
         if log_file:
             error_msg += f"\nSee log: {log_file}"
@@ -254,24 +264,36 @@ class RobotController:
     def map_save(self) -> CommandResponse:
         map_name, maps_dir, full_path = self.map_path()
         if not map_name:
-            return CommandResponse(False, "map_name variable not set. Use 'config set map_name <name>' first.")
+            return CommandResponse(
+                False,
+                "map_name variable not set. Use 'config set map_name <name>' first.",
+            )
         cmd = f"ros2 run nav2_map_server map_saver_cli -f {full_path} --ros-args -p save_map_timeout:=10000."
         config = CommandConfig(command=cmd, log_name="map_save", timeout=15.0)
-        return self.run_map_command(config,
-                                    f"Map saved to {maps_dir}/{map_name}.yaml and {map_name}.pgm",
-                                    "Failed to save map")
+        return self.run_map_command(
+            config,
+            f"Map saved to {maps_dir}/{map_name}.yaml and {map_name}.pgm",
+            "Failed to save map",
+        )
 
     def map_serialize(self) -> CommandResponse:
         map_name, _, full_path = self.map_path()
         if not map_name:
-            return CommandResponse(False, "map_name variable not set. Use 'config set map_name <name>' first.")
-        cmd = (f"ros2 service call /slam_toolbox/serialize_map "
-               f"slam_toolbox/srv/SerializePoseGraph "
-               f'"{{filename: \'{full_path}\'}}"')
+            return CommandResponse(
+                False,
+                "map_name variable not set. Use 'config set map_name <name>' first.",
+            )
+        cmd = (
+            f"ros2 service call /slam_toolbox/serialize_map "
+            f"slam_toolbox/srv/SerializePoseGraph "
+            f"\"{{filename: '{full_path}'}}\""
+        )
         config = CommandConfig(command=cmd, log_name="map_serialize", timeout=15.0)
-        return self.run_map_command(config,
-                                    f"Map serialized to {full_path}.posegraph and {map_name}.data",
-                                    "Failed to serialize map")
+        return self.run_map_command(
+            config,
+            f"Map serialized to {full_path}.posegraph and {map_name}.data",
+            "Failed to serialize map",
+        )
 
     def list_maps(self) -> CommandResponse:
         self.config.ensure_subdirs()
@@ -335,12 +357,9 @@ class RobotController:
         )
 
     def list_topics(self) -> CommandResponse:
-        try:
-            topics = self.movement.get_topic_names_and_types()
-            topic_list = [name for name, _ in topics]
-            return CommandResponse(True, "Active ROS topics", {"topics": topic_list})
-        except Exception as e:
-            return CommandResponse(False, f"Failed to list topics: {e!s}")
+        topics = self.movement.get_topic_names_and_types()
+        topic_list = [name for name, _ in topics]
+        return CommandResponse(True, "Active ROS topics", {"topics": topic_list})
 
     def list_ros_processes(self) -> CommandResponse:
         return self.process.list_ros_processes()
@@ -383,14 +402,23 @@ class RobotController:
         try:
             result = subprocess.run(
                 ["ros2", "topic", "echo", "--once", "/explore/status"],
-                capture_output=True, text=True, timeout=3.0
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=3.0,
             )
             value = result.stdout.strip().replace("data: ", "").strip("'\"")
             if value:
                 return CommandResponse(True, f"explore status: {value}")
-            return CommandResponse(False, "No status received from /explore/status (explore_manager_node running?)")
+            return CommandResponse(
+                False,
+                "No status received from /explore/status (explore_manager_node running?)",
+            )
         except subprocess.TimeoutExpired:
-            return CommandResponse(False, "Timeout reading /explore/status — explore_manager_node not running")
+            return CommandResponse(
+                False,
+                "Timeout reading /explore/status — explore_manager_node not running",
+            )
 
     def start_survey(self) -> CommandResponse:
         success, message = self.survey.start()

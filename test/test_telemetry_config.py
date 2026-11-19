@@ -1,4 +1,5 @@
 """Tests for telemetry config loader (feature F17, task TF17-T02)."""
+
 import os
 import tempfile
 

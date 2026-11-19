@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
+import pytest
 
 from dome_control.commands.robot_controller import CommandResponse
 
@@ -19,7 +20,7 @@ class TestMapServiceLogic:
     def teardown_method(self):
         """Clean up test fixtures"""
         # Cleanup
-        if hasattr(self, 'temp_dir'):
+        if hasattr(self, "temp_dir"):
             shutil.rmtree(self.temp_dir)
 
     def test_maps_directory_creation(self):
@@ -82,7 +83,9 @@ class TestMapServiceLogic:
         assert "Map server not running" in failure_response.message
 
         # Response with data
-        data_response = CommandResponse(True, "Operation complete", {"filename": "test_map"})
+        data_response = CommandResponse(
+            True, "Operation complete", {"filename": "test_map"}
+        )
         assert data_response.success is True
         assert data_response.data == {"filename": "test_map"}
 
@@ -94,7 +97,7 @@ class TestMapServiceLogic:
             "image_format": "pgm",
             "map_mode": "trinary",
             "free_thresh": 0.25,
-            "occupied_thresh": 0.65
+            "occupied_thresh": 0.65,
         }
 
         # Verify parameter types and values
@@ -110,7 +113,9 @@ class TestMapServiceLogic:
     def test_error_message_construction(self):
         """Test error message construction for different failure scenarios"""
         # Map server not running
-        server_error = "Map server is not running. Start it with: launch start map_server"
+        server_error = (
+            "Map server is not running. Start it with: launch start map_server"
+        )
         assert "Map server is not running" in server_error
         assert "launch start map_server" in server_error
 
@@ -143,11 +148,7 @@ class TestMapServiceLogic:
     def test_launch_process_tracking_logic(self):
         """Test the logic for tracking launch processes"""
         # Simulate launch process tracking
-        launch_process_ids = {
-            "nav": None,
-            "slam": None,
-            "map_server": None
-        }
+        launch_process_ids = {"nav": None, "slam": None, "map_server": None}
 
         # Test checking if map_server is running
         map_server_running = launch_process_ids.get("map_server") is not None
@@ -201,7 +202,9 @@ class TestMapServiceWorkflow:
         filename = "workflow_test"
 
         # Step 1: Check if map_server is running (simulated)
-        map_server_running = True  # Would be: launch_process_ids.get("map_server") is not None
+        map_server_running = (
+            True  # Would be: launch_process_ids.get("map_server") is not None
+        )
         assert map_server_running, "Map server must be running"
 
         # Step 2: Create maps directory path
@@ -219,11 +222,18 @@ class TestMapServiceWorkflow:
             "image_format": "pgm",
             "map_mode": "trinary",
             "free_thresh": 0.25,
-            "occupied_thresh": 0.65
+            "occupied_thresh": 0.65,
         }
 
         # Verify all required parameters are present
-        required_params = ["map_topic", "map_url", "image_format", "map_mode", "free_thresh", "occupied_thresh"]
+        required_params = [
+            "map_topic",
+            "map_url",
+            "image_format",
+            "map_mode",
+            "free_thresh",
+            "occupied_thresh",
+        ]
         for param in required_params:
             assert param in service_params
 
@@ -238,7 +248,9 @@ class TestMapServiceWorkflow:
         assert file_exists, f"Map file {map_path} must exist"
 
         # Step 2: Check if map_server is running (simulated)
-        map_server_running = True  # Would be: launch_process_ids.get("map_server") is not None
+        map_server_running = (
+            True  # Would be: launch_process_ids.get("map_server") is not None
+        )
         assert map_server_running, "Map server must be running"
 
         # Step 3: Convert path to string for service call
@@ -246,14 +258,12 @@ class TestMapServiceWorkflow:
         assert map_path_str == "maps/workflow_test.yaml"
 
         # Step 4: Prepare service parameters
-        service_params = {
-            "map_url": map_path_str
-        }
+        service_params = {"map_url": map_path_str}
 
         # Verify required parameter is present
         assert "map_url" in service_params
         assert service_params["map_url"].endswith(".yaml")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main([__file__])

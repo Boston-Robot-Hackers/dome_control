@@ -1,25 +1,32 @@
 #!/usr/bin/env python3
 # behavior_manager_node.py — ROS2 shell for behavior manager
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """ROS2 node that receives intents and routes to domain behavior handlers."""
 
 import os
+
 import rclpy
 from ament_index_python.packages import get_package_share_directory
+from dome_semantic.class_profiles import build_label_map, load_class_profiles
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from vision_msgs.msg import Detection2DArray
 
-from dome_semantic.class_profiles import build_label_map, load_class_profiles
-
-from dome_control.announcement_contract import AnnouncementMsg, make_announcement_msg, PRIORITY_QUERY_REPLY
-from dome_control.commands.intent_parser import IntentParser
+from dome_control.announcement_contract import (
+    PRIORITY_QUERY_REPLY,
+    AnnouncementMsg,
+    make_announcement_msg,
+)
 from dome_control.behaviors.motion_behavior import MotionBehavior
 from dome_control.behaviors.perception_behavior import PerceptionBehavior
 from dome_control.commands.config_manager import ConfigManager
+from dome_control.commands.intent_parser import IntentParser
 from dome_control.commands.robot_controller import RobotController
 
 DEFAULT_CONFIG = os.path.expanduser("~/.dome/config/control.yaml")
@@ -43,7 +50,9 @@ class BehaviorManagerNode(Node):
         ]
 
         self.declare_parameter("class_profiles_path", default_class_profiles_path())
-        profiles_path = self.get_parameter("class_profiles_path").get_parameter_value().string_value
+        profiles_path = (
+            self.get_parameter("class_profiles_path").get_parameter_value().string_value
+        )
         self.profiles = load_class_profiles(profiles_path)
         self.label_map = build_label_map(self.profiles)
 

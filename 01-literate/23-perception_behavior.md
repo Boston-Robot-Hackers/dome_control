@@ -1,6 +1,6 @@
 ---
-version: "1.2"
-generated: "2026-05-12"
+version: "1.3"
+generated: "2026-11-19"
 ---
 
 # PerceptionBehavior — Perception Intent Handler
@@ -34,24 +34,27 @@ The `/describe_scene` service (provided by `describe_scene_stub` or a real visio
 A key design choice: the node calls the service even if `service_is_ready()` returns `False`. A warning is logged, but the call proceeds. This avoids silent no-ops when the service is slow to register during startup:
 
 ```python
-    def call_describe_scene(self) -> None:
-        client = self.node.describe_scene_client
-        if not client.service_is_ready():
-            self.node.get_logger().warn("/describe_scene not ready — attempting call anyway")
-        from std_srvs.srv import Trigger  # lazy — avoids rclpy at import time
-        future = self.node.describe_scene_client.call_async(Trigger.Request())
-        future.add_done_callback(self.on_describe_scene_done)
+def call_describe_scene(self) -> None:
+    client = self.node.describe_scene_client
+    if not client.service_is_ready():
+        self.node.get_logger().warn(
+            "/describe_scene not ready — attempting call anyway"
+        )
+    from std_srvs.srv import Trigger  # lazy — avoids rclpy at import time
+
+    future = self.node.describe_scene_client.call_async(Trigger.Request())
+    future.add_done_callback(self.on_describe_scene_done)
 ```
 
 The tradeoff: if the service never comes up, the future never resolves and the callback is never called. That is acceptable — the system degrades silently rather than failing loudly.
 
-The callback handles both failure modes — an exception (service timeout or crash) and a successful call that returns `success=False`:
+The callback handles both failure modes — an exception (service timeout or crash) and a successful call that returns `success=False`. `future.result()` re-raises whatever went wrong in the service call, whatever its type, so this is a real boundary and the broad catch is kept on purpose (marked `noqa: BLE001`):
 
 ```python
     def on_describe_scene_done(self, future) -> None:
         try:
             response = future.result()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — future re-raises any service-side error
             self.node.get_logger().error(f"/describe_scene call failed: {exc}")
             return
 

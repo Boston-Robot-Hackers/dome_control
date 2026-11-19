@@ -11,7 +11,9 @@ generated: "2026-05-04"
 class DescribeSceneStubNode(Node):
     def __init__(self):
         super().__init__("describe_scene_stub")
-        self.service = self.create_service(Trigger, "/describe_scene", self.describe_scene)
+        self.service = self.create_service(
+            Trigger, "/describe_scene", self.describe_scene
+        )
 
     def describe_scene(self, request, response):
         response.success = True

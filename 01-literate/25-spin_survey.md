@@ -28,12 +28,12 @@ Default `step_angle_rad=1.047` (60°) with `pause_s=1.0` gives the camera a clea
 ## State Variables
 
 ```python
-self.elapsed_s          # time accumulated in current pass
-self.angle_rotated      # angle in current step (resets after each step)
-self.is_pausing         # True during pause phase
-self.pause_elapsed_s    # time elapsed in current pause
-self.pass_num           # which pass (1-based)
-self.is_inter_pass      # True during inter-pass offset rotation
+self.elapsed_s  # time accumulated in current pass
+self.angle_rotated  # angle in current step (resets after each step)
+self.is_pausing  # True during pause phase
+self.pause_elapsed_s  # time elapsed in current pause
+self.pass_num  # which pass (1-based)
+self.is_inter_pass  # True during inter-pass offset rotation
 self.inter_pass_elapsed_s
 ```
 

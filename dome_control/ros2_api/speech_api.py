@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 # speech_api.py — publishes AnnouncementMsg to /announcement topic
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
 import dome_control.commands.config_manager as cm
 import dome_control.ros2_api.base_api as base
-from dome_control.announcement_contract import Announcement, PRIORITY_CHITCHAT
+from dome_control.announcement_contract import PRIORITY_CHITCHAT, Announcement
 
 
 class SpeechApi(base.BaseApi):
-
     def __init__(self, config_manager: cm.ConfigManager = None):
         super().__init__("speech_api", config_manager)
         from dome_control.announcement_contract import AnnouncementMsg
-        self.announcement_pub = self.create_publisher(AnnouncementMsg, "/announcement", 10)
+
+        self.announcement_pub = self.create_publisher(
+            AnnouncementMsg, "/announcement", 10
+        )
 
     def speak(self, text: str, priority: int = PRIORITY_CHITCHAT) -> None:
         ann = Announcement(text=text, priority=priority, source="cli")

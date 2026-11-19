@@ -7,6 +7,7 @@ from dataclasses import dataclass
 try:
     from builtin_interfaces.msg import Time
 except ImportError:
+
     @dataclass
     class Time:
         sec: int = 0
@@ -23,6 +24,7 @@ PRIORITY_CHITCHAT = 5
 try:
     from dome_control.msg import Announcement as AnnouncementMsg
 except ImportError:
+
     class AnnouncementMsg:
         PRIORITY_SAFETY = PRIORITY_SAFETY
         PRIORITY_STATUS = PRIORITY_STATUS

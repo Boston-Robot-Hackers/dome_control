@@ -25,15 +25,20 @@ Class profiles are loaded from a YAML file whose path is settable via a ROS2 par
 
 ```python
 self.declare_parameter("class_profiles_path", DEFAULT_VISION_CONFIG)
-vision_config_path = self.get_parameter("class_profiles_path").get_parameter_value().string_value
+vision_config_path = (
+    self.get_parameter("class_profiles_path").get_parameter_value().string_value
+)
 self.profiles: dict = {}
 self.label_map: dict = {}
 try:
     from dome_vision.class_profiles import build_label_map, load_class_profiles
+
     self.profiles = load_class_profiles(vision_config_path)
     self.label_map = build_label_map(self.profiles)
 except Exception as exc:
-    self.get_logger().warn(f"Could not load class profiles from {vision_config_path}: {exc}")
+    self.get_logger().warn(
+        f"Could not load class profiles from {vision_config_path}: {exc}"
+    )
 ```
 
 The `try/except` means the node runs without `dome_vision` installed — perception commands degrade to raw class IDs rather than failing entirely.
@@ -41,16 +46,12 @@ The `try/except` means the node runs without `dome_vision` installed — percept
 ## Subscriptions and Publishers
 
 ```python
-self.intent_sub = self.create_subscription(
-    String, "/intent", self.on_intent, 10
-)
+self.intent_sub = self.create_subscription(String, "/intent", self.on_intent, 10)
 self.detections_sub = self.create_subscription(
     Detection2DArray, "/oak/detections", self.on_detections, 10
 )
 self.latest_detections: Detection2DArray | None = None
-self.announcement_pub = self.create_publisher(
-    AnnouncementMsg, "/announcement", 10
-)
+self.announcement_pub = self.create_publisher(AnnouncementMsg, "/announcement", 10)
 self.describe_scene_client = self.create_client(Trigger, "/describe_scene")
 ```
 

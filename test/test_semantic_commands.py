@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # test_semantic_commands.py — tests for scene command routing
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 # Note: registry-based scene command tests removed in F15/T07.
 # scene.describe and scene.count now route via dispatch_text → _BEHAVIOR_COMMANDS.
@@ -11,16 +14,15 @@ from unittest.mock import Mock
 import pytest
 
 from dome_control.commands.command_dispatcher import CommandDispatcher
-from dome_control.commands.robot_controller import CommandResponse
 
 
 class TestSceneCommandsViaDispatchText:
-
     @pytest.fixture
     def setup(self):
         rc = Mock()
         published = []
         from dome_control.commands.intent_publisher import IntentPublisher
+
         pub = IntentPublisher(publish_fn=published.append)
         dispatcher = CommandDispatcher(rc, intent_publisher=pub)
         return dispatcher, published
@@ -42,4 +44,5 @@ class TestSceneCommandsViaDispatchText:
         result = dispatcher.execute("scene.describe", {})
         assert result.success is True
         import json
+
         assert json.loads(published[0])["name"] == "describe_scene"

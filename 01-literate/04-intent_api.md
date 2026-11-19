@@ -24,12 +24,13 @@ REPLY_TIMEOUT_S = 5.0
 
 ```python
 class IntentApi(base.BaseApi):
-
     def __init__(self, config_manager: cm.ConfigManager = None):
         super().__init__("intent_api", config_manager)
         self.intent_pub = self.create_publisher(String, "/intent", 10)
         self.reply_text: str | None = None
-        self.create_subscription(AnnouncementMsg, "/announcement", self.on_announcement, 10)
+        self.create_subscription(
+            AnnouncementMsg, "/announcement", self.on_announcement, 10
+        )
 ```
 
 ## Announcement Callback

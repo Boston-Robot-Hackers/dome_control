@@ -2,6 +2,22 @@
 
 Completed checkpoints moved out of `current.md`. Newest first.
 
+## 2026-11-19 — ruff cleanup (chore)
+
+- Added `ruff.toml` (line length 88, `EXE001` ignored, same as dome_mission)
+  and brought the repo from 131 violations to zero: autofixes (import order,
+  unused imports, PEP 585/604 annotations), `ruff format` across code and the
+  Python blocks in Markdown, and hand fixes.
+
+- `process_api.py`: every `except Exception` narrowed to the errors actually
+  raised (`OSError`, `ValueError` on a closed pipe); the bare `except: pass`
+  around `stdout.close()` removed; `_capture_output` split into
+  `stream_output` / `write_log_header` / `write_log_footer` with the log file
+  opened via `with`. New `test/test_process_api_capture.py` (3 tests).
+
+- `RobotController.list_topics` lost its redundant catch-all; the dispatcher
+  is the single CLI error boundary.
+
 ## 2026-11-19 — dome2 F05 launch cleanup, dome_control part
 
 - **TF05.2** (`9046e75`): `launch/robot.launch.py` now follows the DOME launch

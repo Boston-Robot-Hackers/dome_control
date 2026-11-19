@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 # test_script_commands.py - Test script commands
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+import pytest
+
 from dome_control.commands.command_dispatcher import CommandDispatcher
-from dome_control.commands.robot_controller import CommandResponse, RobotController
 from dome_control.commands.config_manager import ConfigManager
+from dome_control.commands.robot_controller import CommandResponse, RobotController
 
 CONFIG_FILE = str(Path.home() / ".dome" / "config" / "control.yaml")
 
@@ -20,9 +25,15 @@ class TestScriptCommands:
     def mock_robot_controller(self):
         """Create a mock robot controller."""
         mock = Mock()
-        mock.script_square.return_value = CommandResponse(True, "Completed square pattern with 1.0m sides")
-        mock.script_rotate_stress.return_value = CommandResponse(True, "Rotate stress test completed")
-        mock.script_circle_stress.return_value = CommandResponse(True, "Circle stress test completed")
+        mock.script_square.return_value = CommandResponse(
+            True, "Completed square pattern with 1.0m sides"
+        )
+        mock.script_rotate_stress.return_value = CommandResponse(
+            True, "Rotate stress test completed"
+        )
+        mock.script_circle_stress.return_value = CommandResponse(
+            True, "Circle stress test completed"
+        )
         mock.script_list.return_value = CommandResponse(True, "Scripts listed")
         return mock
 
@@ -83,7 +94,9 @@ class TestScriptCommands:
         assert "square pattern" in result.message.lower()
         mock_robot_controller.script_square.assert_called_once_with(meters=2.0)
 
-    def test_execute_script_square_with_negative_meters(self, dispatcher, mock_robot_controller):
+    def test_execute_script_square_with_negative_meters(
+        self, dispatcher, mock_robot_controller
+    ):
         """Test executing script.square with negative value."""
         result = dispatcher.execute("script.square", {"meters": -1.0})
 
@@ -121,7 +134,9 @@ class TestScriptCommands:
     @patch("dome_control.commands.robot_controller.CalibrationApi")
     @patch("dome_control.commands.robot_controller.MovementApi")
     @patch("dome_control.commands.robot_controller.ProcessApi")
-    def test_robot_controller_script_square(self, mock_process, mock_movement, mock_calibration):
+    def test_robot_controller_script_square(
+        self, mock_process, mock_movement, mock_calibration
+    ):
         """Test RobotController.script_square method."""
         config = ConfigManager.create(CONFIG_FILE)
         controller = RobotController(config)
@@ -138,7 +153,9 @@ class TestScriptCommands:
     @patch("dome_control.commands.robot_controller.CalibrationApi")
     @patch("dome_control.commands.robot_controller.MovementApi")
     @patch("dome_control.commands.robot_controller.ProcessApi")
-    def test_robot_controller_script_rotate_stress(self, mock_process, mock_movement, mock_calibration):
+    def test_robot_controller_script_rotate_stress(
+        self, mock_process, mock_movement, mock_calibration
+    ):
         """Test RobotController.script_rotate_stress method."""
         config = ConfigManager.create(CONFIG_FILE)
         controller = RobotController(config)

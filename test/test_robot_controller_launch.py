@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for RobotController launch methods."""
+
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -16,9 +17,11 @@ class TestRobotControllerLaunch(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         self.config_manager = ConfigManager.create(CONFIG_FILE)
-        with patch("dome_control.commands.robot_controller.ProcessApi"), \
-             patch("dome_control.commands.robot_controller.MovementApi"), \
-             patch("dome_control.commands.robot_controller.CalibrationApi"):
+        with (
+            patch("dome_control.commands.robot_controller.ProcessApi"),
+            patch("dome_control.commands.robot_controller.MovementApi"),
+            patch("dome_control.commands.robot_controller.CalibrationApi"),
+        ):
             self.controller = RobotController(self.config_manager)
 
         self.controller.process_node = MagicMock()
@@ -35,7 +38,9 @@ class TestRobotControllerLaunch(unittest.TestCase):
             "slam": MagicMock(launch_type="slam", description="SLAM toolbox"),
             "map": MagicMock(launch_type="map", description="Map server"),
         }
-        self.controller.process_node.get_launch_config.side_effect = lambda t: mock_configs[t]
+        self.controller.process_node.get_launch_config.side_effect = lambda t: (
+            mock_configs[t]
+        )
         self.controller.is_launch_running = MagicMock(return_value=False)
 
         response = self.controller.launch_list()

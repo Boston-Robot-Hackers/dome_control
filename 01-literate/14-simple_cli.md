@@ -17,7 +17,9 @@ class SimpleCLI:
         self.robot_controller = rc.RobotController(self.config_manager)
         self.intent_publisher = IntentPublisher()
         self.intent_publisher.get_api()  # warm up ROS2 node + DDS discovery at startup
-        self.dispatcher = cd.CommandDispatcher(self.robot_controller, self.intent_publisher)
+        self.dispatcher = cd.CommandDispatcher(
+            self.robot_controller, self.intent_publisher
+        )
 ```
 
 Construction order: `ConfigManager` → `RobotController` → `IntentPublisher` (warmed up) → `CommandDispatcher`. Config path is fixed at `~/.dome/config/control.yaml`.
@@ -90,11 +92,14 @@ Commands that return structured `data` (not just a message) get rendered through
 def print_data(self, data) -> None:
     if isinstance(data, dict):
         if "variables" in data and isinstance(data["variables"], dict):
-            self.print_variables(data["variables"]); return
+            self.print_variables(data["variables"])
+            return
         if "status" in data and isinstance(data["status"], dict):
-            self.print_status(data["status"]); return
+            self.print_status(data["status"])
+            return
         if "subsystems" in data and isinstance(data["subsystems"], dict):
-            self.print_subsystems(data["subsystems"]); return
+            self.print_subsystems(data["subsystems"])
+            return
         ...  # generic fallback for anything else
 ```
 
@@ -106,12 +111,18 @@ def print_subsystems(self, subsystems: dict) -> None:
         {
             "subsystem": name,
             "running": entry.get("running"),
-            "detail": entry["state"] if name == "mission"
-                      else str(len(entry.get("processes", []))),
+            "detail": entry["state"]
+            if name == "mission"
+            else str(len(entry.get("processes", []))),
         }
         for name, entry in sorted(subsystems.items())
     ]
-    print(format_table(rows, [("subsystem", "SUBSYSTEM"), ("running", "RUNNING"), ("detail", "DETAIL")]))
+    print(
+        format_table(
+            rows,
+            [("subsystem", "SUBSYSTEM"), ("running", "RUNNING"), ("detail", "DETAIL")],
+        )
+    )
 ```
 
 This "one column, two meanings" choice trades a small amount of column-semantics purity for a single unified table — the alternative (a separate `STATE` column that's empty for five of six rows) was judged less readable for a status command whose whole point is a quick glance.

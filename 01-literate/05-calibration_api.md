@@ -11,7 +11,9 @@ generated: "2026-05-04"
 
 ```python
 class CalibrationApi(base.BaseApi):
-    def __init__(self, movement_api: movement.MovementApi, config_manager: cm.ConfigManager):
+    def __init__(
+        self, movement_api: movement.MovementApi, config_manager: cm.ConfigManager
+    ):
         super().__init__("calibration_api", config_manager)
         self.movement = movement_api
 ```

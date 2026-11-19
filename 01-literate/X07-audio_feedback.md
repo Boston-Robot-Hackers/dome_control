@@ -31,6 +31,7 @@ def beep(frequency: int = 880, duration: float = 0.15, device_index: int = 0) ->
         subprocess.run(cmd, input=bytes(samples), check=False, capture_output=True)
     except Exception as exc:
         import sys
+
         print(f"beep: aplay failed: {exc}", file=sys.stderr)
 ```
 

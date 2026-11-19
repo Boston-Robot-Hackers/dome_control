@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # test_motion_behavior.py — tests for MotionBehavior
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 from unittest.mock import Mock
 
-from dome_control.commands.intent_parser import Intent
 from dome_control.behaviors.motion_behavior import MOTION_INTENTS, MotionBehavior
+from dome_control.commands.intent_parser import Intent
 
 
 def make_intent(name, slots=None):
@@ -13,7 +16,6 @@ def make_intent(name, slots=None):
 
 
 class TestMotionBehaviorHandles:
-
     def test_handles_stop(self):
         mb = MotionBehavior(Mock())
         assert mb.handles("stop") is True
@@ -51,7 +53,6 @@ class TestMotionBehaviorHandles:
 
 
 class TestMotionBehaviorExecute:
-
     def test_stop_calls_stop_robot(self):
         rc = Mock()
         mb = MotionBehavior(rc)

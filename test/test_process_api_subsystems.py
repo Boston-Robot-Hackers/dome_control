@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for ProcessApi.get_subsystem_status (F22 T01)."""
+
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch

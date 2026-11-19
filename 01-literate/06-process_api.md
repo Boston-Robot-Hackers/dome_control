@@ -1,6 +1,6 @@
 ---
-version: "1.2"
-generated: "2026-08-05"
+version: "1.3"
+generated: "2026-11-19"
 ---
 
 # ProcessApi: Subprocess Lifecycle Management
@@ -21,6 +21,7 @@ class ProcessInfo:
     pid: int
     start_time: float
     log_file: Optional[str] = None
+
 
 @dataclass
 class LaunchConfig:
@@ -57,7 +58,7 @@ def _load_launch_configs(self):
             launch_type=launch_type,
             command_template=template.get("command", ""),
             description=template.get("description", ""),
-            default_params=template.get("default_params", {})
+            default_params=template.get("default_params", {}),
         )
 ```
 
@@ -67,15 +68,20 @@ The async path launches a process in a new session (`start_new_session=True`) so
 
 ```python
 proc = subprocess.Popen(
-    command, shell=True,
-    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    command,
+    shell=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
     stdin=subprocess.DEVNULL,
-    text=True, bufsize=1,
+    text=True,
+    bufsize=1,
     start_new_session=True,
 )
 ```
 
 `start_new_session=True` creates a new process group, which matters for `kill_ros_process`: if the PID is the group leader, `SIGTERM` is sent to `-pgid` (the whole group), not just the parent.
+
+The capture thread (`_capture_output`) is split into three pieces. `stream_output` echoes each line to the console and, when a log file is configured, to that file. `write_log_header` and `write_log_footer` bracket the log. The log file is opened with `with`, and the footer is written in a `finally`, so the file is always closed and always ends with its completion notice, even if streaming fails. Only `OSError` (file or pipe I/O) and `ValueError` (reading a closed pipe) are caught and logged; anything else is a bug and surfaces. The process's stdout pipe is closed unconditionally at the end.
 
 A UUID is returned as the process handle. `RobotController` stores this UUID in `launch_process_ids` keyed by launch type.
 
@@ -94,14 +100,17 @@ class CommandConfig:
 ```python
 def run_command_sync(self, config: CommandConfig) -> tuple[bool, str, Optional[str]]:
     result = subprocess.run(
-        config.command, shell=True,
-        capture_output=True, text=True,
-        timeout=config.timeout
+        config.command,
+        shell=True,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=config.timeout,
     )
     return (result.returncode == 0, result.stdout + result.stderr, log_file_path)
 ```
 
-Returns `(success, output, log_file_path)` so callers can report both the outcome and where to find details.
+Returns `(success, output, log_file_path)` so callers can report both the outcome and where to find details. `check=False` is explicit: a non-zero exit is an expected outcome, reported through `success`, not raised. A timeout, or an `OSError` from the shell failing to start, is also turned into a `False` result with its message.
 
 ## Killing Processes
 
@@ -138,7 +147,7 @@ def get_process_pid(self, process_id: str) -> int | str:
 
 ## Listing ROS and Launch Processes
 
-`list_ros_processes` and `list_launch_processes` shell out to `ps aux` and `ps axo` respectively, filtering by ROS-related keywords. These are display-only utilities — they scan all OS processes, not just managed ones:
+`list_ros_processes` and `list_launch_processes` shell out to `ps aux` and `ps axo` respectively, filtering by ROS-related keywords. These are display-only utilities — they scan all OS processes, not just managed ones. A timeout or an `OSError` (e.g. `ps` missing) becomes a failed `CommandResponse`:
 
 ```
 ps aux → filter ros/nav2/slam/rviz keywords → tabular output
@@ -152,12 +161,19 @@ ps axo pid,pgid,ppid → filter ros2 launch → parent-only display
 ```python
 SUBSYSTEM_KEYWORDS = {
     "gendrv": ["micro_ros_agent"],
-    "nav": ["slam_manager_node", "explorer_manager_node", "slam_toolbox", "bt_navigator", "amcl"],
+    "nav": [
+        "slam_manager_node",
+        "explorer_manager_node",
+        "slam_toolbox",
+        "bt_navigator",
+        "amcl",
+    ],
     "semantic": ["semantic_map_node"],
     "control": ["behavior_manager"],
     "mission": ["mission_node"],
     "vision": ["dome_vision_ros_node"],
 }
+
 
 def get_subsystem_status(self) -> dict[str, dict]:
     status = {name: {"running": False, "processes": []} for name in SUBSYSTEM_KEYWORDS}
@@ -197,5 +213,6 @@ The subscription is transient — created and torn down within the call — beca
 
 - **Parameter formatting is complex.** `launch_by_type` has distinct code paths for `bl` commands, `ros2 run`, and launch files. This fragility could be replaced with a strategy object per command type.
 - **`list_ros_processes` leaks shell knowledge.** The hardcoded keyword list `["ros2", "nav2", "slam", "rviz", ...]` will miss new components and is not tested. `SUBSYSTEM_KEYWORDS` is the same idea at finer grain, and inherits the same risk: a subsystem's binary name changing silently breaks its detection.
-- **Circular import via string.** `kill_ros_process` and `list_*` import `CommandResponse` inline to avoid circular imports. The fix is to move `CommandResponse` to its own module.
+- **Circular import via string.** `kill_ros_process` and `list_*` import `CommandResponse` inline at run time to avoid a circular import; a `TYPE_CHECKING` import makes the string annotations resolvable for linters. The real fix is to move `CommandResponse` to its own module.
+- **Exception handling is narrowed.** Every handler catches the specific errors subprocess and file I/O raise (`OSError`, `subprocess.TimeoutExpired`, `ValueError` on a closed pipe) instead of `Exception`, so an unexpected error is visible rather than logged and swallowed.
 - **`get_mission_state` is the only per-subsystem introspection.** The other five subsystems report only running/not-running; deeper state (Nav2/vision lifecycle, `/telemetry` snapshots) is deliberately out of scope for F22 and flagged as a follow-up in the feature file.

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # test_perception_behavior.py — tests for PerceptionBehavior
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 from unittest.mock import Mock
 
-import pytest
-
-from dome_control.commands.intent_parser import Intent
 from dome_control.behaviors.perception_behavior import PerceptionBehavior
+from dome_control.commands.intent_parser import Intent
 
 
 def make_intent(name, slots=None):
@@ -22,7 +23,6 @@ def make_mock_node(service_ready=True):
 
 
 class TestPerceptionBehaviorHandles:
-
     def test_handles_describe_scene(self):
         pb = PerceptionBehavior(Mock())
         assert pb.handles("describe_scene") is True
@@ -41,7 +41,6 @@ class TestPerceptionBehaviorHandles:
 
 
 class TestPerceptionBehaviorExecute:
-
     def test_describe_scene_calls_service_when_ready(self):
         node = make_mock_node(service_ready=True)
         future = Mock()
@@ -82,7 +81,6 @@ class TestPerceptionBehaviorExecute:
 
 
 class TestPerceptionBehaviorCallbacks:
-
     def test_on_done_publishes_announcement_on_success(self):
         node = make_mock_node()
         response = Mock()

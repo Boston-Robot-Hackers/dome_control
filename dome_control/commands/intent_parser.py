@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # intent_parser.py — pure intent parsing logic
 # Author: Pito Salas and Claude Code
+# Version: 1
+# Created: 2026-11-19
+# Updated: 2026-11-19
 # Open Source Under MIT license
 """Pure intent parser — no ROS2 dependency."""
 
@@ -13,10 +16,10 @@ from dome_control.announcement_contract import (
 )
 
 __all__ = [
-    'IntentParser',
-    'Intent',
-    'make_announcement_msg',
-    'make_announcement_payload',
+    "Intent",
+    "IntentParser",
+    "make_announcement_msg",
+    "make_announcement_payload",
 ]
 
 
@@ -37,7 +40,7 @@ class IntentParser:
             raise ValueError(f"Invalid intent JSON: {exc.msg}") from exc
 
         if not isinstance(raw, dict):
-            raise ValueError("Intent payload must be a JSON object")
+            raise ValueError("Intent payload must be a JSON object")  # noqa: TRY004
 
         name = raw.get("name")
         if not isinstance(name, str) or not name:
@@ -49,6 +52,6 @@ class IntentParser:
 
         slots = raw.get("slots", {})
         if not isinstance(slots, dict):
-            raise ValueError("Intent field 'slots' must be an object")
+            raise ValueError("Intent field 'slots' must be an object")  # noqa: TRY004
 
         return Intent(name=name, source=source, slots=slots)
