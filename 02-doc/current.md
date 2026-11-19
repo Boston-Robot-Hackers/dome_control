@@ -7,27 +7,11 @@ attention.
 
 ## Snapshot
 
-**Branch:** `main`  
-**Last checkpoint:** 2026-08-05 — **F21 closed** (all tasks T01–T06 done):
-`nav` domain renamed to `mission` throughout the CLI (`mission.go.start`,
-`mission.go.stop`, `mission.explore.start`, `mission.explore.stop`,
-`mission.explore.status`), `navigation_commands.py` split into
-`map_commands.py` + `mission_commands.py` (`command_dispatcher.py` updated
-to import/register both), `02-doc/cli-reference.md` and `docs/launch.start.txt`
-updated for the rename and the positional-optional-parameter note.
-**F22 closed 2026-08-07** (`robot subsystems` status command, all tasks
-done): `ProcessApi.get_subsystem_status()` + `get_mission_state()`,
-`RobotController.get_subsystems_status()`, `robot.subsystems` CLI command
-with table output, `dome_mission`'s `/mission/state` publisher. T06 (live Pi
-hardware verification) confirmed all six subsystems and mission's live FSM
-state enrichment working on `dome-R1`. 202 tests passing.
-Control config moved from `~/.control/config.yaml` to
-`~/.dome/config/control.yaml`, with the `CONTROL_CONFIG` env var override
-dropped (path is now fixed).
-**F20 merged 2026-08-07**: battery telemetry moved out of `dome_control` into
-the standalone sibling package `dome_telemetry`, verified on the live robot
-2026-08-04 — its code had been done on a worktree branch that never made it
-into `main` until now (only its closing docs had landed here previously).
+**Branch:** `main`
+
+**Last checkpoint:** 2026-11-19. dome_control's part of **dome2 F05**
+(stack-wide launch-file cleanup) is committed: TF05.2 and TF05.3. 214 tests
+passing. Completed checkpoints are in `02-doc/history.md`.
 
 This repo is the ROS2 control package and CLI for robot movement, launch/process
 management, map operations, configuration, scripts, and intent publishing.
@@ -59,8 +43,9 @@ management, map operations, configuration, scripts, and intent publishing.
 - Wake word: "alexa". Threshold 0.7, wake_hits 3, cooldown 1.5s.
 - `audio_feedback.py` (in dome_voice): beep via aplay, 20% amplitude.
 - Launch files — each package owns its own robot/remote launches:
-  - `dome_control/launch/robot.launch.py` — speech_output + behavior_manager (no args)
-  - `dome_control/launch/remote.launch.py` — optional behavior_manager
+  - `dome_control/launch/robot.launch.py`: behavior_manager, telemetry and
+    spin_survey; follows the DOME launch convention, with spin_survey params
+    in `config/spin_survey.yaml`. No `remote.launch.py` (deleted in F05).
   - `dome_voice/launch/robot.launch.py` — voice_input (Seeed board assumed)
   - `dome_vision_ros/launch/robot.launch.py` — oak camera + semantic_map + optional spin_survey
 - `TelemetryNode` (F17): publishes combined `/telemetry` (`dome_control/msg/Telemetry`,
@@ -111,6 +96,29 @@ management, map operations, configuration, scripts, and intent publishing.
 - Feature files:
   - `F01`–`F03`, `F13`–`F15`, `F17`, `F19`, `F20`, `F21`, `F22`: done
 
+## Open
+
+- **dome2 F05, launch-file cleanup** (tracked in
+  `dome2/process/03-features/notdone/F05-launch-file-cleanup.md`): TF05.0–TF05.4
+  are done. Remaining: TF05.5 (stack docs), TF05.6 (convention test suite,
+  in progress) and TF05.7 (robot + remote verification). Still to check for
+  dome_control: a live clean stop of its nodes.
+
+- **F16 status mismatch:** the feature file says not done, but
+  `PerceptionBehavior` already handles `list_objects` and caches
+  `/oak/detections`. Reconcile before relying on either.
+
+- **Stale voice task files:** `04-tasks/notdone/` still holds TF05 (voice
+  instrumentation), TF08, TF09 and TF11. They look like they belong in
+  `dome_voice` now; F05 itself is in `03-features/deferred/`.
+
+- **Open chores** in `04-tasks/chores.md`: duplicate `intent.*` commands,
+  real `CommandDef`s for `scene.*`, `config.set` treating `0`/`1` as booleans,
+  and the stale README command list.
+
+- **ruff not installed** on the robot, so the checkpoint lint step can't run
+  here.
+
 ## Known Issues / Pending
 
 - **Empty STT turns**: voice turns returning empty. Debug log in `voice_input_node` shows
@@ -131,10 +139,11 @@ management, map operations, configuration, scripts, and intent publishing.
 
 ## Likely Next Steps
 
-1. Test `scene describe` and `scene objects` with real oak hardware on robot.
-2. Observe empty-turn voice debug log on hardware.
-3. Split `RobotController` into smaller modules.
-4. Sort out Doppler token / `ROBOFLOW_API_KEY` for this session (see above).
+1. Finish dome2 F05 (TF05.5–TF05.7), including the dome_control clean-stop check.
+2. Test `scene describe` and `scene objects` with real oak hardware on robot.
+3. Observe empty-turn voice debug log on hardware.
+4. Split `RobotController` into smaller modules.
+5. Sort out Doppler token / `ROBOFLOW_API_KEY` for this session (see above).
 
 ## Quick Commands
 

@@ -1,0 +1,42 @@
+# control — History
+
+Completed checkpoints moved out of `current.md`. Newest first.
+
+## 2026-11-19 — dome2 F05 launch cleanup, dome_control part
+
+- **TF05.2** (`9046e75`): `launch/robot.launch.py` now follows the DOME launch
+  convention (header, usage examples, argument docstrings). spin_survey's
+  inline params moved to `config/spin_survey.yaml` with the same values, plus
+  `test/test_spin_survey_params.py` checking its keys match
+  `SpinSurveyConfig`. Added the header-stamping `.githooks/pre-commit`.
+
+- **TF05.3** (`6f42ffd`): deleted the empty `launch/remote.launch.py`.
+
+- **Clean stop** (`3cc2873`): nodes exit cleanly on
+  `ExternalShutdownException` when a launch is stopped.
+
+- The feature and task records live in dome2:
+  `dome2/process/03-features/notdone/F05-launch-file-cleanup.md`.
+
+## 2026-08-07 — F20 merged, F22 closed
+
+- **F22** (`robot subsystems` status command): `ProcessApi.get_subsystem_status()`
+  + `get_mission_state()`, `RobotController.get_subsystems_status()`,
+  `robot.subsystems` CLI table, `dome_mission`'s `/mission/state` publisher.
+  T06 verified on `dome-R1`: all six subsystems plus mission FSM state.
+
+- **F20** merged: battery telemetry moved to the sibling `dome_telemetry`
+  package (verified on the live robot 2026-08-04). Its code had been
+  stranded on an unmerged worktree branch until this merge.
+
+- Control config moved from `~/.control/config.yaml` to
+  `~/.dome/config/control.yaml`; `CONTROL_CONFIG` env var dropped.
+
+## 2026-08-05 — F21 closed
+
+- `nav` CLI domain renamed to `mission` (`mission.go.start/stop`,
+  `mission.explore.start/stop/status`).
+
+- `navigation_commands.py` split into `map_commands.py` +
+  `mission_commands.py`. `cli-reference.md` and `docs/launch.start.txt`
+  updated.
