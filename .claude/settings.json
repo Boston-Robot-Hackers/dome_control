@@ -16,5 +16,45 @@
       "Read(./**/*.pem)",
       "Read(./**/id_rsa*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/block-secrets.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit-ruff.sh" }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start-context.sh" }
+        ]
+      }
+    ]
+  },
+  "autoMode": {
+    "environment": [
+      "### Project: dome_control",
+      "**Purpose**: ROS2 control package and CLI for the DOME robot: movement, launch/process management, maps, config, intent publishing, telemetry",
+      "**Package manager**: colcon / ament_python (ROS2); ruff in ~/.local/bin",
+      "**Run**: ros2 run dome_control run (CLI); bl dome_control robot.launch.py (robot)",
+      "**Test**: python3 -m pytest test/",
+      "**Source control**: github.com/Boston-Robot-Hackers/dome_control",
+      "**Protected branches**: main"
+    ],
+    "allow": [
+      "$defaults"
+    ]
   }
 }
