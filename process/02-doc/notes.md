@@ -32,7 +32,8 @@ integration constraints, and research that should survive across sessions.
   `get_status`.
 - `PerceptionBehavior`: `describe_scene` (async `/describe_scene` Trigger
   call to `SemanticMapNode`) and `list_objects` (cached detections). If the
-  service is not ready it publishes "Oak Camera not connected".
+  service is not ready it logs a warning and calls anyway; failures are
+  logged only, never announced (see `process/01-literate/14-*`).
 - `IntentParser`: pure-Python JSON → Intent parser.
 - `describe_scene_stub` node for smoke testing without vision hardware.
 - **`/intent` ownership is split (F19)**, each name handled by exactly one

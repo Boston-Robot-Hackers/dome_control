@@ -1,21 +1,34 @@
 ---
-version: "1.0"
-generated: "2026-05-04"
+version: "2.0"
+generated: "2026-11-22"
 ---
 
-# Command Definition (Appendix)
+# Appendix X02 — CommandDef
 
-`command_def.py` defines a single dataclass describing one entry in the command registry.
+`commands/command_def.py` is one registry entry:
 
 ```python
 @dataclass
 class CommandDef:
-    method_name: str  # method to call on RobotController
-    parameters: list[ParameterDef]  # ordered — position maps to CLI arg position
-    description: str  # shown in help text
-    group: str  # e.g. "movement", "launch", "config"
+    method_name: str
+    parameters: list[pd.ParameterDef]
+    description: str
+    group: str
 ```
 
-`method_name` decouples the CLI command name from the Python method name. The ordering of `parameters` is load-bearing: `SimpleCLI._map_to_dispatcher_format` maps CLI positional args to parameter names by index.
+- **`method_name`** is looked up with `getattr` on `RobotController` at
+  call time, so a typo is only found when the command runs ("Method X not
+  found").
+- **`group`** drives `help` grouping.
 
-No business logic. No imports beyond `parameter_def`.
+Behavior commands are registered with `method_name=""` and no parameters
+(see `11-command_dispatcher.md`).
+
+## Observations
+
+- **Add an `intent_name: str | None` field** so behavior commands can be
+  first-class entries with real parameters, instead of a side table plus
+  empty placeholders.
+- **Check method names at startup.** A test that every `method_name`
+  exists on `RobotController` would catch typos in CI.
+- **Use `frozen=True`**, as for `ParameterDef`.

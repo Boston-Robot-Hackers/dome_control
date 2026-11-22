@@ -4,12 +4,19 @@
 
 ### Pick up here (2026-11-22)
 
-- Kit sync and `process/` move committed (see `history.md`). The new
-  SessionStart hook, `/feature` and `/close-feature` are live from now on.
-- **Next:** resume dome2 F05 (below).
+- **Literate docs rebuilt** (21 chapters + 15 appendices, renumbered).
+  `process/01-literate/00-overview.md` ends with 25 ranked findings
+  (safety, correctness, build, doc drift, structure). None are filed as
+  issues yet.
+- **Spin survey on hold:** the user may replace it with a new feature
+  rather than fix it. They are looking at `dome_mission` first.
+- `angular_speed` 1.0 (was 1.5) committed as kept.
 
 ### Next
 
+- **Safety, from the rebuild:** `stop` can't interrupt motion in
+  `behavior_manager` (motion blocks its only executor thread). See
+  `process/01-literate/13-motion_behavior.md`.
 - **dome2 F05, launch-file cleanup**
   (`dome2/process/03-features/notdone/F05-launch-file-cleanup.md`):
   TF05.0–TF05.4 done. Left: TF05.5 (stack docs), TF05.6 (convention test
@@ -21,9 +28,13 @@
 
 ### Decisions pending
 
-- **Uncommitted `angular_speed` 1.5 → 1.0** in `config/control-config.yaml`:
-  predates the 2026-11-22 session and was left out of its commit. Keep or
-  revert.
+- **Spin survey: fix or replace?** Known bugs: continuous multi-pass
+  never ends, no cancel path, `stop` can't halt it. Its "skip frames taken
+  while turning" gate seems gone from `dome_semantic`. Pending a new
+  feature (possibly via `dome_mission`); don't fix until decided.
+- **File the literate findings?** Turn the safety and correctness items in
+  `00-overview.md` into issues, and the build items into chores; use them
+  to sort I01–I14.
 - **dome_vision link fixes uncommitted:** two `dome_control/process/02-doc`
   path updates in `../dome_vision/process/02-doc/` (`system-overview.md`,
   `house-map.md`). Commit in that repo.

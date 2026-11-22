@@ -2,6 +2,19 @@
 
 Completed checkpoints moved out of `current.md`. Newest first.
 
+## 2026-11-22 — literate docs rebuilt (chore)
+
+- All literate docs regenerated and renumbered in dependency order: 21
+  chapters (`00`–`20`) and 15 appendices (`X01`–`X15`). Removed the six
+  docs for deleted modules; added `intent_parser`, `host_stats`,
+  `csv_logger`, telemetry config and `robot.launch.py`.
+- `00-overview.md` gained a ranked list of 25 findings. Three were
+  reproduced by running code: endless continuous multi-pass survey,
+  `convert_number("1e5")` crash, `"1"`/`"0"` parsed as booleans. Also
+  confirmed: CLI help files don't exist in the installed package.
+- `notes.md`: removed the stale "Oak Camera not connected" claim.
+- `config/control-config.yaml`: `angular_speed` 1.5 → 1.0 kept.
+
 ## 2026-11-22 — `.claude/` kit sync and `process/` move (chore)
 
 - `.claude/` re-synced from the canonical `~/j3/.claude` kit: new agents
