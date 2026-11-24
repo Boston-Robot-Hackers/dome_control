@@ -19,6 +19,7 @@
   <depend>sensor_msgs</depend>
   <depend>dome_semantic</depend>
   <depend>dome_telemetry_msgs</depend>
+  <depend>dome_voice_msgs</depend>
 
   <exec_depend>rosidl_default_runtime</exec_depend>
   <exec_depend>better_launch</exec_depend>

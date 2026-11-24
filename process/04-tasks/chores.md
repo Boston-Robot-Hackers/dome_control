@@ -76,3 +76,5 @@ Each entry is one line, flipped to `[x]` when applied. Still gets a test.
       note there fixed for F20.
 - [ ] Add a `Makefile` with `make help` as default target — the synced style
       guide now makes one a MUST for every project.
+- [ ] Migrate the telemetry CSV writer (`telemetryDDMMYY.csv`) to the DOME telemetry convention: `~/.dome/telemetry/<source>-<YYYY-MM-DD>[-N].jsonl`, JSON lines with `source`, `event`, `stamp`, `ts` (see dome_nav `process/02-doc/notes.md`, *Telemetry convention*, F38).
+- [x] `Announcement.msg` moved to the new `dome_voice_msgs` package (dome_nav F38 TF38.6, 2026-11-24): `announcement_contract.py` imports it from there; `msg/Announcement.msg` removed; docs updated. Topic type is now `dome_voice_msgs/msg/Announcement`. 217/217 pass.

@@ -8,7 +8,6 @@ find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Announcement.msg"
   "msg/Telemetry.msg"
   DEPENDENCIES builtin_interfaces std_msgs
 )

@@ -22,7 +22,7 @@ PRIORITY_DISCOVERY = 4
 PRIORITY_CHITCHAT = 5
 
 try:
-    from dome_control.msg import Announcement as AnnouncementMsg
+    from dome_voice_msgs.msg import Announcement as AnnouncementMsg
 except ImportError:
 
     class AnnouncementMsg:

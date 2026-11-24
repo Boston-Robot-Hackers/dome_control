@@ -23,6 +23,6 @@ EXPECTED FLOW
 
 NOTES
   The current MVP uses std_msgs/String JSON for /intent.
-  Announcement output uses dome_control/msg/Announcement on /announcement.
+  Announcement output uses dome_voice_msgs/msg/Announcement on /announcement.
   The temporary /describe_scene service type is std_srvs/Trigger.
   Custom Intent.msg and query services are deferred until the vocabulary stabilizes.
